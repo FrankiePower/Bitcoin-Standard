@@ -2,10 +2,17 @@
 version = 1
 
 [[package]]
+name = "alexandria_math"
+version = "0.3.0"
+source = "git+https://github.com/keep-starknet-strange/alexandria.git?tag=v0.3.0#e3715428c990665afc495b5428ef08ab9a2089cd"
+
+[[package]]
 name = "contracts"
 version = "0.2.0"
 dependencies = [
+ "alexandria_math",
  "openzeppelin_access",
+ "openzeppelin_security",
  "openzeppelin_testing",
  "openzeppelin_token",
  "openzeppelin_utils",
@@ -36,6 +43,11 @@ name = "openzeppelin_introspection"
 version = "2.0.0"
 source = "registry+https://scarbs.xyz/"
 checksum = "sha256:87773ed6cd2318f169283ecbbb161890d1996260a80302d81ec45b70ee5e54c1"
+
+[[package]]
+name = "openzeppelin_security"
+version = "0.20.0"
+source = "git+https://github.com/OpenZeppelin/cairo-contracts.git?tag=v0.20.0#7756fd1de2b4ebd239fa6e372d75535cea02e5e5"
 
 [[package]]
 name = "openzeppelin_testing"
