@@ -11,6 +11,7 @@ pub mod BTSUSDToken {
     use openzeppelin_token::erc20::{ERC20Component, ERC20HooksEmptyImpl};
     use openzeppelin_access::ownable::OwnableComponent;
     use openzeppelin_security::pausable::PausableComponent;
+    use openzeppelin_security::interface::IPausable;
     use contracts::interfaces::IBTSUSDToken;
 
     // ================================================================================================
