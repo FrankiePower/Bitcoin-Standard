@@ -5,18 +5,11 @@ import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";
 import { Toaster } from "react-hot-toast";
 import { StarknetConfig, starkscan } from "@starknet-react/core";
-import { Header } from "~~/components/Header";
 
 import { appChains, connectors } from "~~/services/web3/connectors";
 import provider from "~~/services/web3/provider";
 import { useNativeCurrencyPrice } from "~~/hooks/scaffold-stark/useNativeCurrencyPrice";
 
-const Footer = dynamic(
-  () => import("~~/components/Footer").then((mod) => mod.Footer),
-  {
-    ssr: false,
-  },
-);
 
 const ScaffoldStarkApp = ({ children }: { children: React.ReactNode }) => {
   useNativeCurrencyPrice();
@@ -36,9 +29,7 @@ const ScaffoldStarkApp = ({ children }: { children: React.ReactNode }) => {
             <div className="circle-gradient-blue w-[330px] h-[630px]"></div>
           </>
         )}
-        <Header />
         <main className="relative flex flex-col flex-1">{children}</main>
-        <Footer />
       </div>
       <Toaster />
     </>
