@@ -81,7 +81,7 @@ const ConnectModal = () => {
     <div>
       <label
         htmlFor="connect-modal"
-        className="rounded-[18px] btn-sm  font-bold px-8 bg-btn-wallet py-3 cursor-pointer"
+        className="rounded-[18px] btn-sm font-bold px-8 bg-primary text-primary-foreground hover:bg-primary/90 py-3 cursor-pointer"
       >
         <span>Connect</span>
       </label>
@@ -161,7 +161,7 @@ const ConnectModal = () => {
                         className="w-full flex flex-col"
                       >
                         <button
-                          className={`hover:bg-gradient-modal border rounded-md text-neutral py-[8px] pl-[10px] pr-16 flex items-center gap-4 ${isDarkMode ? "border-[#385183]" : ""}`}
+                          className={`hover:bg-primary hover:text-primary-foreground border rounded-md text-neutral py-[8px] pl-[10px] pr-16 flex items-center gap-4 border-primary/20`}
                           onClick={(e) => handleConnectBurner(e, ix)}
                         >
                           <BlockieAvatar

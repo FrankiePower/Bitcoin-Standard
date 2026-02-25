@@ -100,7 +100,7 @@ export const AddressInfoDropdown = ({
   return (
     <>
       <details ref={dropdownRef} className="dropdown dropdown-end leading-3">
-        <summary className="btn bg-transparent btn-sm px-2 py-[0.35rem] dropdown-toggle gap-0 !h-auto border border-[#5c4fe5] ">
+        <summary className="btn bg-transparent btn-sm px-2 py-[0.35rem] dropdown-toggle gap-0 !h-auto border border-primary/20 hover:border-primary">
           <div className="hidden [@media(min-width:412px)]:block">
             <Avatar
               address={address}
@@ -118,7 +118,7 @@ export const AddressInfoDropdown = ({
         </summary>
         <ul
           tabIndex={0}
-          className={`dropdown-content menu z-[2] p-2 mt-2 rounded-[5px] gap-1 border border-[#5c4fe5] bg-base-100`}
+          className={`dropdown-content menu z-[2] p-2 mt-2 rounded-[5px] gap-1 border border-primary/20 bg-base-100`}
         >
           <NetworkOptions hidden={!selectingNetwork} />
           <li className={selectingNetwork ? "hidden" : ""}>
@@ -199,7 +199,7 @@ export const AddressInfoDropdown = ({
               <>
                 <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none">
                   <div className="relative w-auto my-6 mx-auto max-w-5xl">
-                    <div className="border border-[#4f4ab7] rounded-lg shadow-lg relative w-full mx-auto md:max-h-[30rem] md:max-w-[25rem] bg-base-100 outline-none focus:outline-none">
+                    <div className="border border-primary/20 rounded-lg shadow-lg relative w-full mx-auto md:max-h-[30rem] md:max-w-[25rem] bg-base-100 outline-none focus:outline-none">
                       <div className="flex items-start justify-between p-4 pt-8 rounded-t">
                         <div className="flex justify-center items-center w-11/12">
                           <h2 className="text-lg text-center text-neutral m-0">
@@ -232,11 +232,7 @@ export const AddressInfoDropdown = ({
                               className="w-full flex flex-col"
                             >
                               <button
-                                className={`${
-                                  isDarkMode
-                                    ? "hover:bg-[#385183] border-[#385183]"
-                                    : "hover:bg-gradient-light "
-                                } border rounded-md text-neutral py-[8px] pl-[10px] pr-16 flex items-center gap-4`}
+                                className={`hover:bg-primary hover:text-primary-foreground border-primary/20 border rounded-md text-neutral py-[8px] pl-[10px] pr-16 flex items-center gap-4`}
                                 onClick={(e) => handleConnectBurner(e, ix)}
                               >
                                 <BlockieAvatar
