@@ -5,14 +5,14 @@
 
 #[starknet::contract]
 pub mod BTSUSDToken {
-    use core::num::traits::Zero;
-    use starknet::{ContractAddress, get_caller_address};
-    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
-    use openzeppelin_token::erc20::{ERC20Component, ERC20HooksEmptyImpl};
-    use openzeppelin_access::ownable::OwnableComponent;
-    use openzeppelin_security::pausable::PausableComponent;
-    use openzeppelin_security::interface::IPausable;
     use contracts::interfaces::IBTSUSDToken;
+    use core::num::traits::Zero;
+    use openzeppelin_access::ownable::OwnableComponent;
+    use openzeppelin_security::interface::IPausable;
+    use openzeppelin_security::pausable::PausableComponent;
+    use openzeppelin_token::erc20::{ERC20Component, ERC20HooksEmptyImpl};
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use starknet::{ContractAddress, get_caller_address};
 
     // ================================================================================================
     // COMPONENTS

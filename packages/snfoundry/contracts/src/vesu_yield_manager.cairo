@@ -8,19 +8,18 @@
 
 #[starknet::contract]
 pub mod VesuYieldManager {
-    use core::num::traits::Zero;
-    use starknet::{ContractAddress, get_caller_address, get_contract_address, get_block_timestamp};
-    use starknet::storage::{
-        StoragePointerReadAccess, StoragePointerWriteAccess, Map, StoragePathEntry,
-    };
-    use openzeppelin_token::erc20::interface::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use openzeppelin_access::ownable::OwnableComponent;
-    use contracts::interfaces::{
-        IYieldManager,
-        IVesuSingletonDispatcher, IVesuSingletonDispatcherTrait,
-        Amount, AmountType, AmountDenomination, ModifyPositionParams,
-    };
     use alexandria_math::i257::I257Impl;
+    use contracts::interfaces::{
+        Amount, AmountDenomination, AmountType, IVesuSingletonDispatcher,
+        IVesuSingletonDispatcherTrait, IYieldManager, ModifyPositionParams,
+    };
+    use core::num::traits::Zero;
+    use openzeppelin_access::ownable::OwnableComponent;
+    use openzeppelin_token::erc20::interface::{IERC20Dispatcher, IERC20DispatcherTrait};
+    use starknet::storage::{
+        Map, StoragePathEntry, StoragePointerReadAccess, StoragePointerWriteAccess,
+    };
+    use starknet::{ContractAddress, get_block_timestamp, get_caller_address, get_contract_address};
 
     // ================================================================================================
     // COMPONENTS
@@ -37,7 +36,7 @@ pub mod VesuYieldManager {
     // ================================================================================================
 
     const PRECISION: u256 = 10000;
-    const DEFAULT_USER_SHARE: u256 = 7000;     // 70%
+    const DEFAULT_USER_SHARE: u256 = 7000; // 70%
     const DEFAULT_PROTOCOL_SHARE: u256 = 3000; // 30%
 
     // ================================================================================================
@@ -259,8 +258,9 @@ pub mod VesuYieldManager {
             user_amount
         }
 
-        fn harvest_all(ref self: ContractState) {
-            // No-op: batch harvesting requires off-chain enumeration of users.
+        fn harvest_all(
+            ref self: ContractState,
+        ) { // No-op: batch harvesting requires off-chain enumeration of users.
         }
 
         fn get_user_deposit(self: @ContractState, user: ContractAddress) -> u256 {
@@ -383,13 +383,14 @@ pub mod VesuYieldManager {
         /// Returns (collateral_shares, collateral_value) for this contract's Vesu position.
         #[external(v0)]
         fn get_vesu_position(self: @ContractState) -> (u256, u256) {
-            let vesu = IVesuSingletonDispatcher {
-                contract_address: self.vesu_singleton.read(),
-            };
+            let vesu = IVesuSingletonDispatcher { contract_address: self.vesu_singleton.read() };
             let zero_addr: ContractAddress = 0.try_into().unwrap();
             let (position, collateral_value, _) = vesu
                 .position_unsafe(
-                    self.vesu_pool_id.read(), self.wbtc_token.read(), zero_addr, get_contract_address(),
+                    self.vesu_pool_id.read(),
+                    self.wbtc_token.read(),
+                    zero_addr,
+                    get_contract_address(),
                 );
             (position.collateral_shares.into(), collateral_value)
         }
@@ -425,9 +426,7 @@ pub mod VesuYieldManager {
             if self.total_deposits.read() == 0 {
                 return 0;
             }
-            let vesu = IVesuSingletonDispatcher {
-                contract_address: self.vesu_singleton.read(),
-            };
+            let vesu = IVesuSingletonDispatcher { contract_address: self.vesu_singleton.read() };
             let zero_addr: ContractAddress = 0.try_into().unwrap();
             let (_position, collateral_value, _) = vesu
                 .position_unsafe(
@@ -456,7 +455,7 @@ pub mod VesuYieldManager {
                 collateral: Amount {
                     amount_type: AmountType::Delta,
                     denomination: AmountDenomination::Native,
-                    value: I257Impl::new(amount, false), // positive = supply
+                    value: I257Impl::new(amount, false) // positive = supply
                 },
                 debt: Amount {
                     amount_type: AmountType::Delta,
@@ -484,7 +483,7 @@ pub mod VesuYieldManager {
                 collateral: Amount {
                     amount_type: AmountType::Delta,
                     denomination: AmountDenomination::Native,
-                    value: I257Impl::new(amount, true), // negative = withdraw
+                    value: I257Impl::new(amount, true) // negative = withdraw
                 },
                 debt: Amount {
                     amount_type: AmountType::Delta,

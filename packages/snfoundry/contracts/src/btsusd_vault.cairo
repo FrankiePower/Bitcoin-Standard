@@ -9,20 +9,20 @@
 
 #[starknet::contract]
 pub mod BTSUSDVault {
-    use core::num::traits::Zero;
-    use starknet::{ContractAddress, get_caller_address, get_contract_address, get_block_timestamp};
-    use starknet::storage::{
-        StoragePointerReadAccess, StoragePointerWriteAccess, Map, StoragePathEntry,
+    use contracts::interfaces::{
+        IBTSUSDTokenDispatcher, IBTSUSDTokenDispatcherTrait, IBTSUSDVault, IPriceOracleDispatcher,
+        IPriceOracleDispatcherTrait, IYieldManagerDispatcher, IYieldManagerDispatcherTrait,
+        Position,
     };
-    use openzeppelin_token::erc20::interface::{IERC20Dispatcher, IERC20DispatcherTrait};
+    use core::num::traits::Zero;
     use openzeppelin_access::ownable::OwnableComponent;
     use openzeppelin_security::pausable::PausableComponent;
     use openzeppelin_security::reentrancyguard::ReentrancyGuardComponent;
-    use contracts::interfaces::{
-        IBTSUSDVault, Position, IBTSUSDTokenDispatcher, IBTSUSDTokenDispatcherTrait,
-        IYieldManagerDispatcher, IYieldManagerDispatcherTrait,
-        IPriceOracleDispatcher, IPriceOracleDispatcherTrait,
+    use openzeppelin_token::erc20::interface::{IERC20Dispatcher, IERC20DispatcherTrait};
+    use starknet::storage::{
+        Map, StoragePathEntry, StoragePointerReadAccess, StoragePointerWriteAccess,
     };
+    use starknet::{ContractAddress, get_block_timestamp, get_caller_address, get_contract_address};
 
     // ================================================================================================
     // COMPONENTS
@@ -43,13 +43,16 @@ pub mod BTSUSDVault {
     // ================================================================================================
 
     const PRECISION: u256 = 10000;
-    const MIN_COLLATERAL_RATIO: u256 = 15000;  // 150%
+    const MIN_COLLATERAL_RATIO: u256 = 15000; // 150%
     const LIQUIDATION_THRESHOLD: u256 = 12000; // 120%
-    const MAX_LTV: u256 = 6667;                // 66.67%
-    const WBTC_DECIMALS: u256 = 100000000;     // 1e8
+    const MAX_LTV: u256 = 6667; // 66.67%
+    const WBTC_DECIMALS: u256 = 100000000; // 1e8
     const BTSUSD_DECIMALS: u256 = 1000000000000000000; // 1e18
-    const PRICE_DECIMALS: u256 = 100000000;    // 1e8  (oracle uses 8 decimals)
-    const DEFAULT_MIN_DEPOSIT: u256 = 100000;  // 0.001 wBTC
+    const PRICE_DECIMALS: u256 = 100000000; // 1e8  (oracle uses 8 decimals)
+    const DEFAULT_MIN_DEPOSIT: u256 = 100000; // 0.001 wBTC
+    const DEFAULT_ORACLE_DEVIATION_BPS: u256 = 500; // 5%
+    const DEFAULT_VOLATILITY_THRESHOLD_BPS: u256 = 500; // 5%
+    const DEFAULT_MAX_LTV_PENALTY_BPS: u256 = 1000; // 10%
 
     // ================================================================================================
     // STORAGE
@@ -66,12 +69,18 @@ pub mod BTSUSDVault {
         wbtc_token: ContractAddress,
         btsusd_token: ContractAddress,
         price_oracle: ContractAddress,
+        secondary_oracle: ContractAddress,
         yield_manager: ContractAddress,
         liquidator: ContractAddress,
         positions: Map<ContractAddress, Position>,
         total_collateral: u256,
         total_debt: u256,
         min_deposit: u256,
+        base_max_ltv: u256,
+        volatility_threshold_bps: u256,
+        max_ltv_penalty_bps: u256,
+        oracle_deviation_bps: u256,
+        last_price: u256,
     }
 
     // ================================================================================================
@@ -168,6 +177,8 @@ pub mod BTSUSDVault {
         pub const NO_POSITION: felt252 = 'Vault: no position';
         pub const STALE_PRICE: felt252 = 'Vault: stale price';
         pub const ZERO_PRICE: felt252 = 'Vault: zero price';
+        pub const ORACLE_DEVIATION: felt252 = 'Vault: oracle deviation';
+        pub const EXCEEDS_MAX_LTV: felt252 = 'Vault: exceeds max LTV';
         pub const NOT_LIQUIDATOR: felt252 = 'Vault: not liquidator';
         pub const NOT_LIQUIDATABLE: felt252 = 'Vault: not liquidatable';
         pub const SEIZE_TOO_MUCH: felt252 = 'Vault: seize too much';
@@ -184,18 +195,26 @@ pub mod BTSUSDVault {
         wbtc_token: ContractAddress,
         btsusd_token: ContractAddress,
         price_oracle: ContractAddress,
+        secondary_oracle: ContractAddress,
         yield_manager: ContractAddress,
     ) {
         self.ownable.initializer(owner);
         assert(!wbtc_token.is_zero(), Errors::ZERO_ADDRESS);
         assert(!btsusd_token.is_zero(), Errors::ZERO_ADDRESS);
         assert(!price_oracle.is_zero(), Errors::ZERO_ADDRESS);
+        assert(!secondary_oracle.is_zero(), Errors::ZERO_ADDRESS);
         assert(!yield_manager.is_zero(), Errors::ZERO_ADDRESS);
         self.wbtc_token.write(wbtc_token);
         self.btsusd_token.write(btsusd_token);
         self.price_oracle.write(price_oracle);
+        self.secondary_oracle.write(secondary_oracle);
         self.yield_manager.write(yield_manager);
         self.min_deposit.write(DEFAULT_MIN_DEPOSIT);
+        self.base_max_ltv.write(MAX_LTV);
+        self.volatility_threshold_bps.write(DEFAULT_VOLATILITY_THRESHOLD_BPS);
+        self.max_ltv_penalty_bps.write(DEFAULT_MAX_LTV_PENALTY_BPS);
+        self.oracle_deviation_bps.write(DEFAULT_ORACLE_DEVIATION_BPS);
+        self.last_price.write(0);
     }
 
     // ================================================================================================
@@ -225,7 +244,12 @@ pub mod BTSUSDVault {
 
             self._deposit_to_yield_manager(caller, amount);
 
-            self.emit(CollateralDeposited { user: caller, amount, total_collateral: position.collateral });
+            self
+                .emit(
+                    CollateralDeposited {
+                        user: caller, amount, total_collateral: position.collateral,
+                    },
+                );
             self._emit_position_updated(caller, position);
             self.reentrancy.end();
         }
@@ -236,6 +260,9 @@ pub mod BTSUSDVault {
 
             let caller = get_caller_address();
             assert(amount > 0, Errors::ZERO_AMOUNT);
+            self._assert_oracle_consistent();
+            let (price, _) = self._get_btc_price_safe();
+            self._update_last_price(price);
 
             let mut position = self.positions.entry(caller).read();
             assert(position.collateral >= amount, Errors::INSUFFICIENT_COLLATERAL);
@@ -255,7 +282,12 @@ pub mod BTSUSDVault {
             let wbtc = IERC20Dispatcher { contract_address: self.wbtc_token.read() };
             wbtc.transfer(caller, amount);
 
-            self.emit(CollateralWithdrawn { user: caller, amount, remaining_collateral: new_collateral });
+            self
+                .emit(
+                    CollateralWithdrawn {
+                        user: caller, amount, remaining_collateral: new_collateral,
+                    },
+                );
             self._emit_position_updated(caller, position);
             self.reentrancy.end();
         }
@@ -271,6 +303,14 @@ pub mod BTSUSDVault {
             assert(position.collateral > 0, Errors::NO_POSITION);
 
             let new_debt = position.debt + amount;
+            self._assert_oracle_consistent();
+            let (price, _) = self._get_btc_price_safe();
+            let effective_max_ltv = self._calculate_effective_max_ltv(price);
+            self._update_last_price(price);
+            let collateral_value = self
+                ._get_collateral_value_with_price(position.collateral, price);
+            let max_debt_value = self._get_max_debt_value(collateral_value, effective_max_ltv);
+            assert(new_debt <= max_debt_value, Errors::EXCEEDS_MAX_LTV);
             let new_ratio = self._calculate_collateral_ratio(position.collateral, new_debt);
             assert(new_ratio >= MIN_COLLATERAL_RATIO, Errors::UNHEALTHY_POSITION);
 
@@ -324,8 +364,12 @@ pub mod BTSUSDVault {
             let mut position = self.positions.entry(caller).read();
             let new_collateral = position.collateral + collateral_amount;
 
-            let collateral_value = self._get_collateral_value(new_collateral);
-            let max_debt_value = collateral_value * MAX_LTV / PRECISION;
+            self._assert_oracle_consistent();
+            let (price, _) = self._get_btc_price_safe();
+            let effective_max_ltv = self._calculate_effective_max_ltv(price);
+            self._update_last_price(price);
+            let collateral_value = self._get_collateral_value_with_price(new_collateral, price);
+            let max_debt_value = self._get_max_debt_value(collateral_value, effective_max_ltv);
             let current_debt_value = self._get_debt_value(position.debt);
             let mint_amount = if max_debt_value > current_debt_value {
                 max_debt_value - current_debt_value
@@ -353,7 +397,10 @@ pub mod BTSUSDVault {
                         user: caller, amount: collateral_amount, total_collateral: new_collateral,
                     },
                 );
-            self.emit(BTSUSDMinted { user: caller, amount: mint_amount, total_debt: position.debt });
+            self
+                .emit(
+                    BTSUSDMinted { user: caller, amount: mint_amount, total_debt: position.debt },
+                );
             self._emit_position_updated(caller, position);
             self.reentrancy.end();
 
@@ -366,6 +413,9 @@ pub mod BTSUSDVault {
 
             let caller = get_caller_address();
             assert(BTSUSD_amount > 0, Errors::ZERO_AMOUNT);
+            self._assert_oracle_consistent();
+            let (price, _) = self._get_btc_price_safe();
+            self._update_last_price(price);
 
             let position = self.positions.entry(caller).read();
             assert(position.debt > 0, Errors::NO_POSITION);
@@ -391,7 +441,10 @@ pub mod BTSUSDVault {
             let wbtc = IERC20Dispatcher { contract_address: self.wbtc_token.read() };
             wbtc.transfer(caller, collateral_to_return);
 
-            self.emit(BTSUSDBurned { user: caller, amount: BTSUSD_amount, remaining_debt: new_debt });
+            self
+                .emit(
+                    BTSUSDBurned { user: caller, amount: BTSUSD_amount, remaining_debt: new_debt },
+                );
             self
                 .emit(
                     CollateralWithdrawn {
@@ -434,7 +487,19 @@ pub mod BTSUSDVault {
             if position.collateral == 0 {
                 return 0;
             }
-            let max_debt = self._get_collateral_value(position.collateral) * MAX_LTV / PRECISION;
+            let (price, _) = self._get_btc_price_safe();
+            let effective_max_ltv = self._calculate_effective_max_ltv(price);
+            let max_debt = self._get_collateral_value_with_price(position.collateral, price)
+                * effective_max_ltv
+                / PRECISION;
+            let max_debt_ratio = self._get_collateral_value_with_price(position.collateral, price)
+                * PRECISION
+                / MIN_COLLATERAL_RATIO;
+            let max_debt = if max_debt_ratio < max_debt {
+                max_debt_ratio
+            } else {
+                max_debt
+            };
             let current_debt = self._get_debt_value(position.debt);
             if max_debt > current_debt {
                 max_debt - current_debt
@@ -448,11 +513,14 @@ pub mod BTSUSDVault {
             if position.debt == 0 {
                 return position.collateral;
             }
-            let min_collateral_value =
-                self._get_debt_value(position.debt) * MIN_COLLATERAL_RATIO / PRECISION;
+            let min_collateral_value = self._get_debt_value(position.debt)
+                * MIN_COLLATERAL_RATIO
+                / PRECISION;
             let (btc_price, _) = self._get_btc_price_safe();
-            let min_collateral =
-                min_collateral_value * WBTC_DECIMALS * PRICE_DECIMALS / (btc_price * BTSUSD_DECIMALS);
+            let min_collateral = min_collateral_value
+                * WBTC_DECIMALS
+                * PRICE_DECIMALS
+                / (btc_price * BTSUSD_DECIMALS);
             if position.collateral > min_collateral {
                 position.collateral - min_collateral
             } else {
@@ -475,6 +543,29 @@ pub mod BTSUSDVault {
             self.ownable.assert_only_owner();
             assert(!oracle.is_zero(), Errors::ZERO_ADDRESS);
             self.price_oracle.write(oracle);
+        }
+
+        fn set_secondary_oracle(ref self: ContractState, oracle: ContractAddress) {
+            self.ownable.assert_only_owner();
+            assert(!oracle.is_zero(), Errors::ZERO_ADDRESS);
+            self.secondary_oracle.write(oracle);
+        }
+
+        fn set_oracle_deviation_threshold(ref self: ContractState, threshold_bps: u256) {
+            self.ownable.assert_only_owner();
+            self.oracle_deviation_bps.write(threshold_bps);
+        }
+
+        fn set_risk_params(
+            ref self: ContractState,
+            base_max_ltv: u256,
+            volatility_threshold_bps: u256,
+            max_ltv_penalty_bps: u256,
+        ) {
+            self.ownable.assert_only_owner();
+            self.base_max_ltv.write(base_max_ltv);
+            self.volatility_threshold_bps.write(volatility_threshold_bps);
+            self.max_ltv_penalty_bps.write(max_ltv_penalty_bps);
         }
 
         fn set_yield_manager(ref self: ContractState, yield_manager: ContractAddress) {
@@ -506,6 +597,19 @@ pub mod BTSUSDVault {
                 self.btsusd_token.read(),
                 self.price_oracle.read(),
                 self.yield_manager.read(),
+            )
+        }
+
+        fn get_oracles(self: @ContractState) -> (ContractAddress, ContractAddress) {
+            (self.price_oracle.read(), self.secondary_oracle.read())
+        }
+
+        fn get_risk_params(self: @ContractState) -> (u256, u256, u256, u256) {
+            (
+                self.base_max_ltv.read(),
+                self.volatility_threshold_bps.read(),
+                self.max_ltv_penalty_bps.read(),
+                self.oracle_deviation_bps.read(),
             )
         }
 
@@ -574,13 +678,96 @@ pub mod BTSUSDVault {
 
     #[generate_trait]
     impl InternalImpl of InternalTrait {
+        fn _get_oracle_price(self: @ContractState, oracle: ContractAddress) -> (u256, u64, bool) {
+            let dispatcher = IPriceOracleDispatcher { contract_address: oracle };
+            let (price, timestamp) = dispatcher.get_btc_price();
+            if dispatcher.is_price_stale() {
+                return (price, timestamp, false);
+            }
+            (price, timestamp, true)
+        }
+
         /// Fetches the BTC price from the oracle, asserting it is non-zero and fresh.
         fn _get_btc_price_safe(self: @ContractState) -> (u256, u64) {
-            let oracle = IPriceOracleDispatcher { contract_address: self.price_oracle.read() };
-            let (price, timestamp) = oracle.get_btc_price();
-            assert(price > 0, Errors::ZERO_PRICE);
-            assert(!oracle.is_price_stale(), Errors::STALE_PRICE);
-            (price, timestamp)
+            let primary = self.price_oracle.read();
+            let (p1, t1, ok1) = self._get_oracle_price(primary);
+            assert(ok1, Errors::STALE_PRICE);
+            assert(p1 > 0, Errors::ZERO_PRICE);
+
+            let secondary = self.secondary_oracle.read();
+            if secondary.is_zero() {
+                return (p1, t1);
+            }
+
+            let (p2, _t2, ok2) = self._get_oracle_price(secondary);
+            if !ok2 || p2 == 0 {
+                return (p1, t1);
+            }
+
+            if p2 < p1 {
+                (p2, t1)
+            } else {
+                (p1, t1)
+            }
+        }
+
+        fn _assert_oracle_consistent(self: @ContractState) {
+            let secondary = self.secondary_oracle.read();
+            if secondary.is_zero() {
+                return;
+            }
+
+            let primary = self.price_oracle.read();
+            let (p1, _t1, ok1) = self._get_oracle_price(primary);
+            let (p2, _t2, ok2) = self._get_oracle_price(secondary);
+
+            if !ok1 || !ok2 {
+                return;
+            }
+
+            let diff = if p1 > p2 {
+                p1 - p2
+            } else {
+                p2 - p1
+            };
+            let base = if p1 < p2 {
+                p1
+            } else {
+                p2
+            };
+            if base == 0 {
+                return;
+            }
+            let deviation_bps = diff * PRECISION / base;
+            assert(deviation_bps <= self.oracle_deviation_bps.read(), Errors::ORACLE_DEVIATION);
+        }
+
+        fn _calculate_effective_max_ltv(self: @ContractState, price: u256) -> u256 {
+            let last = self.last_price.read();
+            let mut vol_bps: u256 = 0;
+            if last > 0 {
+                let diff = if price > last {
+                    price - last
+                } else {
+                    last - price
+                };
+                vol_bps = diff * PRECISION / last;
+            }
+
+            let mut max_ltv = self.base_max_ltv.read();
+            if vol_bps >= self.volatility_threshold_bps.read() {
+                let penalty = self.max_ltv_penalty_bps.read();
+                if penalty >= max_ltv {
+                    max_ltv = 0;
+                } else {
+                    max_ltv = max_ltv - penalty;
+                }
+            }
+            max_ltv
+        }
+
+        fn _update_last_price(ref self: ContractState, price: u256) {
+            self.last_price.write(price);
         }
 
         /// collateral(8dec) * price(8dec) * 1e18 / (1e8 * 1e8) = value(18dec)
@@ -589,7 +776,28 @@ pub mod BTSUSDVault {
                 return 0;
             }
             let (btc_price, _) = self._get_btc_price_safe();
+            self._get_collateral_value_with_price(collateral, btc_price)
+        }
+
+        fn _get_collateral_value_with_price(
+            self: @ContractState, collateral: u256, btc_price: u256,
+        ) -> u256 {
+            if collateral == 0 {
+                return 0;
+            }
             collateral * btc_price * BTSUSD_DECIMALS / (WBTC_DECIMALS * PRICE_DECIMALS)
+        }
+
+        fn _get_max_debt_value(
+            self: @ContractState, collateral_value: u256, effective_max_ltv: u256,
+        ) -> u256 {
+            let max_debt_ltv = collateral_value * effective_max_ltv / PRECISION;
+            let max_debt_ratio = collateral_value * PRECISION / MIN_COLLATERAL_RATIO;
+            if max_debt_ratio < max_debt_ltv {
+                max_debt_ratio
+            } else {
+                max_debt_ltv
+            }
         }
 
         /// BTSUSD is pegged 1:1 to USD, already in 18 decimals.
@@ -598,18 +806,14 @@ pub mod BTSUSDVault {
         }
 
         /// ratio = collateral_value * PRECISION / debt_value  (in basis points)
-        fn _calculate_collateral_ratio(
-            self: @ContractState, collateral: u256, debt: u256,
-        ) -> u256 {
+        fn _calculate_collateral_ratio(self: @ContractState, collateral: u256, debt: u256) -> u256 {
             if debt == 0 {
                 return 0;
             }
             self._get_collateral_value(collateral) * PRECISION / self._get_debt_value(debt)
         }
 
-        fn _deposit_to_yield_manager(
-            ref self: ContractState, user: ContractAddress, amount: u256,
-        ) {
+        fn _deposit_to_yield_manager(ref self: ContractState, user: ContractAddress, amount: u256) {
             let yield_manager = self.yield_manager.read();
             let wbtc = IERC20Dispatcher { contract_address: self.wbtc_token.read() };
             wbtc.approve(yield_manager, amount);

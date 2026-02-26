@@ -1,202 +1,330 @@
-"use client"
+"use client";
 
-
-import { ArrowRight, Bot, Shield, Zap, QrCode, Globe, CreditCard, Fingerprint, TrendingUp, Receipt, Bitcoin } from "lucide-react"
-import { Navbar } from "~~/components/layout/navbar"
-import { Button } from "~~/components/ui/button"
-import { CustomConnectButton } from "~~/components/scaffold-stark/CustomConnectButton"
+import { useState, useEffect } from "react";
+import { useAccount } from "@starknet-react/core";
+import { useRouter } from "next/navigation";
+import {
+  ChevronRight,
+  Shield,
+  Zap,
+  TrendingUp,
+  Bitcoin,
+  Lock,
+  Activity,
+  ArrowRight,
+  Terminal,
+  Cpu,
+  Database,
+} from "lucide-react";
+import { Button } from "~~/components/ui/button";
+import { Card, CardContent } from "~~/components/ui/card";
+import { CustomConnectButton } from "~~/components/scaffold-stark/CustomConnectButton";
 
 export default function LandingPage() {
+  const router = useRouter();
+  const { status } = useAccount();
+  const isConnected = status === "connected";
+  const [systemTime, setSystemTime] = useState("");
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setSystemTime(now.toISOString().replace("T", " ").slice(0, 19) + " UTC");
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (isConnected) {
+      router.push("/dashboard");
+    }
+  }, [isConnected, router]);
+
   return (
-    <div className="min-h-screen flex flex-col bg-background font-sans selection:bg-primary/20">
-      <Navbar />
-
-      <main className="flex-1 overflow-hidden relative">
-        {/* Background Gradients */}
-        <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/20 blur-[120px]" />
-          <div className="absolute top-[20%] right-[-10%] w-[30%] h-[40%] rounded-full bg-orange-500/10 blur-[120px]" />
-          <div className="absolute bottom-[-10%] left-[20%] w-[40%] h-[30%] rounded-full bg-violet-500/10 blur-[120px]" />
-        </div>
-
-        {/* Hero Section */}
-        <section className="relative pt-24 pb-32 md:pt-36 md:pb-40 px-4 text-center">
-          <div className="max-w-5xl mx-auto space-y-8 relative z-10">
-            <div className="mx-auto inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm text-primary font-medium mb-6 backdrop-blur-sm">
-              <span className="flex h-2 w-2 rounded-full bg-orange-500 mr-2 animate-pulse"></span>
-              Bitcoin-Backed Stablecoins on Starknet
+    <div className="min-h-screen bg-black text-white font-mono">
+      {/* Header */}
+      <header className="border-b border-neutral-800 bg-neutral-900/50 backdrop-blur-sm fixed w-full z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded bg-orange-500/20 border border-orange-500/50 flex items-center justify-center">
+                <Bitcoin className="h-4 w-4 text-orange-500" />
+              </div>
+              <div>
+                <span className="text-orange-500 font-bold tracking-wider">BTC STANDARD</span>
+                <span className="text-neutral-600 text-xs ml-2">v1.0.0</span>
+              </div>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-foreground leading-[1.1]">
-              The Bitcoin <br className="hidden md:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-primary to-violet-500">
-                Standard Protocol
+            <div className="flex items-center gap-6">
+              <div className="hidden md:flex items-center gap-2 text-xs text-neutral-500">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span>SYSTEM ONLINE</span>
+              </div>
+              <div className="hidden md:block text-xs text-neutral-600 font-mono">
+                {systemTime}
+              </div>
+              <CustomConnectButton />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 px-4 overflow-hidden">
+        {/* Background Grid */}
+        <div className="absolute inset-0 opacity-5">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `linear-gradient(rgba(249, 115, 22, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(249, 115, 22, 0.1) 1px, transparent 1px)`,
+              backgroundSize: "50px 50px",
+            }}
+          />
+        </div>
+
+        {/* Glow Effect */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-500/10 rounded-full blur-[150px]" />
+
+        <div className="max-w-6xl mx-auto relative z-10">
+          <div className="text-center space-y-8">
+            {/* Status Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded border border-orange-500/30 bg-orange-500/10 text-orange-500 text-sm">
+              <Activity className="h-4 w-4 animate-pulse" />
+              <span className="tracking-wider">PROTOCOL ACTIVE • STARKNET L2</span>
+            </div>
+
+            {/* Main Title */}
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter">
+              <span className="text-white">THE BITCOIN</span>
+              <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600">
+                STANDARD
               </span>
             </h1>
 
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Deposit Bitcoin, mint BTSUSD stablecoins, and earn yield.
-              A decentralized CDP protocol bringing Bitcoin&apos;s security to Starknet&apos;s scalability.
+            {/* Subtitle */}
+            <p className="text-xl md:text-2xl text-neutral-400 max-w-3xl mx-auto leading-relaxed">
+              Deposit BTC. Mint BTSUSD. Earn Yield.
+              <br />
+              <span className="text-neutral-500">
+                Decentralized CDP Protocol on Starknet
+              </span>
             </p>
 
-            <div className="pt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
+            {/* Stats Bar */}
+            <div className="flex flex-wrap justify-center gap-8 pt-8 text-sm">
+              <div className="text-center">
+                <div className="text-2xl md:text-3xl font-bold text-white font-mono">$0.00</div>
+                <div className="text-neutral-500 text-xs tracking-wider">TVL LOCKED</div>
+              </div>
+              <div className="w-px h-12 bg-neutral-800 hidden md:block" />
+              <div className="text-center">
+                <div className="text-2xl md:text-3xl font-bold text-white font-mono">150%</div>
+                <div className="text-neutral-500 text-xs tracking-wider">MIN COLLATERAL</div>
+              </div>
+              <div className="w-px h-12 bg-neutral-800 hidden md:block" />
+              <div className="text-center">
+                <div className="text-2xl md:text-3xl font-bold text-white font-mono">0.5%</div>
+                <div className="text-neutral-500 text-xs tracking-wider">STABILITY FEE</div>
+              </div>
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
               <CustomConnectButton />
-              <Button size="lg" variant="outline" className="text-lg h-14 px-10 rounded-full bg-background/50 backdrop-blur-sm border-muted-foreground/20 hover:bg-muted transition-all">
-                Read Documentation
+              <Button
+                variant="outline"
+                size="lg"
+                className="border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:text-white"
+              >
+                <Terminal className="mr-2 h-4 w-4" />
+                View Documentation
               </Button>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Features Grid */}
-        <section className="py-24 bg-muted/30 border-y border-border/50 relative">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="text-center mb-16 space-y-4">
-              <h2 className="text-3xl md:text-5xl font-bold tracking-tight">Everything you need to leverage Bitcoin</h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Bitcoin Standard combines Bitcoin collateral, algorithmic stablecoins, and DeFi yield into one seamless protocol.
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-              {/* Feature 1 */}
-              <div className="bg-background/80 backdrop-blur-sm p-8 rounded-2xl border border-border/50 shadow-sm hover:shadow-md hover:border-orange-500/50 transition-all group">
-                <div className="h-14 w-14 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-6 group-hover:bg-orange-500/20 group-hover:scale-110 transition-all">
-                  <Bitcoin className="h-7 w-7 text-orange-500" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Bitcoin Collateral</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  Deposit wrapped Bitcoin (WBTC) as collateral to mint BTSUSD stablecoins. Your Bitcoin stays secure while you access liquidity.
-                </p>
-              </div>
-
-              {/* Feature 2 */}
-              <div className="bg-background/80 backdrop-blur-sm p-8 rounded-2xl border border-border/50 shadow-sm hover:shadow-md hover:border-blue-500/50 transition-all group">
-                <div className="h-14 w-14 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-6 group-hover:bg-blue-500/20 group-hover:scale-110 transition-all">
-                  <Globe className="h-7 w-7 text-blue-500" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Starknet Scalability</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  Built on Starknet L2 for lightning-fast transactions and minimal gas fees. Enjoy the security of Ethereum with the speed you need.
-                </p>
-              </div>
-
-              {/* Feature 3 */}
-              <div className="bg-background/80 backdrop-blur-sm p-8 rounded-2xl border border-border/50 shadow-sm hover:shadow-md hover:border-violet-500/50 transition-all group">
-                <div className="h-14 w-14 rounded-2xl bg-violet-500/10 flex items-center justify-center mb-6 group-hover:bg-violet-500/20 group-hover:scale-110 transition-all">
-                  <Shield className="h-7 w-7 text-violet-500" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Over-Collateralized CDPs</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  Safe collateralized debt positions with configurable health factors. Automated liquidations protect the protocol and your assets.
-                </p>
-              </div>
-
-              {/* Feature 4 */}
-              <div className="bg-background/80 backdrop-blur-sm p-8 rounded-2xl border border-border/50 shadow-sm hover:shadow-md hover:border-emerald-500/50 transition-all group">
-                <div className="h-14 w-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-6 group-hover:bg-emerald-500/20 group-hover:scale-110 transition-all">
-                  <CreditCard className="h-7 w-7 text-emerald-500" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">BTSUSD Stablecoin</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  Mint BTSUSD - a Bitcoin-backed stablecoin pegged to the US Dollar. Use it across DeFi or hold for stability.
-                </p>
-              </div>
-
-              {/* Feature 5 */}
-              <div className="bg-background/80 backdrop-blur-sm p-8 rounded-2xl border border-border/50 shadow-sm hover:shadow-md hover:border-amber-500/50 transition-all group">
-                <div className="h-14 w-14 rounded-2xl bg-amber-500/10 flex items-center justify-center mb-6 group-hover:bg-amber-500/20 group-hover:scale-110 transition-all">
-                  <TrendingUp className="h-7 w-7 text-amber-500" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Yield Strategies</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  Earn yield on your BTSUSD through integrated DeFi strategies. Automated yield optimization maximizes your returns.
-                </p>
-              </div>
-
-              {/* Feature 6 */}
-              <div className="bg-background/80 backdrop-blur-sm p-8 rounded-2xl border border-border/50 shadow-sm hover:shadow-md hover:border-rose-500/50 transition-all group">
-                <div className="h-14 w-14 rounded-2xl bg-rose-500/10 flex items-center justify-center mb-6 group-hover:bg-rose-500/20 group-hover:scale-110 transition-all">
-                  <Bot className="h-7 w-7 text-rose-500" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Automated Risk Management</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  Smart risk engine monitors your positions 24/7. Get alerts before liquidation and auto-repay options to protect your collateral.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* How it Works */}
-        <section className="py-24 px-4 bg-background relative overflow-hidden">
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent"></div>
-
-          <div className="max-w-6xl mx-auto relative z-10">
-            <div className="text-center mb-20">
-              <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">How it works</h2>
-              <p className="text-lg text-muted-foreground">From connecting your wallet to minting stablecoins in minutes.</p>
-            </div>
-
-            <div className="grid md:grid-cols-4 gap-8 md:gap-4 relative">
-              {/* Connector line (Desktop only) */}
-              <div className="hidden md:block absolute top-12 left-[12%] right-[12%] h-[2px] bg-border z-0" />
-
-              {[
-                { step: "01", title: "Connect Wallet", desc: "Connect your Starknet wallet (Braavos or ArgentX) to access the protocol." },
-                { step: "02", title: "Deposit Bitcoin", desc: "Deposit wrapped Bitcoin as collateral into your vault position." },
-                { step: "03", title: "Mint BTSUSD", desc: "Mint BTSUSD stablecoins against your Bitcoin collateral at your chosen ratio." },
-                { step: "04", title: "Earn Yield", desc: "Deploy your BTSUSD into yield strategies or use it across DeFi." }
-              ].map((item, i) => (
-                <div key={i} className="relative z-10 flex flex-col items-center text-center space-y-5 px-2">
-                  <div className="w-24 h-24 rounded-full bg-background border-4 border-muted flex items-center justify-center shadow-lg group hover:border-primary/50 transition-all">
-                    <span className="text-3xl font-extrabold text-muted-foreground/30 group-hover:text-primary transition-colors">{item.step}</span>
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-bold mb-2">{item.title}</h4>
-                    <p className="text-muted-foreground text-sm leading-relaxed">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-32 px-4 relative overflow-hidden">
-          <div className="absolute inset-0 bg-primary/5 -z-10"></div>
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
-
-          <div className="max-w-4xl mx-auto text-center space-y-10 relative z-10">
-            <h2 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight">
-              Ready to unlock <br className="hidden md:block" /> your Bitcoin?
+      {/* Protocol Overview */}
+      <section className="py-20 px-4 border-t border-neutral-800">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="text-xs text-orange-500 tracking-widest mb-4">{`// PROTOCOL ARCHITECTURE`}</div>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+              SYSTEM COMPONENTS
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Join the future of Bitcoin-backed DeFi. Mint stablecoins, earn yield, and maintain exposure to Bitcoin.
-            </p>
-            <CustomConnectButton />
           </div>
-        </section>
-      </main>
 
-      <footer className="border-t border-border/50 py-12 bg-background">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between text-muted-foreground">
-          <div className="flex items-center space-x-3 mb-6 md:mb-0">
-            <div className="h-8 w-8 rounded-lg bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
-              <Bitcoin className="h-4 w-4 text-orange-500" />
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: Database,
+                title: "VAULT ENGINE",
+                desc: "Deposit WBTC as collateral. Manage your CDP position with real-time health monitoring.",
+                status: "OPERATIONAL",
+              },
+              {
+                icon: Cpu,
+                title: "MINT PROTOCOL",
+                desc: "Generate BTSUSD stablecoins against your locked Bitcoin at configurable ratios.",
+                status: "OPERATIONAL",
+              },
+              {
+                icon: TrendingUp,
+                title: "YIELD MATRIX",
+                desc: "Deploy BTSUSD into automated yield strategies. Earn from protocol fees and DeFi.",
+                status: "OPERATIONAL",
+              },
+            ].map((item, i) => (
+              <Card key={i} className="bg-neutral-900 border-neutral-800 hover:border-orange-500/50 transition-all group">
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="h-12 w-12 rounded bg-orange-500/10 border border-orange-500/30 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
+                      <item.icon className="h-6 w-6 text-orange-500" />
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-green-500">{item.status}</span>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold tracking-wider">{item.title}</h3>
+                  <p className="text-neutral-500 text-sm leading-relaxed">{item.desc}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Grid */}
+      <section className="py-20 px-4 bg-neutral-900/50 border-y border-neutral-800">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="text-xs text-orange-500 tracking-widest mb-4">{`// SECURITY PROTOCOLS`}</div>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+              BUILT FOR SECURITY
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {[
+              {
+                icon: Shield,
+                title: "OVER-COLLATERALIZED",
+                desc: "All BTSUSD is backed by >150% Bitcoin collateral. Automated liquidations protect the protocol.",
+              },
+              {
+                icon: Lock,
+                title: "NON-CUSTODIAL",
+                desc: "Your keys, your coins. All assets remain in your control via smart contracts on Starknet.",
+              },
+              {
+                icon: Zap,
+                title: "INSTANT SETTLEMENT",
+                desc: "Starknet L2 enables near-instant transactions with minimal gas fees.",
+              },
+              {
+                icon: Activity,
+                title: "REAL-TIME MONITORING",
+                desc: "24/7 position monitoring with automated alerts and risk management tools.",
+              },
+            ].map((item, i) => (
+              <div
+                key={i}
+                className="p-6 rounded border border-neutral-800 bg-neutral-900/50 hover:border-neutral-700 transition-all flex gap-4"
+              >
+                <div className="h-10 w-10 rounded bg-neutral-800 flex items-center justify-center flex-shrink-0">
+                  <item.icon className="h-5 w-5 text-orange-500" />
+                </div>
+                <div>
+                  <h3 className="font-bold tracking-wider mb-2">{item.title}</h3>
+                  <p className="text-neutral-500 text-sm">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="text-xs text-orange-500 tracking-widest mb-4">{`// EXECUTION FLOW`}</div>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+              OPERATION SEQUENCE
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-4">
+            {[
+              { step: "01", title: "CONNECT", desc: "Link Starknet wallet" },
+              { step: "02", title: "DEPOSIT", desc: "Lock WBTC collateral" },
+              { step: "03", title: "MINT", desc: "Generate BTSUSD" },
+              { step: "04", title: "DEPLOY", desc: "Earn yield on DeFi" },
+            ].map((item, i) => (
+              <div key={i} className="relative">
+                <div className="p-6 rounded border border-neutral-800 bg-neutral-900/50 text-center hover:border-orange-500/30 transition-all">
+                  <div className="text-4xl font-bold text-orange-500/30 mb-4 font-mono">
+                    {item.step}
+                  </div>
+                  <h3 className="font-bold tracking-wider mb-2">{item.title}</h3>
+                  <p className="text-neutral-500 text-xs">{item.desc}</p>
+                </div>
+                {i < 3 && (
+                  <div className="hidden md:block absolute top-1/2 -right-2 transform -translate-y-1/2 z-10">
+                    <ChevronRight className="h-4 w-4 text-neutral-700" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-4 border-t border-neutral-800">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="p-12 rounded-lg border border-neutral-800 bg-gradient-to-b from-neutral-900 to-black relative overflow-hidden">
+            <div className="absolute inset-0 bg-orange-500/5" />
+            <div className="relative z-10 space-y-6">
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+                INITIALIZE PROTOCOL
+              </h2>
+              <p className="text-neutral-400 max-w-xl mx-auto">
+                Connect your Starknet wallet to access the Bitcoin Standard protocol.
+                Deposit BTC, mint stablecoins, and maximize your yield.
+              </p>
+              <div className="pt-4">
+                <CustomConnectButton />
+              </div>
             </div>
-            <span className="font-bold text-foreground text-xl tracking-tight">Bitcoin Standard</span>
           </div>
+        </div>
+      </section>
 
-          <p className="text-sm">© 2026 Bitcoin Standard. All rights reserved.</p>
-
-          <div className="flex space-x-6 mt-6 md:mt-0 text-sm font-medium">
-            <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-primary transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-primary transition-colors">Documentation</a>
+      {/* Footer */}
+      <footer className="py-8 px-4 border-t border-neutral-800">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-6 w-6 rounded bg-orange-500/20 flex items-center justify-center">
+              <Bitcoin className="h-3 w-3 text-orange-500" />
+            </div>
+            <span className="text-neutral-500 text-sm">BITCOIN STANDARD PROTOCOL</span>
+          </div>
+          <div className="text-neutral-600 text-xs">
+            DEPLOYED ON STARKNET • {new Date().getFullYear()}
+          </div>
+          <div className="flex gap-6 text-xs text-neutral-600">
+            <a href="#" className="hover:text-orange-500 transition-colors">DOCS</a>
+            <a href="#" className="hover:text-orange-500 transition-colors">GITHUB</a>
+            <a href="#" className="hover:text-orange-500 transition-colors">DISCORD</a>
           </div>
         </div>
       </footer>
     </div>
-  )
+  );
 }

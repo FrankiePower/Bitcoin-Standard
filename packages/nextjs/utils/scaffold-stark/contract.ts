@@ -372,8 +372,7 @@ export type UseScaffoldEventHistoryConfig<
   TReceiptData extends boolean = false,
 > = {
   contractName: TContractName;
-  eventName: // | IsContractDeclarationMissing<string, TEventName>
-  BaseName<IsContractDeclarationMissing<string, TEventName>>;
+  eventName: BaseName<IsContractDeclarationMissing<string, TEventName>>; // | IsContractDeclarationMissing<string, TEventName>
   fromBlock: bigint;
   filters?: { [key: string]: any };
   blockData?: TBlockData;

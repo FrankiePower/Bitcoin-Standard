@@ -172,12 +172,10 @@ module.exports = {
       backgroundImage: {
         "gradient-light":
           "linear-gradient(270deg, #F7931A -17.42%, #000000 109.05%)",
-        "gradient-dark":
-          "linear-gradient(90deg, #F7931A 0%, #000000 100%)",
+        "gradient-dark": "linear-gradient(90deg, #F7931A 0%, #000000 100%)",
         "gradient-vertical":
           "linear-gradient(180deg, #F7931A 0%, #D97706 100%)",
-        "gradient-icon":
-          "linear-gradient(90deg, #F7931A 0%, #000000 100%)",
+        "gradient-icon": "linear-gradient(90deg, #F7931A 0%, #000000 100%)",
       },
     },
   },

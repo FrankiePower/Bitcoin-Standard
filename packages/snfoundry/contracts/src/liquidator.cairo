@@ -5,16 +5,15 @@
 
 #[starknet::contract]
 pub mod Liquidator {
-    use starknet::{ContractAddress, get_caller_address, get_block_timestamp};
-    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
-    use openzeppelin_token::erc20::interface::{IERC20Dispatcher, IERC20DispatcherTrait};
+    use contracts::interfaces::{
+        IBTSUSDVaultDispatcher, IBTSUSDVaultDispatcherTrait, ILiquidator, ILiquidatorAdmin,
+        IPriceOracleDispatcher, IPriceOracleDispatcherTrait, LiquidationResult,
+    };
     use openzeppelin_access::ownable::OwnableComponent;
     use openzeppelin_security::pausable::PausableComponent;
-    use contracts::interfaces::{
-        IBTSUSDVaultDispatcher, IBTSUSDVaultDispatcherTrait,
-        IPriceOracleDispatcher, IPriceOracleDispatcherTrait,
-        ILiquidator, ILiquidatorAdmin, LiquidationResult,
-    };
+    use openzeppelin_token::erc20::interface::{IERC20Dispatcher, IERC20DispatcherTrait};
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use starknet::{ContractAddress, get_block_timestamp, get_caller_address};
 
     // ================================================================================================
     // COMPONENTS
@@ -34,10 +33,10 @@ pub mod Liquidator {
 
     const PRECISION: u256 = 10000;
     const DEFAULT_LIQUIDATION_PENALTY: u256 = 1000; // 10%
-    const DEFAULT_LIQUIDATOR_REWARD: u256 = 500;    // 5%
-    const DEFAULT_CLOSE_FACTOR: u256 = 5000;        // 50%
-    const LIQUIDATION_THRESHOLD: u256 = 12000;      // 120%
-    const WBTC_DECIMALS: u256 = 100000000;          // 1e8
+    const DEFAULT_LIQUIDATOR_REWARD: u256 = 500; // 5%
+    const DEFAULT_CLOSE_FACTOR: u256 = 5000; // 50%
+    const LIQUIDATION_THRESHOLD: u256 = 12000; // 120%
+    const WBTC_DECIMALS: u256 = 100000000; // 1e8
 
     // ================================================================================================
     // STORAGE
@@ -158,7 +157,9 @@ pub mod Liquidator {
             };
 
             let (collateral_seized, debt_repaid, liquidator_bonus) =
-                InternalImpl::_calculate_liquidation(@self, user, actual_amount);
+                InternalImpl::_calculate_liquidation(
+                @self, user, actual_amount,
+            );
 
             assert(btsusd.balance_of(caller) >= debt_repaid, Errors::INSUFFICIENT_BALANCE);
 
