@@ -2,10 +2,8 @@
 
 import type React from "react";
 import { Navbar } from "./navbar";
-import { Sidebar } from "./sidebar";
 import { useAccount } from "@starknet-react/core";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface DashboardLayoutProps {
@@ -21,52 +19,43 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     setMounted(true);
   }, []);
 
-  // Tactical loading screen
+  // Simple loading screen
   const LoadingScreen = () => (
-    <div className="min-h-screen bg-black flex items-center justify-center">
+    <div className="min-h-screen bg-[#fafafa] flex items-center justify-center">
       <div className="text-center">
-        <div className="w-16 h-16 border-2 border-neutral-800 border-t-orange-500 rounded-full animate-spin mx-auto mb-4" />
-        <div className="text-xs text-neutral-500 font-mono tracking-wider">
-          INITIALIZING_PROTOCOL...
-        </div>
+        <div className="w-12 h-12 border-2 border-neutral-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4" />
       </div>
     </div>
   );
 
-  // Show loading while mounting (to prevent hydration mismatch)
+  // Show loading while mounting
   if (!mounted) {
     return <LoadingScreen />;
   }
 
-  // Redirect to landing if not connected
-  if (status === "disconnected") {
-    router.push("/");
-    return <LoadingScreen />;
-  }
-
-  // Show loading while connecting
-  if (status === "connecting" || status === "reconnecting") {
-    return <LoadingScreen />;
-  }
-
   return (
-    <div className="min-h-screen bg-black flex flex-col">
+    <div className="min-h-screen bg-[#fafafa] flex flex-col text-black font-sans">
       <Navbar />
-      <div className="flex flex-1">
-        <Sidebar />
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-neutral-950">
-          {/* Grid background pattern */}
-          <div
-            className="fixed inset-0 pointer-events-none opacity-[0.02]"
-            style={{
-              backgroundImage: `linear-gradient(rgba(249, 115, 22, 0.3) 1px, transparent 1px),
-                               linear-gradient(90deg, rgba(249, 115, 22, 0.3) 1px, transparent 1px)`,
-              backgroundSize: "50px 50px",
-            }}
-          />
-          <div className="relative z-10">{children}</div>
-        </main>
-      </div>
+      <main className="flex-1 overflow-y-auto relative">
+        {/* Subtle background SVG lines similar to Spark */}
+        <div className="absolute top-0 right-0 w-[50vw] h-[80vh] pointer-events-none overflow-hidden opacity-30">
+          <svg
+            viewBox="0 0 500 500"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="absolute right-[-10%] top-[-10%] w-[120%] h-[120%]"
+          >
+           <path d="M 500 0 Q 300 250 0 500" stroke="#000" strokeWidth="0.5" fill="none" />
+           <path d="M 500 50 Q 320 280 0 600" stroke="#000" strokeWidth="0.5" fill="none" />
+           <path d="M 500 100 Q 340 310 0 700" stroke="#000" strokeWidth="0.5" fill="none" />
+           <path d="M 450 -50 Q 250 200 -50 450" stroke="#000" strokeWidth="0.5" fill="none" />
+           <path d="M 400 -100 Q 200 150 -100 400" stroke="#000" strokeWidth="0.5" fill="none" />
+          </svg>
+        </div>
+        <div className="relative z-10 p-6 md:p-8 max-w-[1400px] mx-auto w-full">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }

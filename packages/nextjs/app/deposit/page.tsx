@@ -1,363 +1,178 @@
 "use client";
 
-import { DashboardLayout } from "~~/components/layout/dashboard-layout";
-import { Button } from "~~/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~~/components/ui/card";
-import { Input } from "~~/components/ui/input";
-import { Badge } from "~~/components/ui/badge";
-import {
-  Copy,
-  ArrowRight,
-  CheckCircle2,
-  AlertCircle,
-  Wallet,
-  Loader2,
-  ArrowLeft,
-  RefreshCw,
-  Info,
-  Bitcoin,
-} from "lucide-react";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { toast } from "sonner";
 import { useAccount } from "@starknet-react/core";
+import { DashboardLayout } from "~~/components/layout/dashboard-layout";
+import { Info, Plus, Sparkles } from "lucide-react";
+import Image from "next/image";
+import React from "react";
 
-export default function DepositBitcoin() {
-  const router = useRouter();
-  const { address, status } = useAccount();
+export default function BorrowPage() {
+  const { status } = useAccount();
   const isConnected = status === "connected";
-
-  const [depositAmount, setDepositAmount] = useState("0.01");
-  const [isDepositing, setIsDepositing] = useState(false);
-  const [depositStatus, setDepositStatus] = useState<
-    "pending" | "processing" | "success"
-  >("pending");
-
-  // Mock collateral ratio calculation
-  const btcPrice = 97500; // Mock BTC price
-  const collateralValue = parseFloat(depositAmount || "0") * btcPrice;
-  const mintableAmount = collateralValue * 0.66; // 150% collateralization = 66% LTV
-
-  useEffect(() => {
-    if (!isConnected) {
-      router.push("/");
-    }
-  }, [isConnected, router]);
-
-  const handleDeposit = async () => {
-    if (!depositAmount || parseFloat(depositAmount) <= 0) {
-      toast.error("Please enter a valid amount");
-      return;
-    }
-
-    setIsDepositing(true);
-    setDepositStatus("processing");
-
-    // Simulate deposit transaction
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setDepositStatus("success");
-      toast.success("Bitcoin deposited successfully!", {
-        description: `${depositAmount} WBTC deposited as collateral`,
-      });
-
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 2000);
-    } catch (error) {
-      toast.error("Deposit failed. Please try again.");
-      setDepositStatus("pending");
-    } finally {
-      setIsDepositing(false);
-    }
-  };
-
-  const copyAddress = () => {
-    if (address) {
-      navigator.clipboard.writeText(address);
-      toast.success("Address copied to clipboard!");
-    }
-  };
-
-  if (!isConnected) {
-    return null;
-  }
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto">
-        <Button variant="ghost" className="mb-4 pl-0" asChild>
-          <Link href="/dashboard">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
-          </Link>
-        </Button>
+      <div className="max-w-[1100px] mx-auto py-4">
+        <h1 className="text-[40px] font-bold tracking-tight text-black mb-8">
+          Easy Borrow
+        </h1>
 
-        {/* Page Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Deposit Bitcoin
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Deposit wrapped Bitcoin (WBTC) as collateral to mint BTSUSD
-              stablecoins.
-            </p>
+        <div className="flex flex-col lg:flex-row gap-6 relative z-10 items-start">
+          
+          {/* ── LEFT COLUMN (Interactive Area) ───────────────────── */}
+          <div className="flex-1 w-full space-y-6">
+            
+            {/* Deposit / Borrow Blocks */}
+            <div className="flex flex-col md:flex-row gap-4 relative">
+              {/* Decorative separator */}
+              <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white shadow-sm border border-neutral-100 items-center justify-center z-10 text-orange-400">
+                <Sparkles className="w-4 h-4" />
+              </div>
+
+              {/* Deposit Block */}
+              <div className="flex-1 bg-white border border-neutral-100 rounded-[20px] p-6 shadow-sm">
+                <div className="flex justify-between items-center mb-6">
+                  <div className="text-[15px] font-bold flex items-center gap-1.5">
+                    Deposit <Info className="w-4 h-4 text-neutral-400" />
+                  </div>
+                  <button className="text-[13px] text-neutral-500 hover:text-black font-semibold flex items-center transition-colors">
+                    Add more <Plus className="w-3.5 h-3.5 ml-0.5" />
+                  </button>
+                </div>
+                
+                <div className="bg-[#fcf8f3]/50 border border-[#f97316]/20 rounded-[16px] p-4 flex items-center justify-between">
+                  <button className="flex items-center gap-2.5 px-3 py-2 bg-white rounded-[12px] border border-neutral-200 shadow-sm hover:border-neutral-300 transition-colors">
+                    <Image src="/bitcoin-btc-logo.svg" alt="WBTC" width={22} height={22} />
+                    <span className="font-bold text-[15px]">WBTC</span>
+                    <svg className="w-4 h-4 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                  </button>
+                  <div className="text-right">
+                    <div className="text-[20px] font-medium text-neutral-300">0</div>
+                    <div className="text-[12px] text-neutral-400">$0.00</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Borrow Block */}
+              <div className="flex-1 bg-white border border-neutral-100 rounded-[20px] p-6 shadow-sm">
+                <div className="flex justify-between items-center mb-6">
+                  <div className="text-[15px] font-bold">Borrow</div>
+                </div>
+                
+                <div className="bg-[#fcf8f3]/50 border border-[#f97316]/20 rounded-[16px] p-4 flex items-center justify-between">
+                  <button className="flex items-center gap-2.5 px-3 py-2 bg-white rounded-[12px] border border-neutral-200 shadow-sm hover:border-neutral-300 transition-colors">
+                    <div className="w-[22px] h-[22px] rounded-full bg-[#f97316] p-1 flex items-center justify-center">
+                      <Image src="/bitcoin-btc-logo.svg" alt="BTSUSD" width={14} height={14} className="brightness-0 invert" />
+                    </div>
+                    <span className="font-bold text-[15px]">BTSUSD</span>
+                    <svg className="w-4 h-4 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                  </button>
+                  <div className="text-right">
+                    <div className="text-[20px] font-medium text-neutral-300">0</div>
+                    <div className="text-[12px] text-neutral-400">$0.00</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Loan to Value (LTV) Block */}
+            <div className="bg-white border border-neutral-100 rounded-[20px] p-6 shadow-sm">
+              <div className="flex justify-between items-start mb-6 w-full">
+                <div>
+                  <h3 className="text-[18px] font-bold tracking-tight mb-1">Loan to Value (LTV)</h3>
+                  <p className="text-[13px] text-neutral-500 font-medium">Ratio of the collateral value to the borrowed value</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-[18px] font-bold mb-1">0.00%</div>
+                  <div className="text-[13px] text-neutral-500 font-medium tracking-tight">max. 66.00%</div>
+                </div>
+              </div>
+
+              {/* LTV Slider Bar */}
+              <div className="w-full relative pt-6 pb-2">
+                <div className="absolute top-2 right-[25%] text-[10px] text-[#f43f5e] font-bold tracking-tight">66.00%</div>
+                
+                <div className="h-3 w-full bg-neutral-100 rounded-full flex overflow-hidden">
+                  <div className="h-full bg-emerald-100 relative" style={{ width: "30%" }}>
+                    {/* Tiny sun/sparkle at 0 */}
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full border border-emerald-400 flex items-center justify-center shadow-sm">
+                      <Sparkles className="w-2.5 h-2.5 text-emerald-500" />
+                    </div>
+                  </div>
+                  <div className="h-full bg-neutral-100 flex-1 border-l border-white"></div>
+                  <div className="h-full bg-neutral-100 flex-1 border-l border-white"></div>
+                  {/* Liquidation threshold marker */}
+                  <div className="w-[20%] h-full bg-neutral-100 border-l border-[#f43f5e]/30 relative">
+                     <div className="absolute left-0 -top-1 -bottom-1 w-px bg-[#f43f5e]"></div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between mt-3 text-[10px] font-bold text-neutral-400 uppercase tracking-widest px-2">
+                  <span className="text-black">Conservative</span>
+                  <span>Moderate</span>
+                  <span>Aggressive</span>
+                  <span>Liquidation</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Promo Banner */}
+            <div className="relative overflow-hidden bg-[#1a1226] text-white rounded-[20px] p-8 md:p-12 shadow-md mt-4">
+              {/* Background gradient waves */}
+               <div className="absolute inset-0 pointer-events-none opacity-50">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,#fb923c_0%,transparent_60%)] opacity-30"></div>
+                <svg viewBox="0 0 500 200" fill="none" className="absolute bottom-0 w-full h-full" preserveAspectRatio="none">
+                  <path d="M 0 200 Q 250 50 500 200" stroke="#f43f5e" strokeWidth="2" fill="none" />
+                  <path d="M 0 200 Q 250 80 500 200" stroke="#f43f5e" strokeWidth="1" fill="none" />
+                  <path d="M 0 200 Q 250 110 500 200" stroke="#f43f5e" strokeWidth="0.5" fill="none" />
+                </svg>
+              </div>
+
+              <div className="relative z-10 flex flex-col items-center text-center">
+                <h2 className="text-3xl md:text-[36px] font-bold tracking-tight mb-8">
+                  Connect your wallet to use<br/>Bitcoin Standard
+                </h2>
+
+                <div className="flex items-center gap-2 mb-8 bg-black/40 p-2 rounded-full border border-white/5">
+                  <div className="w-8 h-8 rounded-full bg-[#f97316] flex items-center justify-center p-1.5 z-40"><Image src="/bitcoin-btc-logo.svg" alt="BTC" width={20} height={20} className="w-full h-full object-contain" /></div>
+                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center p-1.5 -ml-4 z-30 ring-2 ring-[#1a1226]"><span className="font-bold text-[10px]">ETH</span></div>
+                  <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center -ml-4 z-20 ring-2 ring-[#1a1226]"><span className="font-bold text-[10px]">$</span></div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <button
+                    className="px-6 py-3.5 rounded-full text-[15px] font-bold text-white transition-all hover:opacity-90 active:scale-95 shadow-lg w-full sm:w-auto min-w-[160px]"
+                    style={{ background: "linear-gradient(135deg, #f97316 0%, #fb923c 100%)" }}
+                  >
+                    Connect wallet
+                  </button>
+                  <button className="px-6 py-3.5 rounded-full text-[15px] font-semibold text-white bg-white/10 hover:bg-white/15 border border-white/10 transition-colors flex items-center gap-2 justify-center w-full sm:w-auto min-w-[160px]">
+                    <Sparkles className="w-4 h-4" /> Try in Sandbox
+                  </button>
+                </div>
+              </div>
+            </div>
+
           </div>
-          <Badge
-            variant={depositStatus === "success" ? "default" : "secondary"}
-            className={
-              depositStatus === "success"
-                ? "bg-green-500 hover:bg-green-600"
-                : ""
-            }
-          >
-            {depositStatus === "success" && (
-              <CheckCircle2 className="h-3 w-3 mr-1" />
-            )}
-            {depositStatus === "success"
-              ? "Deposited"
-              : depositStatus === "processing"
-                ? "Processing..."
-                : "Ready"}
-          </Badge>
-        </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Left: Vault Info */}
-          <div className="lg:col-span-1 space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Wallet className="h-4 w-4" /> Your Vault
-                </CardTitle>
-                <CardDescription>Starknet CDP Position</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center space-y-4">
-                <div className="w-full space-y-1">
-                  <p className="text-xs text-muted-foreground">
-                    Connected Address
-                  </p>
-                  <div className="flex gap-2">
-                    <Input
-                      value={
-                        address
-                          ? `${address.slice(0, 10)}...${address.slice(-8)}`
-                          : ""
-                      }
-                      readOnly
-                      className="font-mono text-xs bg-muted/50"
-                    />
-                    <Button variant="outline" size="icon" onClick={copyAddress}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="w-full bg-muted/50 rounded-lg p-3 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      Current Collateral
-                    </span>
-                    <span className="font-medium">0.00 WBTC</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">BTSUSD Minted</span>
-                    <span className="font-medium">0.00 BTSUSD</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Health Factor</span>
-                    <span className="font-medium text-green-500">--</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Deposit status card */}
-            <Card
-              className={
-                depositStatus === "success"
-                  ? "bg-green-500/10 border-green-500/20"
-                  : ""
-              }
-            >
-              <CardContent className="pt-6 flex flex-col items-center text-center space-y-3">
-                {depositStatus === "success" ? (
-                  <>
-                    <div className="h-10 w-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                      <CheckCircle2 className="h-5 w-5 text-green-500" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-green-600">
-                        Deposit Complete!
-                      </h3>
-                      <p className="text-xs text-muted-foreground">
-                        Your collateral is ready to mint BTSUSD.
-                      </p>
-                    </div>
-                    <Button
-                      onClick={() => router.push("/dashboard")}
-                      className="bg-green-600 hover:bg-green-700 w-full"
-                    >
-                      Go to Dashboard
-                    </Button>
-                  </>
-                ) : (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Info className="h-4 w-4" />
-                    <span>Deposit WBTC to enable minting</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          {/* ── RIGHT COLUMN (Rates Panel) ────────────────────────── */}
+          <div className="w-full lg:w-[320px] shrink-0">
+            <div className="bg-[#1c1c1e] text-white rounded-[20px] p-6 shadow-lg relative overflow-hidden">
+               {/* Abstract curve background */}
+               <div className="absolute -right-8 -top-8 w-40 h-40 bg-[#f97316]/10 rounded-full blur-3xl"></div>
+              
+              <div className="flex items-center gap-2 text-[15px] font-bold text-neutral-300 mb-2 relative z-10">
+                <span className="w-5 h-5 rounded-full bg-[#f97316] p-1 flex items-center justify-center">
+                   <Image src="/bitcoin-btc-logo.svg" alt="BTSUSD" width={10} height={10} className="brightness-0 invert" />
+                </span>
+                Borrow Rate
+              </div>
+              <div className="text-[52px] font-bold tracking-tight text-[#fef3c7] relative z-10" style={{ letterSpacing: "-0.04em" }}>
+                2.50%
+              </div>
+            </div>
           </div>
 
-          {/* Right: Deposit Form */}
-          <div className="lg:col-span-2 space-y-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Bitcoin className="h-4 w-4 text-orange-500" /> Deposit
-                  Collateral
-                </CardTitle>
-                <CardDescription>
-                  Deposit wrapped Bitcoin (WBTC) to your vault position.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Amount Input */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Deposit Amount</label>
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex-1">
-                      <Input
-                        type="number"
-                        value={depositAmount}
-                        onChange={(e) => setDepositAmount(e.target.value)}
-                        placeholder="0.00"
-                        step="0.001"
-                        min="0"
-                        className="pr-16"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                        WBTC
-                      </span>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setDepositAmount("0.1")}
-                    >
-                      Max
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Collateral Preview */}
-                <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-                  <h4 className="text-sm font-medium">Position Preview</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground">
-                        Collateral Value
-                      </p>
-                      <p className="text-lg font-bold">
-                        ${collateralValue.toLocaleString()}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">
-                        Max Mintable BTSUSD
-                      </p>
-                      <p className="text-lg font-bold text-primary">
-                        ${mintableAmount.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Info className="h-3 w-3" />
-                    <span>150% minimum collateralization ratio required</span>
-                  </div>
-                </div>
-
-                {/* BTC Price Info */}
-                <div className="flex items-center justify-between text-sm bg-orange-500/10 rounded-lg px-4 py-3 border border-orange-500/20">
-                  <div className="flex items-center gap-2">
-                    <Bitcoin className="h-4 w-4 text-orange-500" />
-                    <span className="text-muted-foreground">
-                      Current BTC Price
-                    </span>
-                  </div>
-                  <span className="font-bold">
-                    ${btcPrice.toLocaleString()}
-                  </span>
-                </div>
-
-                {/* Deposit Button */}
-                <Button
-                  className="w-full"
-                  size="lg"
-                  onClick={handleDeposit}
-                  disabled={
-                    isDepositing ||
-                    !depositAmount ||
-                    parseFloat(depositAmount) <= 0
-                  }
-                >
-                  {isDepositing ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Depositing...
-                    </>
-                  ) : (
-                    <>
-                      Deposit {depositAmount || "0"} WBTC
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
-                  )}
-                </Button>
-
-                <p className="text-xs text-muted-foreground text-center">
-                  You will need to approve the WBTC token transfer first.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Info Card */}
-            <Card className="bg-muted/30">
-              <CardContent className="pt-6">
-                <div className="flex gap-3">
-                  <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                  <div className="space-y-2 text-sm">
-                    <p className="font-medium">How Bitcoin Collateral Works</p>
-                    <ul className="text-muted-foreground space-y-1 list-disc list-inside">
-                      <li>
-                        Deposit WBTC (wrapped Bitcoin) as collateral into your
-                        vault
-                      </li>
-                      <li>
-                        Mint BTSUSD stablecoins up to 66% of your collateral
-                        value (150% ratio)
-                      </li>
-                      <li>
-                        Your Bitcoin remains secure and earns no interest while
-                        locked
-                      </li>
-                      <li>
-                        Repay BTSUSD + fees to withdraw your Bitcoin anytime
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </div>
     </DashboardLayout>

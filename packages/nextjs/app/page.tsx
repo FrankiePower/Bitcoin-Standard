@@ -4,7 +4,13 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useAccount } from "@starknet-react/core";
 import { useRouter } from "next/navigation";
-import { ArrowUpRight, TrendingUp, Landmark, Coins, Repeat2 } from "lucide-react";
+import {
+  ArrowUpRight,
+  TrendingUp,
+  Landmark,
+  Coins,
+  Repeat2,
+} from "lucide-react";
 import { CustomConnectButton } from "~~/components/scaffold-stark/CustomConnectButton";
 
 export default function LandingPage() {
@@ -21,7 +27,10 @@ export default function LandingPage() {
   return (
     <div
       className="min-h-screen text-black overflow-x-hidden"
-      style={{ fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif", background: "#ffffff" }}
+      style={{
+        fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
+        background: "#ffffff",
+      }}
     >
       {/* ── NAV (scrolls with page) ───────────────────────────── */}
       <nav
@@ -32,8 +41,15 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-2.5">
-            <Image src="/bitcoin-btc-logo.svg" alt="Bitcoin" width={26} height={26} />
-            <span className="font-semibold text-base tracking-tight">The Bitcoin Standard</span>
+            <Image
+              src="/bitcoin-btc-logo.svg"
+              alt="Bitcoin"
+              width={26}
+              height={26}
+            />
+            <span className="font-semibold text-base tracking-tight">
+              The Bitcoin Standard
+            </span>
           </div>
 
           {/* Nav right */}
@@ -64,7 +80,10 @@ export default function LandingPage() {
       </nav>
 
       {/* ── SECTION 1: HERO ─────────────────────────────────────── */}
-      <section className="relative overflow-hidden flex items-center" style={{ minHeight: "calc(100vh - 65px)" }}>
+      <section
+        className="relative overflow-hidden flex items-center"
+        style={{ minHeight: "calc(100vh - 65px)" }}
+      >
         {/* Warm gradient + SVG lines */}
         <div className="absolute inset-0 pointer-events-none">
           <div
@@ -84,15 +103,19 @@ export default function LandingPage() {
               ["M 700 -30 Q 540 200 310 410 Q 110 600 -50 880", "0.10"],
               ["M 700 30  Q 520 230 300 430 Q 100 620 -50 930", "0.09"],
               ["M 700 90  Q 500 260 280 450 Q 90  640 -50 980", "0.08"],
-              ["M 700 150 Q 480 290 260 470 Q 75  660 -50 1030","0.07"],
-              ["M 700 210 Q 460 330 240 490 Q 60  680 -50 1080","0.06"],
-              ["M 700 270 Q 440 370 220 510 Q 45  700 -50 1130","0.055"],
-              ["M 700 60  Q 570 190 390 370 Q 200 540 -50 840",  "0.13"],
+              ["M 700 150 Q 480 290 260 470 Q 75  660 -50 1030", "0.07"],
+              ["M 700 210 Q 460 330 240 490 Q 60  680 -50 1080", "0.06"],
+              ["M 700 270 Q 440 370 220 510 Q 45  700 -50 1130", "0.055"],
+              ["M 700 60  Q 570 190 390 370 Q 200 540 -50 840", "0.13"],
             ].map(([d, opacity], i) => (
               <path
                 key={i}
                 d={d}
-                stroke={i === 6 ? `rgba(249,115,22,${opacity})` : `rgba(0,0,0,${opacity})`}
+                stroke={
+                  i === 6
+                    ? `rgba(249,115,22,${opacity})`
+                    : `rgba(0,0,0,${opacity})`
+                }
                 strokeWidth={i === 6 ? "1.2" : "1"}
                 fill="none"
               />
@@ -129,8 +152,8 @@ export default function LandingPage() {
 
             {/* Subtext */}
             <p className="text-lg text-neutral-500 max-w-sm leading-relaxed mb-10">
-              Deposit WBTC as collateral. Mint BTSUSD. Earn yield.
-              Decentralized CDP protocol on Starknet — non-custodial, over-collateralized.
+              Deposit WBTC as collateral. Mint BTSUSD. Earn yield. Decentralized
+              CDP protocol on Starknet — non-custodial, over-collateralized.
             </p>
 
             {/* CTA */}
@@ -177,7 +200,10 @@ export default function LandingPage() {
             >
               $0.00
             </div>
-            <div className="mt-5 pt-5" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            <div
+              className="mt-5 pt-5"
+              style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+            >
               <div className="flex items-center gap-2 text-xs text-neutral-500">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
                 All systems operational
@@ -189,7 +215,10 @@ export default function LandingPage() {
 
       {/* ── SECTION 2: WHAT YOU CAN DO WITH BTSUSD ──────────────── */}
       <section
-        style={{ borderTop: "1px solid rgba(0,0,0,0.07)", background: "#fafafa" }}
+        style={{
+          borderTop: "1px solid rgba(0,0,0,0.07)",
+          background: "#fafafa",
+        }}
         className="py-24 px-6 lg:px-8"
       >
         <div className="max-w-7xl mx-auto">
@@ -254,7 +283,9 @@ export default function LandingPage() {
                 </div>
 
                 <h3 className="text-lg font-bold mb-2">{item.title}</h3>
-                <p className="text-neutral-500 text-sm leading-relaxed mb-6">{item.desc}</p>
+                <p className="text-neutral-500 text-sm leading-relaxed mb-6">
+                  {item.desc}
+                </p>
 
                 {/* Tag */}
                 <span
@@ -279,16 +310,27 @@ export default function LandingPage() {
       >
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <Image src="/bitcoin-btc-logo.svg" alt="Bitcoin" width={22} height={22} />
+            <Image
+              src="/bitcoin-btc-logo.svg"
+              alt="Bitcoin"
+              width={22}
+              height={22}
+            />
             <span className="text-sm font-semibold">Bitcoin Standard</span>
             <span className="text-neutral-300 text-sm">·</span>
             <span className="text-neutral-400 text-sm">Starknet</span>
           </div>
 
           <div className="flex items-center gap-6 text-sm text-neutral-400">
-            <a href="#" className="hover:text-black transition-colors">Docs</a>
-            <a href="#" className="hover:text-black transition-colors">GitHub</a>
-            <a href="#" className="hover:text-black transition-colors">Discord</a>
+            <a href="#" className="hover:text-black transition-colors">
+              Docs
+            </a>
+            <a href="#" className="hover:text-black transition-colors">
+              GitHub
+            </a>
+            <a href="#" className="hover:text-black transition-colors">
+              Discord
+            </a>
           </div>
 
           <div className="text-xs text-neutral-400">
