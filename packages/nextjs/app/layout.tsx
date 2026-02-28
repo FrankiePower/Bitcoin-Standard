@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: "Bitcoin Standard — BTC-Backed Stablecoins on Starknet",
   description:
     "Deposit WBTC, mint BTSUSD stablecoins, and earn yield. A decentralized CDP protocol on Starknet L2.",
-  icons: "/logo.ico",
+  icons: "/bitcoin-btc-logo.svg",
 };
 
 const ScaffoldStarkApp = ({ children }: { children: React.ReactNode }) => {
