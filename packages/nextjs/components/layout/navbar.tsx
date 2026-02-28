@@ -31,11 +31,15 @@ export function Navbar() {
       {/* Main Navbar */}
       <nav className="border-b border-black/5 bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-[1400px] mx-auto px-4 md:px-8 h-[68px] flex justify-between items-center">
-          
           {/* Left Section */}
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2 mr-2">
-              <Image src="/bitcoin-btc-logo.svg" alt="Bitcoin Standard" width={32} height={32} />
+              <Image
+                src="/bitcoin-btc-logo.svg"
+                alt="Bitcoin Standard"
+                width={32}
+                height={32}
+              />
             </Link>
 
             <div className="hidden md:flex items-center gap-2">
@@ -52,11 +56,19 @@ export function Navbar() {
                     }`}
                   >
                     {link.badge && (
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)" }} />
+                      <div
+                        className="w-2.5 h-2.5 rounded-full"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
+                        }}
+                      />
                     )}
                     {link.name}
                     {link.badge && (
-                      <span className="text-green-600 font-bold ml-0.5">{link.badge}</span>
+                      <span className="text-green-600 font-bold ml-0.5">
+                        {link.badge}
+                      </span>
                     )}
                   </Link>
                 );
@@ -76,7 +88,13 @@ export function Navbar() {
             </div>
 
             <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center border border-black/10">
-              <Image src="/bitcoin-btc-logo.svg" alt="Network" width={16} height={16} className="opacity-70" />
+              <Image
+                src="/bitcoin-btc-logo.svg"
+                alt="Network"
+                width={16}
+                height={16}
+                className="opacity-70"
+              />
             </div>
 
             <div className="relative">
@@ -85,14 +103,18 @@ export function Navbar() {
               </div>
               <button
                 className="flex items-center gap-1.5 px-5 py-2.5 text-[15px] font-semibold text-white rounded-full transition-all hover:opacity-90 active:scale-95 shadow-sm"
-                style={{ background: "linear-gradient(135deg, #f97316 0%, #fb923c 100%)", pointerEvents: "none" }}
+                style={{
+                  background:
+                    "linear-gradient(135deg, #f97316 0%, #fb923c 100%)",
+                  pointerEvents: "none",
+                }}
               >
                 {isConnected ? "Connected" : "Connect Wallet"}
               </button>
             </div>
 
             {isConnected && (
-              <button 
+              <button
                 onClick={() => disconnect()}
                 className="w-10 h-10 rounded-full flex items-center justify-center text-neutral-400 hover:text-black hover:bg-black/5 transition-all"
                 title="Disconnect"
@@ -105,7 +127,6 @@ export function Navbar() {
               <Menu className="w-4 h-4" />
             </button>
           </div>
-
         </div>
       </nav>
     </>

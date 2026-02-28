@@ -45,11 +45,36 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             xmlns="http://www.w3.org/2000/svg"
             className="absolute right-[-10%] top-[-10%] w-[120%] h-[120%]"
           >
-           <path d="M 500 0 Q 300 250 0 500" stroke="#000" strokeWidth="0.5" fill="none" />
-           <path d="M 500 50 Q 320 280 0 600" stroke="#000" strokeWidth="0.5" fill="none" />
-           <path d="M 500 100 Q 340 310 0 700" stroke="#000" strokeWidth="0.5" fill="none" />
-           <path d="M 450 -50 Q 250 200 -50 450" stroke="#000" strokeWidth="0.5" fill="none" />
-           <path d="M 400 -100 Q 200 150 -100 400" stroke="#000" strokeWidth="0.5" fill="none" />
+            <path
+              d="M 500 0 Q 300 250 0 500"
+              stroke="#000"
+              strokeWidth="0.5"
+              fill="none"
+            />
+            <path
+              d="M 500 50 Q 320 280 0 600"
+              stroke="#000"
+              strokeWidth="0.5"
+              fill="none"
+            />
+            <path
+              d="M 500 100 Q 340 310 0 700"
+              stroke="#000"
+              strokeWidth="0.5"
+              fill="none"
+            />
+            <path
+              d="M 450 -50 Q 250 200 -50 450"
+              stroke="#000"
+              strokeWidth="0.5"
+              fill="none"
+            />
+            <path
+              d="M 400 -100 Q 200 150 -100 400"
+              stroke="#000"
+              strokeWidth="0.5"
+              fill="none"
+            />
           </svg>
         </div>
         <div className="relative z-10 p-6 md:p-8 max-w-[1400px] mx-auto w-full">
