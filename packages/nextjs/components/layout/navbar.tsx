@@ -97,21 +97,7 @@ export function Navbar() {
               />
             </div>
 
-            <div className="relative">
-              <div className="opacity-0 absolute inset-0 z-10 pointer-events-auto">
-                <CustomConnectButton />
-              </div>
-              <button
-                className="flex items-center gap-1.5 px-5 py-2.5 text-[15px] font-semibold text-white rounded-full transition-all hover:opacity-90 active:scale-95 shadow-sm"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #f97316 0%, #fb923c 100%)",
-                  pointerEvents: "none",
-                }}
-              >
-                {isConnected ? "Connected" : "Connect Wallet"}
-              </button>
-            </div>
+            <CustomConnectButton />
 
             {isConnected && (
               <button

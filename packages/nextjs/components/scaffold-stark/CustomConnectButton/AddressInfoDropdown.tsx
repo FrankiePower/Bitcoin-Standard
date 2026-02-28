@@ -24,6 +24,8 @@ import { Address } from "@starknet-react/chains";
 import { useDisconnect, useNetwork, useConnect } from "@starknet-react/core";
 import { useScaffoldStarkProfile } from "~~/hooks/scaffold-stark/useScaffoldStarkProfile";
 import { useTheme } from "next-themes";
+import { useXverseWallet } from "~~/hooks/useXverseWallet";
+import Image from "next/image";
 
 const allowedNetworks = getTargetNetworks();
 
@@ -46,6 +48,7 @@ export const AddressInfoDropdown = ({
   const [selectingNetwork, setSelectingNetwork] = useState(false);
   const { connectors, connect } = useConnect();
   const { resolvedTheme } = useTheme();
+  const { btcAddress, isBtcConnected, connectBtc, disconnectBtc } = useXverseWallet();
   const isDarkMode = resolvedTheme === "dark";
   const dropdownRef = useRef<HTMLDetailsElement>(null);
   const closeDropdown = () => {
@@ -100,7 +103,12 @@ export const AddressInfoDropdown = ({
   return (
     <>
       <details ref={dropdownRef} className="dropdown dropdown-end leading-3">
-        <summary className="btn bg-transparent btn-sm px-2 py-[0.35rem] dropdown-toggle gap-0 !h-auto border border-primary/20 hover:border-primary">
+        <summary
+          className="flex items-center justify-center gap-1.5 px-5 py-2.5 text-[15px] font-semibold text-white rounded-full transition-all hover:opacity-90 active:scale-95 shadow-sm cursor-pointer border-none m-0"
+          style={{
+            background: "linear-gradient(135deg, #f97316 0%, #fb923c 100%)",
+          }}
+        >
           <div className="hidden [@media(min-width:412px)]:block">
             <Avatar
               address={address}
@@ -271,6 +279,37 @@ export const AddressInfoDropdown = ({
               </button>
             </li>
           ) : null} */}
+
+          {/* Bitcoin Wallet Integration */}
+          <li className={selectingNetwork ? "hidden" : ""}>
+            {isBtcConnected ? (
+              <div className="flex flex-col gap-1 w-full bg-orange-500/5 p-2 rounded-xl mb-1 border border-orange-500/10">
+                <div className="flex items-center gap-2 mb-1">
+                  <Image src="/bitcoin-btc-logo.svg" alt="BTC" width={14} height={14} />
+                  <span className="text-xs font-semibold text-orange-600">Bitcoin Connected</span>
+                </div>
+                <div className="flex justify-between items-center w-full">
+                  <span className="text-xs font-mono">{`${btcAddress?.slice(0, 8)}...${btcAddress?.slice(-6)}`}</span>
+                  <button onClick={disconnectBtc} className="text-[10px] text-red-500 hover:text-red-700 underline">Disconnect</button>
+                </div>
+              </div>
+            ) : (
+              <button
+                className="btn-sm !rounded-xl flex gap-3 w-full py-3 hover:bg-orange-500/10 hover:text-orange-600 transition-colors"
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  connectBtc();
+                }}
+              >
+                <div className="flex bg-orange-100 rounded-full p-0.5 ml-2 sm:ml-0">
+                  <Image src="/bitcoin-btc-logo.svg" alt="BTC" width={16} height={16} />
+                </div>
+                <span>Connect Bitcoin Wallet</span>
+              </button>
+            )}
+          </li>
+
           <li className={selectingNetwork ? "hidden" : "p-0"}>
             <button
               className="menu-item text-secondary-content btn-sm text-sm !rounded-xl flex gap-3"
