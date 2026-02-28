@@ -264,9 +264,10 @@ export default function CreateVault() {
                     What happens next?
                   </p>
                   <p className="text-muted-foreground">
-                    Your vault position will be initialized on the Bitcoin Standard
-                    protocol. You can then deposit WBTC as collateral and mint
-                    BTSUSD stablecoins at your desired collateralization ratio.
+                    Your vault position will be initialized on the Bitcoin
+                    Standard protocol. You can then deposit WBTC as collateral
+                    and mint BTSUSD stablecoins at your desired
+                    collateralization ratio.
                   </p>
                 </div>
               </div>

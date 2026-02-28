@@ -139,8 +139,10 @@
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #404040;
   --sidebar-ring: #f97316;
-  --font-sans: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
-  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  --font-sans:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
   --shadow-2xs: 0px 1px 2px 0px rgba(0, 0, 0, 0.5);
   --shadow-xs: 0px 1px 2px 0px rgba(0, 0, 0, 0.5);
   --shadow-sm: 0px 1px 3px 0px rgba(0, 0, 0, 0.5);

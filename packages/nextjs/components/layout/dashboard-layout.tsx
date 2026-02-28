@@ -64,9 +64,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               backgroundSize: "50px 50px",
             }}
           />
-          <div className="relative z-10">
-            {children}
-          </div>
+          <div className="relative z-10">{children}</div>
         </main>
       </div>
     </div>

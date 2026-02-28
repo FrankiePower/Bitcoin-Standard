@@ -98,7 +98,9 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Main Navigation */}
       <div className="flex-1 py-4">
         <div className="px-3 mb-2">
-          <span className="text-[10px] text-neutral-600 tracking-wider">MAIN_OPERATIONS</span>
+          <span className="text-[10px] text-neutral-600 tracking-wider">
+            MAIN_OPERATIONS
+          </span>
         </div>
         <div className="space-y-1 px-2">
           {mainRoutes.map((route) => (
@@ -109,13 +111,17 @@ export function Sidebar({ className }: SidebarProps) {
                 "flex items-center gap-3 px-3 py-2 text-xs font-mono transition-all group",
                 route.active
                   ? "bg-orange-500/10 text-orange-500 border-l-2 border-orange-500"
-                  : "text-neutral-400 hover:text-white hover:bg-neutral-900 border-l-2 border-transparent"
+                  : "text-neutral-400 hover:text-white hover:bg-neutral-900 border-l-2 border-transparent",
               )}
             >
-              <route.icon className={cn(
-                "w-4 h-4",
-                route.active ? "text-orange-500" : "text-neutral-500 group-hover:text-white"
-              )} />
+              <route.icon
+                className={cn(
+                  "w-4 h-4",
+                  route.active
+                    ? "text-orange-500"
+                    : "text-neutral-500 group-hover:text-white",
+                )}
+              />
               {route.label}
             </Link>
           ))}
@@ -124,7 +130,9 @@ export function Sidebar({ className }: SidebarProps) {
         {/* Dev Tools Section */}
         <div className="mt-6">
           <div className="px-3 mb-2">
-            <span className="text-[10px] text-neutral-600 tracking-wider">DEV_TOOLS</span>
+            <span className="text-[10px] text-neutral-600 tracking-wider">
+              DEV_TOOLS
+            </span>
           </div>
           <div className="space-y-1 px-2">
             {devRoutes.map((route) => (
@@ -135,13 +143,17 @@ export function Sidebar({ className }: SidebarProps) {
                   "flex items-center gap-3 px-3 py-2 text-xs font-mono transition-all group",
                   route.active
                     ? "bg-orange-500/10 text-orange-500 border-l-2 border-orange-500"
-                    : "text-neutral-400 hover:text-white hover:bg-neutral-900 border-l-2 border-transparent"
+                    : "text-neutral-400 hover:text-white hover:bg-neutral-900 border-l-2 border-transparent",
                 )}
               >
-                <route.icon className={cn(
-                  "w-4 h-4",
-                  route.active ? "text-orange-500" : "text-neutral-500 group-hover:text-white"
-                )} />
+                <route.icon
+                  className={cn(
+                    "w-4 h-4",
+                    route.active
+                      ? "text-orange-500"
+                      : "text-neutral-500 group-hover:text-white",
+                  )}
+                />
                 {route.label}
               </Link>
             ))}

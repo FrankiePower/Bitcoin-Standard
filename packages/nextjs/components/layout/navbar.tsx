@@ -23,7 +23,9 @@ export function Navbar() {
 
   useEffect(() => {
     const updateTime = () => {
-      setSystemTime(new Date().toISOString().replace("T", " ").slice(0, 19) + " UTC");
+      setSystemTime(
+        new Date().toISOString().replace("T", " ").slice(0, 19) + " UTC",
+      );
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
@@ -74,7 +76,11 @@ export function Navbar() {
                     {truncatedAddress}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-neutral-900 border-neutral-700" align="end" forceMount>
+                <DropdownMenuContent
+                  className="w-56 bg-neutral-900 border-neutral-700"
+                  align="end"
+                  forceMount
+                >
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-xs text-neutral-400">WALLET_ADDRESS</p>

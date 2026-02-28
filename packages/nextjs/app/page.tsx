@@ -53,7 +53,9 @@ export default function LandingPage() {
                 <Bitcoin className="h-4 w-4 text-orange-500" />
               </div>
               <div>
-                <span className="text-orange-500 font-bold tracking-wider">BTC STANDARD</span>
+                <span className="text-orange-500 font-bold tracking-wider">
+                  BTC STANDARD
+                </span>
                 <span className="text-neutral-600 text-xs ml-2">v1.0.0</span>
               </div>
             </div>
@@ -93,7 +95,9 @@ export default function LandingPage() {
             {/* Status Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded border border-orange-500/30 bg-orange-500/10 text-orange-500 text-sm">
               <Activity className="h-4 w-4 animate-pulse" />
-              <span className="tracking-wider">PROTOCOL ACTIVE • STARKNET L2</span>
+              <span className="tracking-wider">
+                PROTOCOL ACTIVE • STARKNET L2
+              </span>
             </div>
 
             {/* Main Title */}
@@ -117,18 +121,30 @@ export default function LandingPage() {
             {/* Stats Bar */}
             <div className="flex flex-wrap justify-center gap-8 pt-8 text-sm">
               <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white font-mono">$0.00</div>
-                <div className="text-neutral-500 text-xs tracking-wider">TVL LOCKED</div>
+                <div className="text-2xl md:text-3xl font-bold text-white font-mono">
+                  $0.00
+                </div>
+                <div className="text-neutral-500 text-xs tracking-wider">
+                  TVL LOCKED
+                </div>
               </div>
               <div className="w-px h-12 bg-neutral-800 hidden md:block" />
               <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white font-mono">150%</div>
-                <div className="text-neutral-500 text-xs tracking-wider">MIN COLLATERAL</div>
+                <div className="text-2xl md:text-3xl font-bold text-white font-mono">
+                  150%
+                </div>
+                <div className="text-neutral-500 text-xs tracking-wider">
+                  MIN COLLATERAL
+                </div>
               </div>
               <div className="w-px h-12 bg-neutral-800 hidden md:block" />
               <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white font-mono">0.5%</div>
-                <div className="text-neutral-500 text-xs tracking-wider">STABILITY FEE</div>
+                <div className="text-2xl md:text-3xl font-bold text-white font-mono">
+                  0.5%
+                </div>
+                <div className="text-neutral-500 text-xs tracking-wider">
+                  STABILITY FEE
+                </div>
               </div>
             </div>
 
@@ -179,7 +195,10 @@ export default function LandingPage() {
                 status: "OPERATIONAL",
               },
             ].map((item, i) => (
-              <Card key={i} className="bg-neutral-900 border-neutral-800 hover:border-orange-500/50 transition-all group">
+              <Card
+                key={i}
+                className="bg-neutral-900 border-neutral-800 hover:border-orange-500/50 transition-all group"
+              >
                 <CardContent className="p-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="h-12 w-12 rounded bg-orange-500/10 border border-orange-500/30 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
@@ -190,8 +209,12 @@ export default function LandingPage() {
                       <span className="text-green-500">{item.status}</span>
                     </div>
                   </div>
-                  <h3 className="text-lg font-bold tracking-wider">{item.title}</h3>
-                  <p className="text-neutral-500 text-sm leading-relaxed">{item.desc}</p>
+                  <h3 className="text-lg font-bold tracking-wider">
+                    {item.title}
+                  </h3>
+                  <p className="text-neutral-500 text-sm leading-relaxed">
+                    {item.desc}
+                  </p>
                 </CardContent>
               </Card>
             ))}
@@ -240,7 +263,9 @@ export default function LandingPage() {
                   <item.icon className="h-5 w-5 text-orange-500" />
                 </div>
                 <div>
-                  <h3 className="font-bold tracking-wider mb-2">{item.title}</h3>
+                  <h3 className="font-bold tracking-wider mb-2">
+                    {item.title}
+                  </h3>
                   <p className="text-neutral-500 text-sm">{item.desc}</p>
                 </div>
               </div>
@@ -271,7 +296,9 @@ export default function LandingPage() {
                   <div className="text-4xl font-bold text-orange-500/30 mb-4 font-mono">
                     {item.step}
                   </div>
-                  <h3 className="font-bold tracking-wider mb-2">{item.title}</h3>
+                  <h3 className="font-bold tracking-wider mb-2">
+                    {item.title}
+                  </h3>
                   <p className="text-neutral-500 text-xs">{item.desc}</p>
                 </div>
                 {i < 3 && (
@@ -295,8 +322,9 @@ export default function LandingPage() {
                 INITIALIZE PROTOCOL
               </h2>
               <p className="text-neutral-400 max-w-xl mx-auto">
-                Connect your Starknet wallet to access the Bitcoin Standard protocol.
-                Deposit BTC, mint stablecoins, and maximize your yield.
+                Connect your Starknet wallet to access the Bitcoin Standard
+                protocol. Deposit BTC, mint stablecoins, and maximize your
+                yield.
               </p>
               <div className="pt-4">
                 <CustomConnectButton />
@@ -313,15 +341,23 @@ export default function LandingPage() {
             <div className="h-6 w-6 rounded bg-orange-500/20 flex items-center justify-center">
               <Bitcoin className="h-3 w-3 text-orange-500" />
             </div>
-            <span className="text-neutral-500 text-sm">BITCOIN STANDARD PROTOCOL</span>
+            <span className="text-neutral-500 text-sm">
+              BITCOIN STANDARD PROTOCOL
+            </span>
           </div>
           <div className="text-neutral-600 text-xs">
             DEPLOYED ON STARKNET • {new Date().getFullYear()}
           </div>
           <div className="flex gap-6 text-xs text-neutral-600">
-            <a href="#" className="hover:text-orange-500 transition-colors">DOCS</a>
-            <a href="#" className="hover:text-orange-500 transition-colors">GITHUB</a>
-            <a href="#" className="hover:text-orange-500 transition-colors">DISCORD</a>
+            <a href="#" className="hover:text-orange-500 transition-colors">
+              DOCS
+            </a>
+            <a href="#" className="hover:text-orange-500 transition-colors">
+              GITHUB
+            </a>
+            <a href="#" className="hover:text-orange-500 transition-colors">
+              DISCORD
+            </a>
           </div>
         </div>
       </footer>

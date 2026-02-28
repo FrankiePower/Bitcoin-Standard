@@ -332,8 +332,8 @@ export default function YieldStrategies() {
             More Strategies Coming Soon
           </h3>
           <p className="text-muted-foreground mb-4">
-            Additional yield strategies are coming, including lending,
-            liquidity provision, and cross-chain opportunities.
+            Additional yield strategies are coming, including lending, liquidity
+            provision, and cross-chain opportunities.
           </p>
           <Button variant="outline" disabled>
             Suggest a Strategy

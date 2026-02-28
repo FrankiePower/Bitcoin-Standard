@@ -56,7 +56,9 @@ export default function Dashboard() {
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="w-12 h-12 border-2 border-neutral-800 border-t-orange-500 rounded-full animate-spin mx-auto mb-4" />
-              <div className="text-xs text-neutral-500 font-mono">LOADING_DATA...</div>
+              <div className="text-xs text-neutral-500 font-mono">
+                LOADING_DATA...
+              </div>
             </div>
           </div>
         </div>
@@ -83,7 +85,10 @@ export default function Dashboard() {
               SYSTEM_DASHBOARD
             </h1>
           </div>
-          <Button asChild className="bg-orange-500 hover:bg-orange-600 text-black font-mono text-xs">
+          <Button
+            asChild
+            className="bg-orange-500 hover:bg-orange-600 text-black font-mono text-xs"
+          >
             <Link href="/debug">
               <Bug className="mr-2 h-4 w-4" /> DEBUG_CONTRACTS
             </Link>
@@ -100,7 +105,9 @@ export default function Dashboard() {
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                <span className="text-xs text-green-500 font-mono">CONNECTED</span>
+                <span className="text-xs text-green-500 font-mono">
+                  CONNECTED
+                </span>
               </div>
             </div>
             <div className="flex gap-2">
@@ -182,8 +189,12 @@ export default function Dashboard() {
                 <div className="flex items-center gap-3">
                   <PlusCircle className="w-5 h-5 text-orange-500" />
                   <div>
-                    <div className="text-sm font-mono text-white">CREATE_VAULT</div>
-                    <div className="text-[10px] text-neutral-500">Initialize new CDP position</div>
+                    <div className="text-sm font-mono text-white">
+                      CREATE_VAULT
+                    </div>
+                    <div className="text-[10px] text-neutral-500">
+                      Initialize new CDP position
+                    </div>
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-neutral-600 group-hover:text-orange-500 transition-colors" />
@@ -196,8 +207,12 @@ export default function Dashboard() {
                 <div className="flex items-center gap-3">
                   <ArrowDownToLine className="w-5 h-5 text-orange-500" />
                   <div>
-                    <div className="text-sm font-mono text-white">DEPOSIT_BTC</div>
-                    <div className="text-[10px] text-neutral-500">Add collateral to vault</div>
+                    <div className="text-sm font-mono text-white">
+                      DEPOSIT_BTC
+                    </div>
+                    <div className="text-[10px] text-neutral-500">
+                      Add collateral to vault
+                    </div>
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-neutral-600 group-hover:text-orange-500 transition-colors" />
@@ -210,8 +225,12 @@ export default function Dashboard() {
                 <div className="flex items-center gap-3">
                   <TrendingUp className="w-5 h-5 text-orange-500" />
                   <div>
-                    <div className="text-sm font-mono text-white">YIELD_STRATEGIES</div>
-                    <div className="text-[10px] text-neutral-500">Optimize returns</div>
+                    <div className="text-sm font-mono text-white">
+                      YIELD_STRATEGIES
+                    </div>
+                    <div className="text-[10px] text-neutral-500">
+                      Optimize returns
+                    </div>
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-neutral-600 group-hover:text-orange-500 transition-colors" />
@@ -228,26 +247,38 @@ export default function Dashboard() {
 
             <div className="space-y-3">
               <div className="flex justify-between items-center p-3 bg-black/50 border border-neutral-800">
-                <span className="text-xs text-neutral-400 font-mono">NETWORK</span>
+                <span className="text-xs text-neutral-400 font-mono">
+                  NETWORK
+                </span>
                 <span className="text-xs text-white font-mono">STARKNET</span>
               </div>
               <div className="flex justify-between items-center p-3 bg-black/50 border border-neutral-800">
-                <span className="text-xs text-neutral-400 font-mono">COLLATERAL_TYPE</span>
+                <span className="text-xs text-neutral-400 font-mono">
+                  COLLATERAL_TYPE
+                </span>
                 <span className="text-xs text-orange-500 font-mono">WBTC</span>
               </div>
               <div className="flex justify-between items-center p-3 bg-black/50 border border-neutral-800">
-                <span className="text-xs text-neutral-400 font-mono">MIN_RATIO</span>
+                <span className="text-xs text-neutral-400 font-mono">
+                  MIN_RATIO
+                </span>
                 <span className="text-xs text-white font-mono">150%</span>
               </div>
               <div className="flex justify-between items-center p-3 bg-black/50 border border-neutral-800">
-                <span className="text-xs text-neutral-400 font-mono">LIQUIDATION</span>
+                <span className="text-xs text-neutral-400 font-mono">
+                  LIQUIDATION
+                </span>
                 <span className="text-xs text-white font-mono">125%</span>
               </div>
               <div className="flex justify-between items-center p-3 bg-black/50 border border-neutral-800">
-                <span className="text-xs text-neutral-400 font-mono">STATUS</span>
+                <span className="text-xs text-neutral-400 font-mono">
+                  STATUS
+                </span>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full" />
-                  <span className="text-xs text-green-500 font-mono">ACTIVE</span>
+                  <span className="text-xs text-green-500 font-mono">
+                    ACTIVE
+                  </span>
                 </div>
               </div>
             </div>
@@ -269,7 +300,9 @@ export default function Dashboard() {
               <Bug className="w-5 h-5 text-orange-500" />
               <div>
                 <div className="text-sm font-mono text-white">DEBUG</div>
-                <div className="text-[10px] text-neutral-500">Contract interactions</div>
+                <div className="text-[10px] text-neutral-500">
+                  Contract interactions
+                </div>
               </div>
             </Link>
 
@@ -280,7 +313,9 @@ export default function Dashboard() {
               <ExternalLink className="w-5 h-5 text-orange-500" />
               <div>
                 <div className="text-sm font-mono text-white">EXPLORER</div>
-                <div className="text-[10px] text-neutral-500">View transactions</div>
+                <div className="text-[10px] text-neutral-500">
+                  View transactions
+                </div>
               </div>
             </Link>
 
@@ -291,7 +326,9 @@ export default function Dashboard() {
               <Wallet className="w-5 h-5 text-orange-500" />
               <div>
                 <div className="text-sm font-mono text-white">CONFIGURE</div>
-                <div className="text-[10px] text-neutral-500">Download ABIs</div>
+                <div className="text-[10px] text-neutral-500">
+                  Download ABIs
+                </div>
               </div>
             </Link>
           </div>
