@@ -4,8 +4,8 @@ import "~~/styles/globals.css";
 import { ThemeProvider } from "~~/components/ThemeProvider";
 
 export const metadata: Metadata = {
-  title: "Scaffold-Stark",
-  description: "Fast track your starknet journey",
+  title: "Bitcoin Standard — BTC-Backed Stablecoins on Starknet",
+  description: "Deposit WBTC, mint BTSUSD stablecoins, and earn yield. A decentralized CDP protocol on Starknet L2.",
   icons: "/logo.ico",
 };
 
