@@ -27,7 +27,10 @@ export default function LandingPage() {
   return (
     <div
       className="min-h-screen text-black overflow-x-hidden"
-      style={{ fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif", background: "#ffffff" }}
+      style={{
+        fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
+        background: "#ffffff",
+      }}
     >
       {/* ── NAV ────────────────────────────────────────────────── */}
       <nav
@@ -42,19 +45,32 @@ export default function LandingPage() {
           {/* Logo */}
           <div className="flex items-center gap-2.5">
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #f97316 0%, #fb923c 100%)" }}
+              className="w-6 h-6 rounded-full flex items-center justify-center"
+              style={{
+                background: "linear-gradient(135deg, #f97316 0%, #fb923c 100%)",
+              }}
             >
               <Bitcoin className="w-4 h-4 text-white" />
             </div>
-            <span className="font-semibold text-base tracking-tight">The Bitcoin Standard</span>
+            <span className="font-semibold text-base tracking-tight">
+              The Bitcoin Standard
+            </span>
           </div>
 
           {/* Nav links */}
           <div className="hidden md:flex items-center gap-8 text-sm text-neutral-500">
-            <a href="#protocol" className="hover:text-black transition-colors">Protocol</a>
-            <a href="#how-it-works" className="hover:text-black transition-colors">How it works</a>
-            <a href="#security" className="hover:text-black transition-colors">Security</a>
+            <a href="#protocol" className="hover:text-black transition-colors">
+              Protocol
+            </a>
+            <a
+              href="#how-it-works"
+              className="hover:text-black transition-colors"
+            >
+              How it works
+            </a>
+            <a href="#security" className="hover:text-black transition-colors">
+              Security
+            </a>
             <a
               href="https://github.com"
               target="_blank"
@@ -185,8 +201,8 @@ export default function LandingPage() {
 
             {/* Sub-headline */}
             <p className="text-lg md:text-xl text-neutral-500 max-w-md leading-relaxed mb-10">
-              Deposit WBTC as collateral. Mint BTSUSD. Earn yield.
-              Decentralized CDP protocol on Starknet — non-custodial, over-collateralized.
+              Deposit WBTC as collateral. Mint BTSUSD. Earn yield. Decentralized
+              CDP protocol on Starknet — non-custodial, over-collateralized.
             </p>
 
             {/* CTAs */}
@@ -233,7 +249,10 @@ export default function LandingPage() {
       <section
         id="how-it-works"
         className="py-28 px-6 lg:px-8"
-        style={{ background: "#fafafa", borderTop: "1px solid rgba(0,0,0,0.06)" }}
+        style={{
+          background: "#fafafa",
+          borderTop: "1px solid rgba(0,0,0,0.06)",
+        }}
       >
         <div className="max-w-7xl mx-auto">
           <div className="mb-16">
@@ -284,22 +303,30 @@ export default function LandingPage() {
                   transition: "border-color 0.2s, box-shadow 0.2s",
                 }}
                 onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(249,115,22,0.3)";
-                  (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 30px rgba(249,115,22,0.08)";
+                  (e.currentTarget as HTMLDivElement).style.borderColor =
+                    "rgba(249,115,22,0.3)";
+                  (e.currentTarget as HTMLDivElement).style.boxShadow =
+                    "0 8px 30px rgba(249,115,22,0.08)";
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(0,0,0,0.07)";
+                  (e.currentTarget as HTMLDivElement).style.borderColor =
+                    "rgba(0,0,0,0.07)";
                   (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
                 }}
               >
                 <div
                   className="text-5xl font-black mb-6"
-                  style={{ color: "rgba(0,0,0,0.07)", letterSpacing: "-0.05em" }}
+                  style={{
+                    color: "rgba(0,0,0,0.07)",
+                    letterSpacing: "-0.05em",
+                  }}
                 >
                   {step.num}
                 </div>
                 <h3 className="text-xl font-bold mb-2">{step.title}</h3>
-                <p className="text-neutral-500 text-sm leading-relaxed">{step.desc}</p>
+                <p className="text-neutral-500 text-sm leading-relaxed">
+                  {step.desc}
+                </p>
               </div>
             ))}
           </div>
@@ -329,15 +356,24 @@ export default function LandingPage() {
                 holders.
               </h2>
               <p className="text-neutral-500 leading-relaxed max-w-sm">
-                Every BTSUSD is backed by real Bitcoin collateral. No algorithmic
-                tricks. No fractional reserves. Pure, transparent, on-chain collateralization.
+                Every BTSUSD is backed by real Bitcoin collateral. No
+                algorithmic tricks. No fractional reserves. Pure, transparent,
+                on-chain collateralization.
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               {[
-                { label: "Min. Collateral Ratio", value: "150%", accent: false },
-                { label: "Liquidation Threshold", value: "125%", accent: false },
+                {
+                  label: "Min. Collateral Ratio",
+                  value: "150%",
+                  accent: false,
+                },
+                {
+                  label: "Liquidation Threshold",
+                  value: "125%",
+                  accent: false,
+                },
                 { label: "Stability Fee", value: "0.5%", accent: false },
                 { label: "Collateral Type", value: "WBTC", accent: true },
               ].map((stat) => (
@@ -352,7 +388,9 @@ export default function LandingPage() {
                 >
                   <div
                     className="text-xs font-medium mb-3 uppercase tracking-wider"
-                    style={{ color: stat.accent ? "rgba(255,255,255,0.4)" : "#9ca3af" }}
+                    style={{
+                      color: stat.accent ? "rgba(255,255,255,0.4)" : "#9ca3af",
+                    }}
                   >
                     {stat.label}
                   </div>
@@ -376,7 +414,10 @@ export default function LandingPage() {
       <section
         id="security"
         className="py-28 px-6 lg:px-8"
-        style={{ background: "#fafafa", borderTop: "1px solid rgba(0,0,0,0.06)" }}
+        style={{
+          background: "#fafafa",
+          borderTop: "1px solid rgba(0,0,0,0.06)",
+        }}
       >
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
@@ -424,7 +465,9 @@ export default function LandingPage() {
                   <div className="w-2 h-2 rounded-full bg-orange-500" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">{item.title}</h3>
-                <p className="text-neutral-500 text-sm leading-relaxed">{item.desc}</p>
+                <p className="text-neutral-500 text-sm leading-relaxed">
+                  {item.desc}
+                </p>
               </div>
             ))}
           </div>
@@ -462,7 +505,8 @@ export default function LandingPage() {
                 Bitcoin to work?
               </h2>
               <p className="text-neutral-400 max-w-md">
-                Connect your Starknet wallet to open a vault, mint BTSUSD, and start earning yield on your Bitcoin.
+                Connect your Starknet wallet to open a vault, mint BTSUSD, and
+                start earning yield on your Bitcoin.
               </p>
             </div>
 
@@ -482,7 +526,9 @@ export default function LandingPage() {
           <div className="flex items-center gap-2.5">
             <div
               className="w-6 h-6 rounded-full flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #f97316 0%, #fb923c 100%)" }}
+              style={{
+                background: "linear-gradient(135deg, #f97316 0%, #fb923c 100%)",
+              }}
             >
               <Bitcoin className="w-3 h-3 text-white" />
             </div>
@@ -492,9 +538,15 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-6 text-sm text-neutral-400">
-            <a href="#" className="hover:text-black transition-colors">Docs</a>
-            <a href="#" className="hover:text-black transition-colors">GitHub</a>
-            <a href="#" className="hover:text-black transition-colors">Discord</a>
+            <a href="#" className="hover:text-black transition-colors">
+              Docs
+            </a>
+            <a href="#" className="hover:text-black transition-colors">
+              GitHub
+            </a>
+            <a href="#" className="hover:text-black transition-colors">
+              Discord
+            </a>
           </div>
 
           <div className="text-xs text-neutral-300">

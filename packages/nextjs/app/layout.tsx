@@ -5,7 +5,8 @@ import { ThemeProvider } from "~~/components/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "Bitcoin Standard — BTC-Backed Stablecoins on Starknet",
-  description: "Deposit WBTC, mint BTSUSD stablecoins, and earn yield. A decentralized CDP protocol on Starknet L2.",
+  description:
+    "Deposit WBTC, mint BTSUSD stablecoins, and earn yield. A decentralized CDP protocol on Starknet L2.",
   icons: "/logo.ico",
 };
 
