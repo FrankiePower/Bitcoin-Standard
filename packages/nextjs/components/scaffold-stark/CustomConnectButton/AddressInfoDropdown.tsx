@@ -48,7 +48,8 @@ export const AddressInfoDropdown = ({
   const [selectingNetwork, setSelectingNetwork] = useState(false);
   const { connectors, connect } = useConnect();
   const { resolvedTheme } = useTheme();
-  const { btcAddress, isBtcConnected, connectBtc, disconnectBtc } = useXverseWallet();
+  const { btcAddress, isBtcConnected, connectBtc, disconnectBtc } =
+    useXverseWallet();
   const isDarkMode = resolvedTheme === "dark";
   const dropdownRef = useRef<HTMLDetailsElement>(null);
   const closeDropdown = () => {
@@ -285,12 +286,24 @@ export const AddressInfoDropdown = ({
             {isBtcConnected ? (
               <div className="flex flex-col gap-1 w-full bg-orange-500/5 p-2 rounded-xl mb-1 border border-orange-500/10">
                 <div className="flex items-center gap-2 mb-1">
-                  <Image src="/bitcoin-btc-logo.svg" alt="BTC" width={14} height={14} />
-                  <span className="text-xs font-semibold text-orange-600">Bitcoin Connected</span>
+                  <Image
+                    src="/bitcoin-btc-logo.svg"
+                    alt="BTC"
+                    width={14}
+                    height={14}
+                  />
+                  <span className="text-xs font-semibold text-orange-600">
+                    Bitcoin Connected
+                  </span>
                 </div>
                 <div className="flex justify-between items-center w-full">
                   <span className="text-xs font-mono">{`${btcAddress?.slice(0, 8)}...${btcAddress?.slice(-6)}`}</span>
-                  <button onClick={disconnectBtc} className="text-[10px] text-red-500 hover:text-red-700 underline">Disconnect</button>
+                  <button
+                    onClick={disconnectBtc}
+                    className="text-[10px] text-red-500 hover:text-red-700 underline"
+                  >
+                    Disconnect
+                  </button>
                 </div>
               </div>
             ) : (
@@ -303,7 +316,12 @@ export const AddressInfoDropdown = ({
                 }}
               >
                 <div className="flex bg-orange-100 rounded-full p-0.5 ml-2 sm:ml-0">
-                  <Image src="/bitcoin-btc-logo.svg" alt="BTC" width={16} height={16} />
+                  <Image
+                    src="/bitcoin-btc-logo.svg"
+                    alt="BTC"
+                    width={16}
+                    height={16}
+                  />
                 </div>
                 <span>Connect Bitcoin Wallet</span>
               </button>

@@ -200,7 +200,8 @@ pub mod BTSSavingsVault {
 
     #[abi(embed_v0)]
     impl BTSSavingsVaultImpl of IBTSSavingsVault<ContractState> {
-        // ── ERC4626 Core ────────────────────────────────────────────
+        // ── ERC4626 Core
+        // ────────────────────────────────────────────
 
         fn asset(self: @ContractState) -> ContractAddress {
             self.underlying_asset.read()
@@ -347,7 +348,8 @@ pub mod BTSSavingsVault {
             assets
         }
 
-        // ── ERC4626 Accounting ──────────────────────────────────────
+        // ── ERC4626 Accounting
+        // ──────────────────────────────────────
 
         fn convert_to_shares(self: @ContractState, assets: u256) -> u256 {
             self._convert_to_shares(assets)
@@ -400,7 +402,8 @@ pub mod BTSSavingsVault {
             self._convert_to_assets(shares)
         }
 
-        // ── Spark-style Extensions ──────────────────────────────────
+        // ── Spark-style Extensions
+        // ──────────────────────────────────
 
         fn now_chi(self: @ContractState) -> u256 {
             self._now_chi()
@@ -459,7 +462,8 @@ pub mod BTSSavingsVault {
             self.depositor_count.read()
         }
 
-        // ── Admin ───────────────────────────────────────────────────
+        // ── Admin
+        // ───────────────────────────────────────────────────
 
         fn set_vsr(ref self: ContractState, new_vsr: u256) {
             self.ownable.assert_only_owner();
@@ -566,10 +570,7 @@ pub mod BTSSavingsVault {
 
         /// Spends share allowance if caller != owner.
         fn _spend_allowance(
-            ref self: ContractState,
-            owner: ContractAddress,
-            spender: ContractAddress,
-            amount: u256,
+            ref self: ContractState, owner: ContractAddress, spender: ContractAddress, amount: u256,
         ) {
             if owner != spender {
                 let current_allowance = self.erc20.allowance(owner, spender);
@@ -615,7 +616,7 @@ pub mod BTSSavingsVault {
                 if exp > 0 {
                     base = base * base / b;
                 }
-            };
+            }
 
             result
         }

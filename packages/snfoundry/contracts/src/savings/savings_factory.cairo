@@ -16,11 +16,11 @@ pub mod BTSSavingsFactory {
     };
     use core::num::traits::Zero;
     use openzeppelin_access::ownable::OwnableComponent;
-    use starknet::storage::{
-        Map, StoragePathEntry, StoragePointerReadAccess, StoragePointerWriteAccess, Vec,
-        VecTrait, MutableVecTrait,
-    };
     use starknet::ContractAddress;
+    use starknet::storage::{
+        Map, MutableVecTrait, StoragePathEntry, StoragePointerReadAccess, StoragePointerWriteAccess,
+        Vec, VecTrait,
+    };
 
     // ================================================================================================
     // COMPONENTS
@@ -115,7 +115,7 @@ pub mod BTSSavingsFactory {
                 let vault_addr = self.vault_list.at(i.try_into().unwrap()).read();
                 result.append(vault_addr);
                 i += 1;
-            };
+            }
             result
         }
 
@@ -131,9 +131,7 @@ pub mod BTSSavingsFactory {
             self.vault_info.entry(vault).read()
         }
 
-        fn register_vault(
-            ref self: ContractState, vault: ContractAddress, asset: ContractAddress,
-        ) {
+        fn register_vault(ref self: ContractState, vault: ContractAddress, asset: ContractAddress) {
             self.ownable.assert_only_owner();
             assert(!vault.is_zero(), Errors::ZERO_ADDRESS);
             assert(!asset.is_zero(), Errors::ZERO_ADDRESS);

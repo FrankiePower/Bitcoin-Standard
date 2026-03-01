@@ -63,14 +63,16 @@ export function useTestTokens() {
   const { data: wbtcData } = useDeployedContractInfo("MockWBTC" as any);
 
   // Read wBTC balance
-  const { data: wbtcBalanceRaw, refetch: refetchWbtcBalance } = useReadContract({
-    functionName: "balance_of",
-    address: wbtcData?.address,
-    abi: wbtcData?.abi,
-    args: address ? [address] : [],
-    enabled: !!wbtcData?.address && isConnected,
-    watch: true,
-  });
+  const { data: wbtcBalanceRaw, refetch: refetchWbtcBalance } = useReadContract(
+    {
+      functionName: "balance_of",
+      address: wbtcData?.address,
+      abi: wbtcData?.abi,
+      args: address ? [address] : [],
+      enabled: !!wbtcData?.address && isConnected,
+      watch: true,
+    },
+  );
 
   // Use transactor for sending transactions
   const { writeTransaction, sendTransactionInstance } = useTransactor();
@@ -92,9 +94,12 @@ export function useTestTokens() {
   }, [wbtcBalanceRaw]);
 
   // Check if contracts are deployed
-  const isDeployed = useMemo(() => ({
-    wBTC: !!wbtcData?.address,
-  }), [wbtcData]);
+  const isDeployed = useMemo(
+    () => ({
+      wBTC: !!wbtcData?.address,
+    }),
+    [wbtcData],
+  );
 
   // Mint function
   const mint = useCallback(
@@ -129,7 +134,7 @@ export function useTestTokens() {
         setIsMinting(false);
       }
     },
-    [address, wbtcData, writeTransaction]
+    [address, wbtcData, writeTransaction],
   );
 
   // Refetch all balances

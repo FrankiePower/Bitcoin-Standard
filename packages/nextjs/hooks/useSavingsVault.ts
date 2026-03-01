@@ -35,14 +35,17 @@ export function vsrToApy(vsr: bigint): number {
 export function formatTokenAmount(
   amount: bigint | undefined,
   decimals: number = 8,
-  displayDecimals: number = 4
+  displayDecimals: number = 4,
 ): string {
   if (!amount || amount === BigInt(0)) return "0";
   const divisor = BigInt(10 ** decimals);
   const integerPart = amount / divisor;
   const fractionalPart = amount % divisor;
 
-  const fractionalStr = fractionalPart.toString().padStart(decimals, "0").slice(0, displayDecimals);
+  const fractionalStr = fractionalPart
+    .toString()
+    .padStart(decimals, "0")
+    .slice(0, displayDecimals);
   return `${integerPart.toLocaleString()}.${fractionalStr}`;
 }
 
@@ -70,23 +73,27 @@ export function useSavingsVault() {
   const [isRedeeming, setIsRedeeming] = useState(false);
 
   // Read vault stats
-  const { data: totalAssetsRaw, refetch: refetchTotalAssets } = useReadContract({
-    functionName: "total_assets",
-    address: vaultData?.address,
-    abi: vaultData?.abi,
-    args: [],
-    enabled: isContractDeployed,
-    watch: true,
-  });
+  const { data: totalAssetsRaw, refetch: refetchTotalAssets } = useReadContract(
+    {
+      functionName: "total_assets",
+      address: vaultData?.address,
+      abi: vaultData?.abi,
+      args: [],
+      enabled: isContractDeployed,
+      watch: true,
+    },
+  );
 
-  const { data: totalSharesRaw, refetch: refetchTotalShares } = useReadContract({
-    functionName: "total_supply",
-    address: vaultData?.address,
-    abi: vaultData?.abi,
-    args: [],
-    enabled: isContractDeployed,
-    watch: true,
-  });
+  const { data: totalSharesRaw, refetch: refetchTotalShares } = useReadContract(
+    {
+      functionName: "total_supply",
+      address: vaultData?.address,
+      abi: vaultData?.abi,
+      args: [],
+      enabled: isContractDeployed,
+      watch: true,
+    },
+  );
 
   const { data: vsrRaw, refetch: refetchVsr } = useReadContract({
     functionName: "get_vsr",
@@ -97,14 +104,15 @@ export function useSavingsVault() {
     watch: true,
   });
 
-  const { data: depositorCountRaw, refetch: refetchDepositorCount } = useReadContract({
-    functionName: "get_depositor_count",
-    address: vaultData?.address,
-    abi: vaultData?.abi,
-    args: [],
-    enabled: isContractDeployed,
-    watch: true,
-  });
+  const { data: depositorCountRaw, refetch: refetchDepositorCount } =
+    useReadContract({
+      functionName: "get_depositor_count",
+      address: vaultData?.address,
+      abi: vaultData?.abi,
+      args: [],
+      enabled: isContractDeployed,
+      watch: true,
+    });
 
   const { data: chiRaw, refetch: refetchChi } = useReadContract({
     functionName: "now_chi",
@@ -143,32 +151,40 @@ export function useSavingsVault() {
     watch: true,
   });
 
-  const { data: maxWithdrawRaw, refetch: refetchMaxWithdraw } = useReadContract({
-    functionName: "max_withdraw",
-    address: vaultData?.address,
-    abi: vaultData?.abi,
-    args: address ? [address] : [],
-    enabled: isContractDeployed && isConnected,
-    watch: true,
-  });
+  const { data: maxWithdrawRaw, refetch: refetchMaxWithdraw } = useReadContract(
+    {
+      functionName: "max_withdraw",
+      address: vaultData?.address,
+      abi: vaultData?.abi,
+      args: address ? [address] : [],
+      enabled: isContractDeployed && isConnected,
+      watch: true,
+    },
+  );
 
   // Read user wBTC balance
-  const { data: wbtcBalanceRaw, refetch: refetchWbtcBalance } = useReadContract({
-    functionName: "balance_of",
-    address: wbtcData?.address,
-    abi: wbtcData?.abi,
-    args: address ? [address] : [],
-    enabled: isWbtcDeployed && isConnected,
-    watch: true,
-  });
+  const { data: wbtcBalanceRaw, refetch: refetchWbtcBalance } = useReadContract(
+    {
+      functionName: "balance_of",
+      address: wbtcData?.address,
+      abi: wbtcData?.abi,
+      args: address ? [address] : [],
+      enabled: isWbtcDeployed && isConnected,
+      watch: true,
+    },
+  );
 
   // Parse values
   const totalAssets = useMemo(() => {
-    return totalAssetsRaw ? BigInt((totalAssetsRaw as any).toString()) : BigInt(0);
+    return totalAssetsRaw
+      ? BigInt((totalAssetsRaw as any).toString())
+      : BigInt(0);
   }, [totalAssetsRaw]);
 
   const totalShares = useMemo(() => {
-    return totalSharesRaw ? BigInt((totalSharesRaw as any).toString()) : BigInt(0);
+    return totalSharesRaw
+      ? BigInt((totalSharesRaw as any).toString())
+      : BigInt(0);
   }, [totalSharesRaw]);
 
   const vsr = useMemo(() => {
@@ -176,7 +192,9 @@ export function useSavingsVault() {
   }, [vsrRaw]);
 
   const depositorCount = useMemo(() => {
-    return depositorCountRaw ? Number((depositorCountRaw as any).toString()) : 0;
+    return depositorCountRaw
+      ? Number((depositorCountRaw as any).toString())
+      : 0;
   }, [depositorCountRaw]);
 
   const currentChi = useMemo(() => {
@@ -184,23 +202,33 @@ export function useSavingsVault() {
   }, [chiRaw]);
 
   const userShares = useMemo(() => {
-    return userSharesRaw ? BigInt((userSharesRaw as any).toString()) : BigInt(0);
+    return userSharesRaw
+      ? BigInt((userSharesRaw as any).toString())
+      : BigInt(0);
   }, [userSharesRaw]);
 
   const userAssets = useMemo(() => {
-    return userAssetsRaw ? BigInt((userAssetsRaw as any).toString()) : BigInt(0);
+    return userAssetsRaw
+      ? BigInt((userAssetsRaw as any).toString())
+      : BigInt(0);
   }, [userAssetsRaw]);
 
   const maxDeposit = useMemo(() => {
-    return maxDepositRaw ? BigInt((maxDepositRaw as any).toString()) : BigInt(0);
+    return maxDepositRaw
+      ? BigInt((maxDepositRaw as any).toString())
+      : BigInt(0);
   }, [maxDepositRaw]);
 
   const maxWithdraw = useMemo(() => {
-    return maxWithdrawRaw ? BigInt((maxWithdrawRaw as any).toString()) : BigInt(0);
+    return maxWithdrawRaw
+      ? BigInt((maxWithdrawRaw as any).toString())
+      : BigInt(0);
   }, [maxWithdrawRaw]);
 
   const wbtcBalance = useMemo(() => {
-    return wbtcBalanceRaw ? BigInt((wbtcBalanceRaw as any).toString()) : BigInt(0);
+    return wbtcBalanceRaw
+      ? BigInt((wbtcBalanceRaw as any).toString())
+      : BigInt(0);
   }, [wbtcBalanceRaw]);
 
   // Calculate APY from VSR
@@ -211,7 +239,13 @@ export function useSavingsVault() {
   // Deposit action
   const deposit = useCallback(
     async (assets: bigint, receiver?: string) => {
-      if (!address || !vaultData?.address || !vaultData?.abi || !wbtcData?.address || !wbtcData?.abi) {
+      if (
+        !address ||
+        !vaultData?.address ||
+        !vaultData?.abi ||
+        !wbtcData?.address ||
+        !wbtcData?.abi
+      ) {
         throw new Error("Contracts not deployed or wallet not connected");
       }
 
@@ -220,12 +254,24 @@ export function useSavingsVault() {
         const receiverAddr = receiver || address;
 
         // First approve wBTC spending
-        const wbtcContract = new Contract({ abi: wbtcData.abi, address: wbtcData.address });
-        const approveCall = wbtcContract.populate("approve", [vaultData.address, assets]);
+        const wbtcContract = new Contract({
+          abi: wbtcData.abi,
+          address: wbtcData.address,
+        });
+        const approveCall = wbtcContract.populate("approve", [
+          vaultData.address,
+          assets,
+        ]);
 
         // Then deposit
-        const vaultContract = new Contract({ abi: vaultData.abi, address: vaultData.address });
-        const depositCall = vaultContract.populate("deposit", [assets, receiverAddr]);
+        const vaultContract = new Contract({
+          abi: vaultData.abi,
+          address: vaultData.address,
+        });
+        const depositCall = vaultContract.populate("deposit", [
+          assets,
+          receiverAddr,
+        ]);
 
         // Execute both calls
         await writeTransaction([approveCall as Call, depositCall as Call]);
@@ -233,7 +279,7 @@ export function useSavingsVault() {
         setIsDepositing(false);
       }
     },
-    [address, vaultData, wbtcData, writeTransaction]
+    [address, vaultData, wbtcData, writeTransaction],
   );
 
   // Withdraw action
@@ -248,15 +294,22 @@ export function useSavingsVault() {
         const receiverAddr = receiver || address;
         const ownerAddr = owner || address;
 
-        const vaultContract = new Contract({ abi: vaultData.abi, address: vaultData.address });
-        const withdrawCall = vaultContract.populate("withdraw", [assets, receiverAddr, ownerAddr]);
+        const vaultContract = new Contract({
+          abi: vaultData.abi,
+          address: vaultData.address,
+        });
+        const withdrawCall = vaultContract.populate("withdraw", [
+          assets,
+          receiverAddr,
+          ownerAddr,
+        ]);
 
         await writeTransaction([withdrawCall as Call]);
       } finally {
         setIsWithdrawing(false);
       }
     },
-    [address, vaultData, writeTransaction]
+    [address, vaultData, writeTransaction],
   );
 
   // Redeem action
@@ -271,15 +324,22 @@ export function useSavingsVault() {
         const receiverAddr = receiver || address;
         const ownerAddr = owner || address;
 
-        const vaultContract = new Contract({ abi: vaultData.abi, address: vaultData.address });
-        const redeemCall = vaultContract.populate("redeem", [shares, receiverAddr, ownerAddr]);
+        const vaultContract = new Contract({
+          abi: vaultData.abi,
+          address: vaultData.address,
+        });
+        const redeemCall = vaultContract.populate("redeem", [
+          shares,
+          receiverAddr,
+          ownerAddr,
+        ]);
 
         await writeTransaction([redeemCall as Call]);
       } finally {
         setIsRedeeming(false);
       }
     },
-    [address, vaultData, writeTransaction]
+    [address, vaultData, writeTransaction],
   );
 
   // Refetch all data

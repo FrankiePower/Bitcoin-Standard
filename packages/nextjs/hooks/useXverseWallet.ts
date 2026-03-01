@@ -25,27 +25,30 @@ export const useXverseWallet = () => {
 
   const connectBtc = async () => {
     try {
-      const response = await satsConnect.request('getAccounts', {
+      const response = await satsConnect.request("getAccounts", {
         purposes: [AddressPurpose.Payment],
-        message: 'BTCUSD Protocol wants to connect to your wallet',
+        message: "BTCUSD Protocol wants to connect to your wallet",
       });
 
-      if (response.status === 'success' && response.result) {
+      if (response.status === "success" && response.result) {
         const paymentAccount = response.result.find(
-          (acc: any) => acc.purpose === AddressPurpose.Payment
+          (acc: any) => acc.purpose === AddressPurpose.Payment,
         );
 
         if (paymentAccount) {
           setBtcAddress(paymentAccount.address);
           setIsBtcConnected(true);
-          localStorage.setItem("xverse_payment_address", paymentAccount.address);
+          localStorage.setItem(
+            "xverse_payment_address",
+            paymentAccount.address,
+          );
           toast.success("Bitcoin wallet connected!");
         }
       } else {
         toast.error("User canceled connection or an error occurred.");
       }
     } catch (error) {
-      console.error('Xverse connect error:', error);
+      console.error("Xverse connect error:", error);
       toast.error("Failed to connect to Xverse");
     }
   };
@@ -61,6 +64,6 @@ export const useXverseWallet = () => {
     btcAddress,
     isBtcConnected,
     connectBtc,
-    disconnectBtc
+    disconnectBtc,
   };
 };

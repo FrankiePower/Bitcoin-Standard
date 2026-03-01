@@ -49,7 +49,8 @@ pub struct VaultStats {
 /// inspired by Spark Vaults V2 / MakerDAO sUSDS.
 #[starknet::interface]
 pub trait IBTSSavingsVault<TContractState> {
-    // ── ERC4626 Core ────────────────────────────────────────────────
+    // ── ERC4626 Core
+    // ────────────────────────────────────────────────
 
     /// Returns the address of the underlying asset token.
     fn asset(self: @TContractState) -> ContractAddress;
@@ -65,10 +66,7 @@ pub trait IBTSSavingsVault<TContractState> {
     /// Withdraws `assets` of underlying to `receiver` by burning shares from `owner`.
     /// Returns: number of shares burned.
     fn withdraw(
-        ref self: TContractState,
-        assets: u256,
-        receiver: ContractAddress,
-        owner: ContractAddress,
+        ref self: TContractState, assets: u256, receiver: ContractAddress, owner: ContractAddress,
     ) -> u256;
 
     /// Mints exactly `shares` share tokens to `receiver` by depositing underlying.
@@ -78,13 +76,11 @@ pub trait IBTSSavingsVault<TContractState> {
     /// Redeems `shares` share tokens from `owner`, sending underlying to `receiver`.
     /// Returns: amount of underlying assets sent.
     fn redeem(
-        ref self: TContractState,
-        shares: u256,
-        receiver: ContractAddress,
-        owner: ContractAddress,
+        ref self: TContractState, shares: u256, receiver: ContractAddress, owner: ContractAddress,
     ) -> u256;
 
-    // ── ERC4626 Accounting ──────────────────────────────────────────
+    // ── ERC4626 Accounting
+    // ──────────────────────────────────────────
 
     /// Converts an amount of assets to shares (at current chi).
     fn convert_to_shares(self: @TContractState, assets: u256) -> u256;
@@ -116,7 +112,8 @@ pub trait IBTSSavingsVault<TContractState> {
     /// Preview the amount of assets received for a given redeem amount.
     fn preview_redeem(self: @TContractState, shares: u256) -> u256;
 
-    // ── Spark-style Extensions ──────────────────────────────────────
+    // ── Spark-style Extensions
+    // ──────────────────────────────────────
 
     /// Returns the current conversion rate at `block.timestamp` (ray precision).
     fn now_chi(self: @TContractState) -> u256;
@@ -139,7 +136,8 @@ pub trait IBTSSavingsVault<TContractState> {
     /// Returns the number of unique depositors.
     fn get_depositor_count(self: @TContractState) -> u256;
 
-    // ── Admin ───────────────────────────────────────────────────────
+    // ── Admin
+    // ───────────────────────────────────────────────────────
 
     /// Sets the vault savings rate. Only callable by rate setter.
     fn set_vsr(ref self: TContractState, new_vsr: u256);

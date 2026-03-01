@@ -16,8 +16,8 @@ use contracts::savings::interfaces::{
 use core::num::traits::Zero;
 use openzeppelin_token::erc20::interface::{IERC20Dispatcher, IERC20DispatcherTrait};
 use snforge_std::{
-    ContractClassTrait, DeclareResultTrait, declare, start_cheat_caller_address,
-    stop_cheat_caller_address, start_cheat_block_timestamp_global, stop_cheat_block_timestamp_global,
+    ContractClassTrait, DeclareResultTrait, declare, start_cheat_block_timestamp_global,
+    start_cheat_caller_address, stop_cheat_block_timestamp_global, stop_cheat_caller_address,
 };
 use starknet::{ContractAddress, contract_address_const};
 
@@ -63,7 +63,11 @@ fn deploy_mock_asset() -> (ContractAddress, IERC20Dispatcher, IMockWBTCDispatche
     let mut calldata = array![];
     OWNER().serialize(ref calldata);
     let (address, _) = contract.deploy(@calldata).unwrap();
-    (address, IERC20Dispatcher { contract_address: address }, IMockWBTCDispatcher { contract_address: address })
+    (
+        address,
+        IERC20Dispatcher { contract_address: address },
+        IMockWBTCDispatcher { contract_address: address },
+    )
 }
 
 /// Deploy BTSSavingsVault with specified parameters
@@ -92,7 +96,7 @@ fn deploy_system() -> (
     IMockWBTCDispatcher, // mock wbtc dispatcher (for minting)
     ContractAddress, // vault address
     IBTSSavingsVaultDispatcher, // vault dispatcher
-    IERC20Dispatcher, // vault share token dispatcher
+    IERC20Dispatcher // vault share token dispatcher
 ) {
     // Set initial timestamp
     start_cheat_block_timestamp_global(INITIAL_TIMESTAMP);
@@ -592,7 +596,10 @@ fn test_max_deposit() {
 
     // No cap - should be max u256
     let max = vault.max_deposit(USER1());
-    assert(max == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, 'Should be unlimited');
+    assert(
+        max == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+        'Should be unlimited',
+    );
 
     // Set cap
     let cap = 100 * ONE_TOKEN;

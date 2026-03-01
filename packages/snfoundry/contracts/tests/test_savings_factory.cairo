@@ -9,14 +9,13 @@
 
 use contracts::mock_wbtc::{IMockWBTCDispatcher, IMockWBTCDispatcherTrait};
 use contracts::savings::interfaces::{
-    IBTSSavingsFactoryDispatcher, IBTSSavingsFactoryDispatcherTrait,
-    IBTSSavingsVaultDispatcher, IBTSSavingsVaultDispatcherTrait,
-    VaultInfo,
+    IBTSSavingsFactoryDispatcher, IBTSSavingsFactoryDispatcherTrait, IBTSSavingsVaultDispatcher,
+    IBTSSavingsVaultDispatcherTrait, VaultInfo,
 };
 use core::num::traits::Zero;
 use snforge_std::{
-    ContractClassTrait, DeclareResultTrait, declare, start_cheat_caller_address,
-    stop_cheat_caller_address, start_cheat_block_timestamp_global,
+    ContractClassTrait, DeclareResultTrait, declare, start_cheat_block_timestamp_global,
+    start_cheat_caller_address, stop_cheat_caller_address,
 };
 use starknet::{ContractAddress, contract_address_const};
 
@@ -65,10 +64,7 @@ fn deploy_mock_asset(name: felt252) -> ContractAddress {
 
 /// Deploy BTSSavingsVault
 fn deploy_vault(
-    owner: ContractAddress,
-    asset: ContractAddress,
-    name: ByteArray,
-    symbol: ByteArray,
+    owner: ContractAddress, asset: ContractAddress, name: ByteArray, symbol: ByteArray,
 ) -> (ContractAddress, IBTSSavingsVaultDispatcher) {
     let contract = declare("BTSSavingsVault").unwrap().contract_class();
     let mut calldata = array![];
@@ -87,7 +83,7 @@ fn deploy_system() -> (
     IBTSSavingsFactoryDispatcher, // factory dispatcher
     ContractAddress, // asset address
     ContractAddress, // vault address
-    IBTSSavingsVaultDispatcher, // vault dispatcher
+    IBTSSavingsVaultDispatcher // vault dispatcher
 ) {
     start_cheat_block_timestamp_global(INITIAL_TIMESTAMP);
 

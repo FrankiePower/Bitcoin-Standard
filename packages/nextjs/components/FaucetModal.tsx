@@ -3,7 +3,12 @@
 import { useState } from "react";
 import Image from "next/image";
 import { X, Droplets, Loader2, Check, AlertCircle } from "lucide-react";
-import { useTestTokens, formatTokenDisplay, TEST_TOKENS, TestToken } from "~~/hooks/useTestTokens";
+import {
+  useTestTokens,
+  formatTokenDisplay,
+  TEST_TOKENS,
+  TestToken,
+} from "~~/hooks/useTestTokens";
 
 interface FaucetModalProps {
   isOpen: boolean;
@@ -75,7 +80,9 @@ export function FaucetModal({ isOpen, onClose }: FaucetModalProps) {
             </div>
             <div>
               <h2 className="text-[20px] font-bold text-black">Test Faucet</h2>
-              <p className="text-[13px] text-neutral-500">Get tokens for testing</p>
+              <p className="text-[13px] text-neutral-500">
+                Get tokens for testing
+              </p>
             </div>
           </div>
           <button
@@ -162,8 +169,8 @@ export function FaucetModal({ isOpen, onClose }: FaucetModalProps) {
                     mintedThis
                       ? "bg-emerald-100 text-emerald-700"
                       : deployed && isConnected
-                      ? "bg-blue-500 text-white hover:bg-blue-600 active:scale-[0.98]"
-                      : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
+                        ? "bg-blue-500 text-white hover:bg-blue-600 active:scale-[0.98]"
+                        : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
                   }`}
                 >
                   {isMintingThis ? (
@@ -179,7 +186,12 @@ export function FaucetModal({ isOpen, onClose }: FaucetModalProps) {
                   ) : (
                     <>
                       <Droplets className="w-4 h-4" />
-                      Mint {formatTokenDisplay(token.mintAmount, token.decimals)} {token.symbol}
+                      Mint{" "}
+                      {formatTokenDisplay(
+                        token.mintAmount,
+                        token.decimals,
+                      )}{" "}
+                      {token.symbol}
                     </>
                   )}
                 </button>
@@ -191,9 +203,9 @@ export function FaucetModal({ isOpen, onClose }: FaucetModalProps) {
         {/* Info footer */}
         <div className="mt-6 p-4 rounded-[12px] bg-neutral-50 border border-neutral-100">
           <p className="text-[12px] text-neutral-600 leading-relaxed">
-            This faucet provides test tokens for development and testing purposes only.
-            These tokens have no real value. Make sure you&apos;re connected to the correct
-            test network.
+            This faucet provides test tokens for development and testing
+            purposes only. These tokens have no real value. Make sure
+            you&apos;re connected to the correct test network.
           </p>
         </div>
       </div>

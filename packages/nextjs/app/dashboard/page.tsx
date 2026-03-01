@@ -33,7 +33,8 @@ export default function SavingsPage() {
   // Format TVL for display (assuming 8 decimals for wBTC)
   const formattedTVL = formatTokenAmount(totalAssets, 8, 4);
   const formattedUserBalance = formatTokenAmount(userAssets, 8, 4);
-  const formattedDepositCap = depositCap > 0 ? formatTokenAmount(depositCap, 8, 2) : "Unlimited";
+  const formattedDepositCap =
+    depositCap > 0 ? formatTokenAmount(depositCap, 8, 2) : "Unlimited";
 
   // Handle deposit
   const handleDeposit = async () => {
@@ -58,7 +59,8 @@ export default function SavingsPage() {
 
         <div className="flex items-center gap-4 text-[13px] font-medium text-neutral-600 bg-white/50 backdrop-blur px-5 py-2.5 rounded-full border border-black/5 shadow-sm">
           <span>
-            TVL: <strong className="text-black ml-1">{formattedTVL} wBTC</strong>
+            TVL:{" "}
+            <strong className="text-black ml-1">{formattedTVL} wBTC</strong>
           </span>
           <span className="w-[1px] h-3 bg-neutral-300"></span>
           <span>
@@ -120,8 +122,8 @@ export default function SavingsPage() {
                 asset.active
                   ? "bg-white border-[1.5px] border-emerald-500 shadow-sm"
                   : asset.deployed
-                  ? "bg-white border border-neutral-100 hover:border-emerald-300 shadow-sm"
-                  : "bg-white border border-neutral-100 shadow-sm opacity-50 cursor-not-allowed"
+                    ? "bg-white border border-neutral-100 hover:border-emerald-300 shadow-sm"
+                    : "bg-white border border-neutral-100 shadow-sm opacity-50 cursor-not-allowed"
               }`}
             >
               <div className="flex items-center gap-3">
@@ -144,7 +146,9 @@ export default function SavingsPage() {
                 <div className="flex flex-col">
                   <span className="font-bold text-[15px]">{asset.symbol}</span>
                   {!asset.deployed && (
-                    <span className="text-[10px] text-neutral-400">Coming soon</span>
+                    <span className="text-[10px] text-neutral-400">
+                      Coming soon
+                    </span>
                   )}
                 </div>
               </div>
@@ -157,7 +161,9 @@ export default function SavingsPage() {
           {/* User Position Card */}
           {isConnected && userShares > 0 && (
             <div className="mt-6 p-4 rounded-[16px] bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200">
-              <div className="text-[12px] text-emerald-700 font-medium mb-2">Your Position</div>
+              <div className="text-[12px] text-emerald-700 font-medium mb-2">
+                Your Position
+              </div>
               <div className="text-[24px] font-bold text-emerald-800">
                 {formattedUserBalance} wBTC
               </div>
@@ -212,7 +218,8 @@ export default function SavingsPage() {
               <h2 className="text-4xl md:text-[44px] font-bold leading-[1.1] mb-6 tracking-tight">
                 Deposit your assets
                 <br />
-                and earn up to <span className="text-[#34d399]">{apy.toFixed(1)}%</span> APY!
+                and earn up to{" "}
+                <span className="text-[#34d399]">{apy.toFixed(1)}%</span> APY!
               </h2>
 
               <div className="flex items-center gap-3 mb-6">
@@ -236,8 +243,10 @@ export default function SavingsPage() {
               </div>
 
               <p className="text-neutral-400 text-[15px] leading-relaxed mb-10 max-w-[440px]">
-                Deposit wBTC, BTSUSD, or STRK into the Savings Vault to earn yield. Your shares
-                automatically appreciate as the vault accumulates returns through the VSR (Vault Savings Rate) mechanism.{" "}
+                Deposit wBTC, BTSUSD, or STRK into the Savings Vault to earn
+                yield. Your shares automatically appreciate as the vault
+                accumulates returns through the VSR (Vault Savings Rate)
+                mechanism.{" "}
                 <span className="text-[#34d399] hover:underline cursor-pointer transition-all">
                   Learn more ↗
                 </span>
@@ -266,16 +275,28 @@ export default function SavingsPage() {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white border border-neutral-100 rounded-[16px] p-5 shadow-sm">
-              <div className="text-[12px] text-neutral-500 font-medium mb-1">Current APY</div>
-              <div className="text-[28px] font-bold text-emerald-600">{apy.toFixed(2)}%</div>
+              <div className="text-[12px] text-neutral-500 font-medium mb-1">
+                Current APY
+              </div>
+              <div className="text-[28px] font-bold text-emerald-600">
+                {apy.toFixed(2)}%
+              </div>
             </div>
             <div className="bg-white border border-neutral-100 rounded-[16px] p-5 shadow-sm">
-              <div className="text-[12px] text-neutral-500 font-medium mb-1">Total Value Locked</div>
-              <div className="text-[28px] font-bold text-black">{formattedTVL} wBTC</div>
+              <div className="text-[12px] text-neutral-500 font-medium mb-1">
+                Total Value Locked
+              </div>
+              <div className="text-[28px] font-bold text-black">
+                {formattedTVL} wBTC
+              </div>
             </div>
             <div className="bg-white border border-neutral-100 rounded-[16px] p-5 shadow-sm">
-              <div className="text-[12px] text-neutral-500 font-medium mb-1">Depositors</div>
-              <div className="text-[28px] font-bold text-black">{depositorCount}</div>
+              <div className="text-[12px] text-neutral-500 font-medium mb-1">
+                Depositors
+              </div>
+              <div className="text-[28px] font-bold text-black">
+                {depositorCount}
+              </div>
             </div>
           </div>
 
@@ -360,7 +381,9 @@ export default function SavingsPage() {
       {showDepositModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-[24px] p-8 w-full max-w-md shadow-2xl">
-            <h3 className="text-[24px] font-bold text-black mb-6">Deposit wBTC</h3>
+            <h3 className="text-[24px] font-bold text-black mb-6">
+              Deposit wBTC
+            </h3>
 
             <div className="mb-6">
               <label className="text-[13px] text-neutral-500 font-medium mb-2 block">
