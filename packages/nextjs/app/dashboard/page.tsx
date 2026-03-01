@@ -2,13 +2,51 @@
 
 import { useAccount } from "@starknet-react/core";
 import { DashboardLayout } from "~~/components/layout/dashboard-layout";
-import { Info, ExternalLink } from "lucide-react";
-import React from "react";
+import { Info, ExternalLink, Loader2 } from "lucide-react";
+import React, { useState } from "react";
 import Image from "next/image";
+import { useSavingsVault, formatTokenAmount } from "~~/hooks/useSavingsVault";
 
 export default function SavingsPage() {
   const { status, address } = useAccount();
   const isConnected = status === "connected";
+
+  // Use the savings vault hook
+  const {
+    totalAssets,
+    depositorCount,
+    depositCap,
+    apy,
+    userAssets,
+    userShares,
+    deposit,
+    withdraw,
+    isDepositing,
+    isWithdrawing,
+    isLoading,
+  } = useSavingsVault();
+
+  // Deposit modal state
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [depositAmount, setDepositAmount] = useState("");
+
+  // Format TVL for display (assuming 8 decimals for wBTC)
+  const formattedTVL = formatTokenAmount(totalAssets, 8, 4);
+  const formattedUserBalance = formatTokenAmount(userAssets, 8, 4);
+  const formattedDepositCap = depositCap > 0 ? formatTokenAmount(depositCap, 8, 2) : "Unlimited";
+
+  // Handle deposit
+  const handleDeposit = async () => {
+    if (!depositAmount || isDepositing) return;
+    try {
+      const amount = BigInt(Math.floor(parseFloat(depositAmount) * 1e8)); // Convert to 8 decimals
+      await deposit(amount);
+      setDepositAmount("");
+      setShowDepositModal(false);
+    } catch (error) {
+      console.error("Deposit failed:", error);
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -20,11 +58,11 @@ export default function SavingsPage() {
 
         <div className="flex items-center gap-4 text-[13px] font-medium text-neutral-600 bg-white/50 backdrop-blur px-5 py-2.5 rounded-full border border-black/5 shadow-sm">
           <span>
-            TVL: <strong className="text-black ml-1">$1.2M</strong>
+            TVL: <strong className="text-black ml-1">{formattedTVL} wBTC</strong>
           </span>
           <span className="w-[1px] h-3 bg-neutral-300"></span>
           <span>
-            Users: <strong className="text-black ml-1">42</strong>
+            Users: <strong className="text-black ml-1">{depositorCount}</strong>
           </span>
           <span className="w-[1px] h-3 bg-neutral-300"></span>
           <span>
@@ -36,7 +74,7 @@ export default function SavingsPage() {
                 width={14}
                 height={14}
               />{" "}
-              500
+              {formattedDepositCap}
             </strong>
           </span>
           <ExternalLink className="w-3.5 h-3.5 ml-2 text-neutral-400 hover:text-black cursor-pointer" />
@@ -52,25 +90,28 @@ export default function SavingsPage() {
 
           {[
             {
-              symbol: "BTSUSD",
-              name: "Bitcoin Standard USD",
-              apy: "4.00%",
+              symbol: "sWBTC",
+              name: "Savings wBTC",
+              apy: `${apy.toFixed(2)}%`,
               icon: "/bitcoin-btc-logo.svg",
               active: true,
+              deployed: true,
             },
             {
-              symbol: "WBTC",
-              name: "Wrapped Bitcoin",
-              apy: "1.50%",
+              symbol: "sBTSUSD",
+              name: "Savings BTSUSD",
+              apy: "4.00%",
               icon: "/bitcoin-btc-logo.svg",
               active: false,
+              deployed: false,
             },
             {
-              symbol: "STRK",
-              name: "Starknet Token",
+              symbol: "sSTRK",
+              name: "Savings STRK",
               apy: "3.20%",
               icon: "/bitcoin-btc-logo.svg",
               active: false,
+              deployed: false,
             },
           ].map((asset) => (
             <div
@@ -78,7 +119,9 @@ export default function SavingsPage() {
               className={`flex items-center justify-between p-4 rounded-[16px] cursor-pointer transition-all ${
                 asset.active
                   ? "bg-white border-[1.5px] border-emerald-500 shadow-sm"
-                  : "bg-white border border-neutral-100 hover:border-emerald-300 shadow-sm"
+                  : asset.deployed
+                  ? "bg-white border border-neutral-100 hover:border-emerald-300 shadow-sm"
+                  : "bg-white border border-neutral-100 shadow-sm opacity-50 cursor-not-allowed"
               }`}
             >
               <div className="flex items-center gap-3">
@@ -98,7 +141,12 @@ export default function SavingsPage() {
                     </div>
                   )}
                 </div>
-                <span className="font-bold text-[15px]">{asset.symbol}</span>
+                <div className="flex flex-col">
+                  <span className="font-bold text-[15px]">{asset.symbol}</span>
+                  {!asset.deployed && (
+                    <span className="text-[10px] text-neutral-400">Coming soon</span>
+                  )}
+                </div>
               </div>
               <span className="font-medium text-[14px] text-neutral-600">
                 {asset.apy}
@@ -106,21 +154,18 @@ export default function SavingsPage() {
             </div>
           ))}
 
-          <div className="mt-8 text-[13px] text-neutral-500 font-medium flex items-center gap-1 ml-1 mb-4 pt-4 border-t border-neutral-200/60">
-            Higher-yield Opportunities{" "}
-            <Info className="w-3.5 h-3.5 text-neutral-400" />
-          </div>
-          <div className="flex items-center justify-between p-4 rounded-[16px] bg-white border border-neutral-100 shadow-sm opacity-50 cursor-not-allowed">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 font-bold shrink-0">
-                S
+          {/* User Position Card */}
+          {isConnected && userShares > 0 && (
+            <div className="mt-6 p-4 rounded-[16px] bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200">
+              <div className="text-[12px] text-emerald-700 font-medium mb-2">Your Position</div>
+              <div className="text-[24px] font-bold text-emerald-800">
+                {formattedUserBalance} wBTC
               </div>
-              <span className="font-bold text-[15px]">sBTSUSD</span>
+              <div className="text-[12px] text-emerald-600 mt-1">
+                {formatTokenAmount(userShares, 18, 4)} shares
+              </div>
             </div>
-            <span className="font-medium text-[14px] text-neutral-600">
-              6.38%
-            </span>
-          </div>
+          )}
         </div>
 
         {/* ── MAIN CONTENT AREA ──────────────────────────────────── */}
@@ -165,9 +210,9 @@ export default function SavingsPage() {
 
             <div className="relative z-10 max-w-xl">
               <h2 className="text-4xl md:text-[44px] font-bold leading-[1.1] mb-6 tracking-tight">
-                Deposit your BTSUSD
+                Deposit your assets
                 <br />
-                and earn <span className="text-[#34d399]">4%</span> APY!
+                and earn up to <span className="text-[#34d399]">{apy.toFixed(1)}%</span> APY!
               </h2>
 
               <div className="flex items-center gap-3 mb-6">
@@ -181,19 +226,18 @@ export default function SavingsPage() {
                     />
                   </div>
                   <div className="w-6 h-6 rounded-full bg-[#34d399] -ml-2 z-0 flex items-center justify-center text-white text-[10px] font-bold">
-                    $
+                    s
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-medium text-rose-300">
-                  <span className="w-2 h-2 rounded-full bg-rose-400"></span>{" "}
-                  Eligible for Rewards
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-medium text-emerald-300">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>{" "}
+                  ERC-4626 Vault
                 </div>
               </div>
 
               <p className="text-neutral-400 text-[15px] leading-relaxed mb-10 max-w-[440px]">
-                Deposit your BTSUSD into Savings to earn a transparent APY based
-                on protocol revenue. The rate updates automatically as it
-                evolves.{" "}
+                Deposit wBTC, BTSUSD, or STRK into the Savings Vault to earn yield. Your shares
+                automatically appreciate as the vault accumulates returns through the VSR (Vault Savings Rate) mechanism.{" "}
                 <span className="text-[#34d399] hover:underline cursor-pointer transition-all">
                   Learn more ↗
                 </span>
@@ -201,143 +245,160 @@ export default function SavingsPage() {
 
               <div className="flex items-center gap-4">
                 <button
-                  className="px-6 py-3.5 rounded-full text-[15px] font-bold text-white transition-all hover:opacity-90 active:scale-95 shadow-lg"
+                  onClick={() => isConnected && setShowDepositModal(true)}
+                  disabled={isLoading}
+                  className="px-6 py-3.5 rounded-full text-[15px] font-bold text-white transition-all hover:opacity-90 active:scale-95 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   style={{
                     background:
                       "linear-gradient(135deg, #f97316 0%, #fb923c 100%)",
                   }}
                 >
-                  {isConnected ? "Start Saving" : "Connect Wallet"}
+                  {isDepositing && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {isConnected ? "Deposit wBTC" : "Connect Wallet"}
                 </button>
                 <button className="px-6 py-3.5 rounded-full text-[15px] font-semibold text-white bg-white/10 hover:bg-white/15 border border-white/10 transition-colors">
-                  Try in Sandbox
+                  View Contract
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Chart / Stats Section */}
-          <div className="bg-white border border-neutral-100 rounded-[20px] p-6 shadow-sm min-h-[400px]">
-            {/* Chart Header Tabs */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-neutral-100 pb-4 mb-6">
-              <div className="flex items-center gap-2 p-1 bg-neutral-50 rounded-full border border-neutral-200/60">
-                <button className="px-4 py-1.5 rounded-full bg-white shadow-sm text-[14px] font-bold text-black border border-black/5 flex items-center gap-1.5">
-                  Savings Rate
-                </button>
-                <button className="px-4 py-1.5 rounded-full text-[14px] font-medium text-neutral-500 hover:text-black transition-colors">
-                  Collateral Composition
-                </button>
-                <button className="px-4 py-1.5 rounded-full text-[14px] font-medium text-neutral-500 hover:text-black transition-colors">
-                  Liquidity
-                </button>
-              </div>
-
-              <div className="flex items-center gap-1 p-1 bg-neutral-50 rounded-full border border-neutral-200/60 text-xs font-semibold text-neutral-500">
-                <button className="px-2.5 py-1 rounded-full hover:text-black transition-colors">
-                  1M
-                </button>
-                <button className="px-2.5 py-1 rounded-full bg-white shadow-sm text-black border border-black/5">
-                  3M
-                </button>
-                <button className="px-2.5 py-1 rounded-full hover:text-black transition-colors">
-                  1Y
-                </button>
-                <button className="px-2.5 py-1 rounded-full hover:text-black transition-colors">
-                  All
-                </button>
-              </div>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white border border-neutral-100 rounded-[16px] p-5 shadow-sm">
+              <div className="text-[12px] text-neutral-500 font-medium mb-1">Current APY</div>
+              <div className="text-[28px] font-bold text-emerald-600">{apy.toFixed(2)}%</div>
             </div>
-
-            {/* Fake Chart Area mapping Spark design */}
-            <div className="relative w-full h-[280px] mt-8 overflow-hidden">
-              {/* Grid lines */}
-              <div className="absolute inset-0 flex flex-col justify-between">
-                {[5, 4, 3, 2, 1, 0].map((val) => (
-                  <div
-                    key={val}
-                    className="w-full flex items-center border-t border-dashed border-neutral-200/80 h-0"
-                  >
-                    <span className="text-[10px] text-neutral-400 -mt-4 -ml-6 w-8 text-right pr-2">
-                      {val}%
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Filled Graph Area (svg placeholder) */}
-              <div className="absolute inset-x-8 bottom-0 top-[32%] w-[calc(100%-2rem)] h-full overflow-hidden">
-                <div
-                  className="w-full h-full bg-[#34d399]/20 border-t-2 border-[#34d399]"
-                  style={{
-                    clipPath:
-                      "polygon(0 0, 15% 0, 15% 10%, 30% 10%, 30% 20%, 100% 20%, 100% 100%, 0 100%)",
-                  }}
-                />
-              </div>
-
-              {/* X-axis labels */}
-              <div className="absolute bottom-2 left-8 right-8 flex justify-between text-[10px] text-neutral-400 font-medium">
-                <span>December</span>
-                <span>2026</span>
-                <span>February</span>
-              </div>
+            <div className="bg-white border border-neutral-100 rounded-[16px] p-5 shadow-sm">
+              <div className="text-[12px] text-neutral-500 font-medium mb-1">Total Value Locked</div>
+              <div className="text-[28px] font-bold text-black">{formattedTVL} wBTC</div>
+            </div>
+            <div className="bg-white border border-neutral-100 rounded-[16px] p-5 shadow-sm">
+              <div className="text-[12px] text-neutral-500 font-medium mb-1">Depositors</div>
+              <div className="text-[28px] font-bold text-black">{depositorCount}</div>
             </div>
           </div>
 
-          {/* Supported Assets Table */}
-          <div className="bg-white border border-neutral-100 rounded-[20px] p-6 shadow-sm">
-            <h3 className="text-[22px] font-bold text-black tracking-tight mb-6">
-              Supported assets
-            </h3>
+          {/* Your Position Section */}
+          {isConnected && (
+            <div className="bg-white border border-neutral-100 rounded-[20px] p-6 shadow-sm">
+              <h3 className="text-[22px] font-bold text-black tracking-tight mb-6">
+                Your Position
+              </h3>
 
-            <div className="w-full overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-neutral-100">
-                    <th className="pb-3 text-[13px] font-semibold text-neutral-400">
-                      Asset
-                    </th>
-                    <th className="pb-3 text-[13px] font-semibold text-neutral-400 text-right pr-4">
-                      Balance
-                    </th>
-                    <th className="pb-3 text-[13px] font-semibold text-neutral-400 text-right w-[160px]"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-neutral-50 last:border-0 hover:bg-neutral-50/50 transition-colors">
-                    <td className="py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#f97316] flex items-center justify-center p-1.5 shrink-0">
-                          <Image
-                            src="/bitcoin-btc-logo.svg"
-                            alt="BTSUSD"
-                            width={20}
-                            height={20}
-                            className="w-full h-full object-contain"
-                          />
+              <div className="w-full overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-neutral-100">
+                      <th className="pb-3 text-[13px] font-semibold text-neutral-400">
+                        Asset
+                      </th>
+                      <th className="pb-3 text-[13px] font-semibold text-neutral-400 text-right pr-4">
+                        Deposited
+                      </th>
+                      <th className="pb-3 text-[13px] font-semibold text-neutral-400 text-right pr-4">
+                        Shares
+                      </th>
+                      <th className="pb-3 text-[13px] font-semibold text-neutral-400 text-right w-[200px]"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-neutral-50 last:border-0 hover:bg-neutral-50/50 transition-colors">
+                      <td className="py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-[#f97316] flex items-center justify-center p-1.5 shrink-0">
+                            <Image
+                              src="/bitcoin-btc-logo.svg"
+                              alt="sWBTC"
+                              width={20}
+                              height={20}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                          <span className="font-bold text-[15px] text-black">
+                            sWBTC
+                          </span>
                         </div>
-                        <span className="font-bold text-[15px] text-black">
-                          BTSUSD
+                      </td>
+                      <td className="py-4 pr-4 text-right align-middle">
+                        <span className="font-medium text-[15px] text-black">
+                          {formattedUserBalance} wBTC
                         </span>
-                      </div>
-                    </td>
-                    <td className="py-4 pr-4 text-right align-middle">
-                      <span className="font-medium text-[15px] text-black">
-                        -
-                      </span>
-                    </td>
-                    <td className="py-4 text-right align-middle w-[160px]">
-                      <button className="px-4 py-2 rounded-full text-[14px] font-semibold bg-neutral-100 text-neutral-700 hover:bg-neutral-200 transition-colors w-full">
-                        Deposit
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                      </td>
+                      <td className="py-4 pr-4 text-right align-middle">
+                        <span className="font-medium text-[15px] text-neutral-600">
+                          {formatTokenAmount(userShares, 18, 4)}
+                        </span>
+                      </td>
+                      <td className="py-4 text-right align-middle w-[200px]">
+                        <div className="flex gap-2 justify-end">
+                          <button
+                            onClick={() => setShowDepositModal(true)}
+                            disabled={isDepositing}
+                            className="px-4 py-2 rounded-full text-[14px] font-semibold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors disabled:opacity-50"
+                          >
+                            Deposit
+                          </button>
+                          <button
+                            disabled={isWithdrawing || userShares === BigInt(0)}
+                            className="px-4 py-2 rounded-full text-[14px] font-semibold bg-neutral-100 text-neutral-700 hover:bg-neutral-200 transition-colors disabled:opacity-50"
+                          >
+                            Withdraw
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Deposit Modal */}
+      {showDepositModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-[24px] p-8 w-full max-w-md shadow-2xl">
+            <h3 className="text-[24px] font-bold text-black mb-6">Deposit wBTC</h3>
+
+            <div className="mb-6">
+              <label className="text-[13px] text-neutral-500 font-medium mb-2 block">
+                Amount to deposit
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                  placeholder="0.0"
+                  className="w-full px-4 py-3 pr-20 border border-neutral-200 rounded-[12px] text-[18px] font-medium focus:outline-none focus:border-emerald-500"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[14px] font-medium text-neutral-500">
+                  wBTC
+                </span>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDepositModal(false)}
+                className="flex-1 px-6 py-3 rounded-full text-[15px] font-semibold text-neutral-700 bg-neutral-100 hover:bg-neutral-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeposit}
+                disabled={!depositAmount || isDepositing}
+                className="flex-1 px-6 py-3 rounded-full text-[15px] font-bold text-white bg-emerald-500 hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isDepositing && <Loader2 className="w-4 h-4 animate-spin" />}
+                Deposit
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </DashboardLayout>
   );
 }

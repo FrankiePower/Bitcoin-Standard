@@ -14,6 +14,11 @@ pub mod btsusd_vault;
 ///                        YieldManager → Vesu
 ///                              ↓
 ///                        Liquidator
+///
+/// Savings:
+///   wBTC/BTSUSD/STRK → BTSSavingsVault → sWBTC/sBTSUSD/sSTRK (share tokens)
+///                              ↑
+///                      BTSSavingsFactory (registry)
 /// ```
 ///
 /// ## Modules
@@ -28,10 +33,12 @@ pub mod btsusd_vault;
 /// - `mock_yield_manager`: Mock yield manager for Stage 1 testing
 /// - `mock_wbtc`         : Mock wBTC ERC20 for testing
 /// - `mock_btc_relay`    : Mock BTC relay for testing
+/// - `savings`           : ERC4626 savings vaults + factory registry
 
 pub mod interfaces;
 pub mod liquidator;
 pub mod mock_btc_relay;
 pub mod mock_wbtc;
 pub mod mock_yield_manager;
+pub mod savings;
 pub mod vesu_yield_manager;

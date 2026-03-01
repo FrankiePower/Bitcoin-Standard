@@ -5,3 +5,7 @@ mod test_integration;
 mod test_mock_oracle;
 mod test_mock_yield_manager;
 mod test_risk_engine;
+
+// Savings module tests
+mod test_savings_vault;
+mod test_savings_factory;

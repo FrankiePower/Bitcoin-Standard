@@ -1,15 +1,19 @@
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAccount, useDisconnect } from "@starknet-react/core";
-import { LogOut, Diamond, Hexagon, Menu } from "lucide-react";
+import { LogOut, Menu, Droplets } from "lucide-react";
 import { CustomConnectButton } from "~~/components/scaffold-stark/CustomConnectButton";
+import { FaucetModal } from "~~/components/FaucetModal";
 
 export function Navbar() {
   const pathname = usePathname();
   const { status } = useAccount();
   const { disconnect } = useDisconnect();
   const isConnected = status === "connected";
+  const [bannerVisible, setBannerVisible] = useState(true);
+  const [faucetOpen, setFaucetOpen] = useState(false);
 
   const navLinks = [
     { name: "Savings", href: "/dashboard", badge: "4%" },
@@ -21,12 +25,17 @@ export function Navbar() {
   return (
     <>
       {/* Top Banner */}
-      <div className="bg-[#6c48ff] text-white text-xs font-semibold py-2 px-4 flex justify-center items-center relative">
-        <span>Save with WBTC and STRK in Bitcoin Standard Savings</span>
-        <button className="absolute right-4 top-1/2 -translate-y-1/2 opacity-70 hover:opacity-100">
-          ×
-        </button>
-      </div>
+      {bannerVisible && (
+        <div className="bg-[#6c48ff] text-white text-xs font-semibold py-2 px-4 flex justify-center items-center relative">
+          <span>Save with WBTC and STRK in Bitcoin Standard Savings</span>
+          <button
+            onClick={() => setBannerVisible(false)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 opacity-70 hover:opacity-100"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* Main Navbar */}
       <nav className="border-b border-black/5 bg-white/80 backdrop-blur-md sticky top-0 z-50">
@@ -78,14 +87,15 @@ export function Navbar() {
 
           {/* Right Section */}
           <div className="flex items-center gap-3">
-            <div className="hidden lg:flex items-center gap-3 mr-2">
-              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-[#6c48ff] bg-[#6c48ff]/10 hover:bg-[#6c48ff]/20 transition-colors">
-                <Hexagon className="w-3.5 h-3.5" /> Rewards
-              </button>
-              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-[#f43f5e] bg-[#f43f5e]/10 hover:bg-[#f43f5e]/20 transition-colors">
-                <Diamond className="w-3.5 h-3.5" /> Points
-              </button>
-            </div>
+            {/* Faucet Button */}
+            <button
+              onClick={() => setFaucetOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full text-[14px] font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 transition-all"
+              title="Get test tokens"
+            >
+              <Droplets className="w-4 h-4" />
+              <span className="hidden sm:inline">Faucet</span>
+            </button>
 
             <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center border border-black/10">
               <Image
@@ -115,6 +125,9 @@ export function Navbar() {
           </div>
         </div>
       </nav>
+
+      {/* Faucet Modal */}
+      <FaucetModal isOpen={faucetOpen} onClose={() => setFaucetOpen(false)} />
     </>
   );
 }
