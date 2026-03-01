@@ -237,31 +237,39 @@ export default function BorrowPage() {
                 </div>
               </div>
             </div>
+            {/* Connect / Action Button */}
+            <div className="mt-8">
+              <button
+                className="w-full py-4 rounded-[20px] text-[17px] font-bold text-[#6c48ff] transition-all hover:opacity-90 active:scale-[0.98] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed bg-neutral-100/50"
+                style={{
+                  color: isConnected ? "#6c48ff" : "white",
+                  background: isConnected 
+                    ? "rgb(248, 249, 255)" 
+                    : "linear-gradient(135deg, #f97316 0%, #fb923c 100%, #f43f5e 100%)",
+                }}
+              >
+                {isConnected ? "Borrow" : "Connect Wallet"}
+              </button>
+            </div>
           </div>
 
           {/* ── RIGHT COLUMN (Rates Panel) ────────────────────────── */}
           <div className="w-full lg:w-[320px] shrink-0">
-            <div className="bg-[#1c1c1e] text-white rounded-[20px] p-6 shadow-lg relative overflow-hidden">
+            <div className="bg-[#1c1c1e] text-white rounded-[20px] p-6 shadow-lg relative overflow-hidden h-fit">
               {/* Abstract curve background */}
               <div className="absolute -right-8 -top-8 w-40 h-40 bg-[#f97316]/10 rounded-full blur-3xl"></div>
 
               <div className="flex items-center gap-2 text-[15px] font-bold text-neutral-300 mb-2 relative z-10">
-                <span className="w-5 h-5 rounded-full bg-[#f97316] p-1 flex items-center justify-center">
-                  <Image
-                    src="/bitcoin-btc-logo.svg"
-                    alt="BTSUSD"
-                    width={10}
-                    height={10}
-                    className="brightness-0 invert"
-                  />
-                </span>
+                <div className="w-6 h-6 rounded-full bg-[#f97316]/20 p-1 flex items-center justify-center">
+                  <span className="text-[#f97316] text-[10px] font-bold">$</span>
+                </div>
                 Borrow Rate
               </div>
               <div
                 className="text-[52px] font-bold tracking-tight text-[#fef3c7] relative z-10"
                 style={{ letterSpacing: "-0.04em" }}
               >
-                2.50%
+                4.52%
               </div>
             </div>
           </div>

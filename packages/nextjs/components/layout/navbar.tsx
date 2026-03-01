@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAccount, useDisconnect } from "@starknet-react/core";
-import { LogOut, Menu, Droplets } from "lucide-react";
+import { LogOut, Menu, Droplets, TrendingUp, Repeat2, Sparkles } from "lucide-react";
 import { CustomConnectButton } from "~~/components/scaffold-stark/CustomConnectButton";
 import { FaucetModal } from "~~/components/FaucetModal";
 
@@ -17,9 +17,9 @@ export function Navbar() {
 
   const navLinks = [
     { name: "Savings", href: "/dashboard", badge: "4%" },
-    { name: "Borrow", href: "/deposit" },
-    { name: "BTSUSD", href: "#" },
-    { name: "Swap", href: "#" },
+    { name: "Borrow", href: "/borrow" },
+    { name: "BTSUSD", href: "/btsusd" },
+    { name: "Swap", href: "/swap" },
   ];
 
   return (
@@ -51,34 +51,66 @@ export function Navbar() {
               />
             </Link>
 
-            <div className="hidden md:flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-3">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
+                
+                // Specialized styling for Savings
+                if (link.name === "Savings") {
+                  return (
+                    <Link
+                      key={link.name}
+                      href={link.href}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-[12px] text-[14px] font-bold transition-all border ${
+                        isActive 
+                          ? "bg-white border-emerald-500/30 shadow-sm text-emerald-600" 
+                          : "bg-neutral-50/50 border-transparent text-neutral-500 hover:text-black hover:bg-white hover:border-neutral-200"
+                      }`}
+                    >
+                      <div className="w-5 h-5 rounded-md bg-emerald-100 flex items-center justify-center">
+                        <TrendingUp className="w-3 h-3 text-emerald-600" />
+                      </div>
+                      {link.name}
+                      <span className="px-1.5 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-black">
+                        {link.badge}
+                      </span>
+                    </Link>
+                  );
+                }
+
+                // Specialized styling for Swap
+                if (link.name === "Swap") {
+                  return (
+                    <Link
+                      key={link.name}
+                      href={link.href}
+                      className={`flex items-center gap-2 px-4 py-1.5 rounded-[12px] text-[14px] font-bold transition-all border ${
+                        isActive
+                          ? "bg-white border-purple-500/30 shadow-sm text-purple-600"
+                          : "bg-neutral-50/50 border-transparent text-neutral-500 hover:text-black hover:bg-white hover:border-neutral-200"
+                      }`}
+                    >
+                      <div className="w-5 h-5 rounded-md bg-purple-100 flex items-center justify-center">
+                        <Repeat2 className="w-3 h-3 text-purple-600" />
+                      </div>
+                      {link.name}
+                    </Link>
+                  );
+                }
+
                 return (
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[15px] font-medium transition-all ${
+                    className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[14px] font-bold transition-all border ${
                       isActive
-                        ? "bg-black/5 text-black border border-black/10"
-                        : "text-neutral-500 hover:text-black hover:bg-black/5"
+                        ? "bg-white border-orange-500/30 shadow-sm text-orange-600"
+                        : "text-neutral-500 hover:text-black hover:bg-white hover:border-neutral-200 border-transparent"
                     }`}
                   >
-                    {link.badge && (
-                      <div
-                        className="w-2.5 h-2.5 rounded-full"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
-                        }}
-                      />
-                    )}
+                    {link.name === "Borrow" && <Sparkles className="w-3.5 h-3.5" />}
+                    {link.name === "BTSUSD" && <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />}
                     {link.name}
-                    {link.badge && (
-                      <span className="text-green-600 font-bold ml-0.5">
-                        {link.badge}
-                      </span>
-                    )}
                   </Link>
                 );
               })}
