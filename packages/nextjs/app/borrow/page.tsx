@@ -243,8 +243,8 @@ export default function BorrowPage() {
                 className="w-full py-4 rounded-[20px] text-[17px] font-bold text-[#6c48ff] transition-all hover:opacity-90 active:scale-[0.98] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed bg-neutral-100/50"
                 style={{
                   color: isConnected ? "#6c48ff" : "white",
-                  background: isConnected 
-                    ? "rgb(248, 249, 255)" 
+                  background: isConnected
+                    ? "rgb(248, 249, 255)"
                     : "linear-gradient(135deg, #f97316 0%, #fb923c 100%, #f43f5e 100%)",
                 }}
               >
@@ -261,7 +261,9 @@ export default function BorrowPage() {
 
               <div className="flex items-center gap-2 text-[15px] font-bold text-neutral-300 mb-2 relative z-10">
                 <div className="w-6 h-6 rounded-full bg-[#f97316]/20 p-1 flex items-center justify-center">
-                  <span className="text-[#f97316] text-[10px] font-bold">$</span>
+                  <span className="text-[#f97316] text-[10px] font-bold">
+                    $
+                  </span>
                 </div>
                 Borrow Rate
               </div>

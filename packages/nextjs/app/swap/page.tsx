@@ -10,10 +10,20 @@ import React from "react";
 export default function SwapPage() {
   const { status } = useAccount();
   const isConnected = status === "connected";
-  
-  const [fromToken, setFromToken] = useState({ symbol: "USDC", name: "USD Coin", icon: "/bitcoin-btc-logo.svg", isBtcStyle: false });
-  const [toToken, setToToken] = useState({ symbol: "BTSUSD", name: "Bitcoin Standard USD", icon: "/bitcoin-btc-logo.svg", isBtcStyle: true });
-  
+
+  const [fromToken, setFromToken] = useState({
+    symbol: "USDC",
+    name: "USD Coin",
+    icon: "/bitcoin-btc-logo.svg",
+    isBtcStyle: false,
+  });
+  const [toToken, setToToken] = useState({
+    symbol: "BTSUSD",
+    name: "Bitcoin Standard USD",
+    icon: "/bitcoin-btc-logo.svg",
+    isBtcStyle: true,
+  });
+
   const [fromAmount, setFromAmount] = useState("");
   const [toAmount, setToAmount] = useState("");
 
@@ -60,7 +70,9 @@ export default function SwapPage() {
                       $
                     </div>
                   )}
-                  <span className="font-bold text-[16px]">{fromToken.symbol}</span>
+                  <span className="font-bold text-[16px]">
+                    {fromToken.symbol}
+                  </span>
                   <svg
                     className="w-4 h-4 text-neutral-400 ml-auto"
                     fill="none"
@@ -93,10 +105,10 @@ export default function SwapPage() {
             {/* SWAP ICON SEPARATOR */}
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
               <div className="w-10 h-10 rounded-full bg-white shadow-md border border-neutral-100 flex items-center justify-center text-[#6c48ff] group-hover:scale-110 transition-transform cursor-pointer">
-                 <div className="relative">
-                    <div className="absolute inset-0 bg-[#6c48ff]/10 rounded-full blur-md animate-pulse"></div>
-                    <ArrowDown className="w-5 h-5 relative z-10" />
-                 </div>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-[#6c48ff]/10 rounded-full blur-md animate-pulse"></div>
+                  <ArrowDown className="w-5 h-5 relative z-10" />
+                </div>
               </div>
             </div>
 
@@ -122,7 +134,9 @@ export default function SwapPage() {
                       $
                     </div>
                   )}
-                  <span className="font-bold text-[16px]">{toToken.symbol}</span>
+                  <span className="font-bold text-[16px]">
+                    {toToken.symbol}
+                  </span>
                   <svg
                     className="w-4 h-4 text-neutral-400 ml-auto"
                     fill="none"
@@ -138,7 +152,7 @@ export default function SwapPage() {
                   </svg>
                 </button>
                 <div className="flex-1 text-right">
-                   <input
+                  <input
                     type="text"
                     placeholder="0"
                     value={toAmount}
@@ -158,15 +172,19 @@ export default function SwapPage() {
             <button
               className="w-full py-4 rounded-[20px] text-[17px] font-bold text-white transition-all hover:opacity-90 active:scale-[0.98] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                background: isConnected 
-                  ? "rgb(248, 249, 255)" 
+                background: isConnected
+                  ? "rgb(248, 249, 255)"
                   : "linear-gradient(135deg, #f97316 0%, #fb923c 100%, #f43f5e 100%)",
                 color: isConnected ? "#6c48ff" : "white",
-                border: isConnected ? "1px solid #6c48ff" : "none"
+                border: isConnected ? "1px solid #6c48ff" : "none",
               }}
               disabled={isConnected && !fromAmount}
             >
-              {isConnected ? (fromAmount ? "Swap" : "Enter amount") : "Connect Wallet"}
+              {isConnected
+                ? fromAmount
+                  ? "Swap"
+                  : "Enter amount"
+                : "Connect Wallet"}
             </button>
           </div>
         </div>

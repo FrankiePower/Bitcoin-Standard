@@ -3,7 +3,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAccount, useDisconnect } from "@starknet-react/core";
-import { LogOut, Menu, Droplets, TrendingUp, Repeat2, Sparkles } from "lucide-react";
+import {
+  LogOut,
+  Menu,
+  Droplets,
+  TrendingUp,
+  Repeat2,
+  Sparkles,
+} from "lucide-react";
 import { CustomConnectButton } from "~~/components/scaffold-stark/CustomConnectButton";
 import { FaucetModal } from "~~/components/FaucetModal";
 
@@ -54,7 +61,7 @@ export function Navbar() {
             <div className="hidden md:flex items-center gap-3">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
-                
+
                 // Specialized styling for Savings
                 if (link.name === "Savings") {
                   return (
@@ -62,8 +69,8 @@ export function Navbar() {
                       key={link.name}
                       href={link.href}
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-[12px] text-[14px] font-bold transition-all border ${
-                        isActive 
-                          ? "bg-white border-emerald-500/30 shadow-sm text-emerald-600" 
+                        isActive
+                          ? "bg-white border-emerald-500/30 shadow-sm text-emerald-600"
                           : "bg-neutral-50/50 border-transparent text-neutral-500 hover:text-black hover:bg-white hover:border-neutral-200"
                       }`}
                     >
@@ -108,8 +115,12 @@ export function Navbar() {
                         : "text-neutral-500 hover:text-black hover:bg-white hover:border-neutral-200 border-transparent"
                     }`}
                   >
-                    {link.name === "Borrow" && <Sparkles className="w-3.5 h-3.5" />}
-                    {link.name === "BTSUSD" && <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />}
+                    {link.name === "Borrow" && (
+                      <Sparkles className="w-3.5 h-3.5" />
+                    )}
+                    {link.name === "BTSUSD" && (
+                      <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+                    )}
                     {link.name}
                   </Link>
                 );
