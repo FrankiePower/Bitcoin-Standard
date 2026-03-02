@@ -28,6 +28,35 @@ Savings:
 
 ## Development Log
 
+### 2026-03-01 - CDP System Deployed
+
+**Deployed to Sepolia:**
+- MockOracle: `0x03d86bc966d124fce2c7fdec8ccbb5af4e429ecafa7e97b84b14b98812d5ab6e`
+- BTSUSDToken: `0x065b99291375dd031316a50f44718ba6f7582802cbae093f9327e1dd1ddc94ce`
+- MockYieldManager: `0x0478fbd0abaa32a8fe551ef1699dea2c64e61e837ad7092ebee383ce58d2dbdf`
+- BTSUSDVault: `0x071d1fb34337cb55478cc2784bbc9aa905eae7d670f4267f60dc0c9ee2ac0040`
+- Liquidator: `0x02fc386dc1b2642510048dc42428aef88a3c4a5b8660ce6c41f98263eb07670f`
+
+**CDP Features:**
+- Deposit wBTC collateral
+- Mint BTSUSD stablecoin (up to 66.67% LTV)
+- 150% minimum collateral ratio
+- 120% liquidation threshold
+- Mock oracle providing $65,000 BTC price
+
+**Configuration:**
+- BTSUSDToken vault → BTSUSDVault
+- MockYieldManager vault → BTSUSDVault
+- BTSUSDVault liquidator → Liquidator
+
+**Frontend:**
+- `useCDP` hook - reads vault stats, user position, executes deposit/withdraw/mint/repay
+- Borrow page - full CDP management UI with collateral deposit, borrowing, repayment
+- Health status indicators (healthy/warning/danger)
+- LTV visualization bar
+
+---
+
 ### 2026-03-01 - Savings Module Complete
 
 **Deployed to Sepolia:**
@@ -58,13 +87,14 @@ Savings:
 
 | Feature | Reference | Bitcoin Standard | Status |
 |---------|-----------|------------------|--------|
-| CDP Vault | BTCUSDVault | BTSUSDVault | Built |
-| Stablecoin | BTCUSDToken | BTSUSDToken | Built |
-| Price Oracle | PriceOracle | BTSUSDOracle | Built |
-| Liquidator | Liquidator | Liquidator | Built |
+| CDP Vault | BTCUSDVault | BTSUSDVault | **Deployed** |
+| Stablecoin | BTCUSDToken | BTSUSDToken | **Deployed** |
+| Price Oracle | PriceOracle | MockOracle | **Deployed** |
+| Liquidator | Liquidator | Liquidator | **Deployed** |
 | Mock wBTC | MockWBTC | MockWBTC | **Deployed** |
+| Mock Yield Manager | YieldManager | MockYieldManager | **Deployed** |
 | BTC Bridge | AtomiqAdapter | AtomiqAdapter | Built |
-| Yield Manager | YieldManager | VesuYieldManager | Built |
+| Yield Manager | VesuYieldManager | VesuYieldManager | Built |
 | **Savings Vaults** | Not included | BTSSavingsVault | **Deployed** |
 | **Intent System** | Not included | Planned | Not started |
 | Mobile App | React Native | Next.js Web | Different |
