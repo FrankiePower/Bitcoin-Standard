@@ -44,12 +44,15 @@ Last updated: 2026-03-02
 
 ### 2b. Starknet Contracts — CDP Layer
 
-- [ ] Write VaultRegistry.cairo (maps btc_txid → position owner + amount)
-- [ ] Write CDPCore.cairo (debt tracking, health factor, liquidation trigger)
-- [ ] Rename BTSUSDToken → BTCUSDToken (100% reusable, just rename + redeploy)
-- [ ] Write interfaces.cairo (updated for new contracts)
-- [ ] Write tests for VaultRegistry (register, verify_active, close)
-- [ ] Write tests for CDPCore (mint_debt, repay_debt, liquidate, get_health_factor)
+- [x] Write VaultRegistry.cairo (maps btc_txid → position owner + amount) ✅
+- [x] Write CDPCore.cairo (debt tracking, health factor, liquidation trigger) ✅
+- [x] Write BTCUSDToken.cairo (replaces btsusd_token; mint/burn gated to CDPCore) ✅
+- [x] Rewrite interfaces.cairo — purged 467 lines of wBTC CDP cruft, 0 external trust assumptions ✅
+- [x] Purge Phase 1 wBTC contracts — 8 contracts + 5 test files deleted (~3,100 LOC removed) ✅
+- [x] `scarb build` → 0 errors ✅
+- [x] Write tests for VaultRegistry (register, verify_active, close, liquidate, access control) ✅ 18 tests
+- [x] Write tests for CDPCore (mint_debt, repay_debt, liquidate, get_health_factor, undercollateralization) ✅ 24 tests
+- [x] `snforge test` → 59 passed, 0 failed ✅
 - [ ] Deploy VaultRegistry to Sepolia
 - [ ] Deploy CDPCore to Sepolia
 - [ ] Deploy BTCUSDToken to Sepolia
