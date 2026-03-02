@@ -20,24 +20,36 @@ const PRICE_DECIMALS = BigInt(100000000); // 1e8
 /**
  * Format wBTC amount (8 decimals)
  */
-export function formatWBTC(amount: bigint | undefined, displayDecimals: number = 4): string {
+export function formatWBTC(
+  amount: bigint | undefined,
+  displayDecimals: number = 4,
+): string {
   if (!amount || amount === BigInt(0)) return "0";
   const divisor = WBTC_DECIMALS;
   const integerPart = amount / divisor;
   const fractionalPart = amount % divisor;
-  const fractionalStr = fractionalPart.toString().padStart(8, "0").slice(0, displayDecimals);
+  const fractionalStr = fractionalPart
+    .toString()
+    .padStart(8, "0")
+    .slice(0, displayDecimals);
   return `${integerPart.toLocaleString()}.${fractionalStr}`;
 }
 
 /**
  * Format BTSUSD amount (18 decimals)
  */
-export function formatBTSUSD(amount: bigint | undefined, displayDecimals: number = 2): string {
+export function formatBTSUSD(
+  amount: bigint | undefined,
+  displayDecimals: number = 2,
+): string {
   if (!amount || amount === BigInt(0)) return "0";
   const divisor = BTSUSD_DECIMALS;
   const integerPart = amount / divisor;
   const fractionalPart = amount % divisor;
-  const fractionalStr = fractionalPart.toString().padStart(18, "0").slice(0, displayDecimals);
+  const fractionalStr = fractionalPart
+    .toString()
+    .padStart(18, "0")
+    .slice(0, displayDecimals);
   return `${integerPart.toLocaleString()}.${fractionalStr}`;
 }
 
@@ -53,7 +65,9 @@ export function formatRatio(ratio: bigint | undefined): string {
 /**
  * Get health status based on collateral ratio
  */
-export function getHealthStatus(ratio: bigint): "healthy" | "warning" | "danger" | "none" {
+export function getHealthStatus(
+  ratio: bigint,
+): "healthy" | "warning" | "danger" | "none" {
   if (ratio === BigInt(0)) return "none";
   if (ratio < LIQUIDATION_THRESHOLD) return "danger";
   if (ratio < MIN_COLLATERAL_RATIO) return "warning";
@@ -88,14 +102,15 @@ export function useCDP() {
   const [isBurningBTSUSD, setIsBurningBTSUSD] = useState(false);
 
   // Read protocol stats
-  const { data: protocolStatsRaw, refetch: refetchProtocolStats } = useReadContract({
-    functionName: "get_protocol_stats",
-    address: vaultData?.address,
-    abi: vaultData?.abi,
-    args: [],
-    enabled: isVaultDeployed,
-    watch: true,
-  });
+  const { data: protocolStatsRaw, refetch: refetchProtocolStats } =
+    useReadContract({
+      functionName: "get_protocol_stats",
+      address: vaultData?.address,
+      abi: vaultData?.abi,
+      args: [],
+      enabled: isVaultDeployed,
+      watch: true,
+    });
 
   const { data: btcPriceRaw, refetch: refetchBtcPrice } = useReadContract({
     functionName: "get_btc_price",
@@ -116,64 +131,73 @@ export function useCDP() {
     watch: true,
   });
 
-  const { data: collateralRatioRaw, refetch: refetchCollateralRatio } = useReadContract({
-    functionName: "get_collateral_ratio",
-    address: vaultData?.address,
-    abi: vaultData?.abi,
-    args: address ? [address] : [],
-    enabled: isVaultDeployed && isConnected,
-    watch: true,
-  });
+  const { data: collateralRatioRaw, refetch: refetchCollateralRatio } =
+    useReadContract({
+      functionName: "get_collateral_ratio",
+      address: vaultData?.address,
+      abi: vaultData?.abi,
+      args: address ? [address] : [],
+      enabled: isVaultDeployed && isConnected,
+      watch: true,
+    });
 
-  const { data: isLiquidatableRaw, refetch: refetchIsLiquidatable } = useReadContract({
-    functionName: "is_liquidatable",
-    address: vaultData?.address,
-    abi: vaultData?.abi,
-    args: address ? [address] : [],
-    enabled: isVaultDeployed && isConnected,
-    watch: true,
-  });
+  const { data: isLiquidatableRaw, refetch: refetchIsLiquidatable } =
+    useReadContract({
+      functionName: "is_liquidatable",
+      address: vaultData?.address,
+      abi: vaultData?.abi,
+      args: address ? [address] : [],
+      enabled: isVaultDeployed && isConnected,
+      watch: true,
+    });
 
-  const { data: maxMintableRaw, refetch: refetchMaxMintable } = useReadContract({
-    functionName: "get_max_mintable",
-    address: vaultData?.address,
-    abi: vaultData?.abi,
-    args: address ? [address] : [],
-    enabled: isVaultDeployed && isConnected,
-    watch: true,
-  });
+  const { data: maxMintableRaw, refetch: refetchMaxMintable } = useReadContract(
+    {
+      functionName: "get_max_mintable",
+      address: vaultData?.address,
+      abi: vaultData?.abi,
+      args: address ? [address] : [],
+      enabled: isVaultDeployed && isConnected,
+      watch: true,
+    },
+  );
 
-  const { data: maxWithdrawableRaw, refetch: refetchMaxWithdrawable } = useReadContract({
-    functionName: "get_max_withdrawable",
-    address: vaultData?.address,
-    abi: vaultData?.abi,
-    args: address ? [address] : [],
-    enabled: isVaultDeployed && isConnected,
-    watch: true,
-  });
+  const { data: maxWithdrawableRaw, refetch: refetchMaxWithdrawable } =
+    useReadContract({
+      functionName: "get_max_withdrawable",
+      address: vaultData?.address,
+      abi: vaultData?.abi,
+      args: address ? [address] : [],
+      enabled: isVaultDeployed && isConnected,
+      watch: true,
+    });
 
   // Read user balances
-  const { data: wbtcBalanceRaw, refetch: refetchWbtcBalance } = useReadContract({
-    functionName: "balance_of",
-    address: wbtcData?.address,
-    abi: wbtcData?.abi,
-    args: address ? [address] : [],
-    enabled: isWbtcDeployed && isConnected,
-    watch: true,
-  });
+  const { data: wbtcBalanceRaw, refetch: refetchWbtcBalance } = useReadContract(
+    {
+      functionName: "balance_of",
+      address: wbtcData?.address,
+      abi: wbtcData?.abi,
+      args: address ? [address] : [],
+      enabled: isWbtcDeployed && isConnected,
+      watch: true,
+    },
+  );
 
-  const { data: btsusdBalanceRaw, refetch: refetchBtsusdBalance } = useReadContract({
-    functionName: "balance_of",
-    address: btsusdData?.address,
-    abi: btsusdData?.abi,
-    args: address ? [address] : [],
-    enabled: isBtsusdDeployed && isConnected,
-    watch: true,
-  });
+  const { data: btsusdBalanceRaw, refetch: refetchBtsusdBalance } =
+    useReadContract({
+      functionName: "balance_of",
+      address: btsusdData?.address,
+      abi: btsusdData?.abi,
+      args: address ? [address] : [],
+      enabled: isBtsusdDeployed && isConnected,
+      watch: true,
+    });
 
   // Parse values
   const protocolStats = useMemo(() => {
-    if (!protocolStatsRaw) return { totalCollateral: BigInt(0), totalDebt: BigInt(0) };
+    if (!protocolStatsRaw)
+      return { totalCollateral: BigInt(0), totalDebt: BigInt(0) };
     const stats = protocolStatsRaw as any;
     return {
       totalCollateral: stats[0] ? BigInt(stats[0].toString()) : BigInt(0),
@@ -191,38 +215,56 @@ export function useCDP() {
   }, [btcPrice]);
 
   const position = useMemo(() => {
-    if (!positionRaw) return { collateral: BigInt(0), debt: BigInt(0), lastUpdate: BigInt(0) };
+    if (!positionRaw)
+      return { collateral: BigInt(0), debt: BigInt(0), lastUpdate: BigInt(0) };
     const pos = positionRaw as any;
     return {
-      collateral: pos.collateral ? BigInt(pos.collateral.toString()) : BigInt(0),
+      collateral: pos.collateral
+        ? BigInt(pos.collateral.toString())
+        : BigInt(0),
       debt: pos.debt ? BigInt(pos.debt.toString()) : BigInt(0),
-      lastUpdate: pos.last_update ? BigInt(pos.last_update.toString()) : BigInt(0),
+      lastUpdate: pos.last_update
+        ? BigInt(pos.last_update.toString())
+        : BigInt(0),
     };
   }, [positionRaw]);
 
   const collateralRatio = useMemo(() => {
-    return collateralRatioRaw ? BigInt((collateralRatioRaw as any).toString()) : BigInt(0);
+    return collateralRatioRaw
+      ? BigInt((collateralRatioRaw as any).toString())
+      : BigInt(0);
   }, [collateralRatioRaw]);
 
   const isLiquidatable = useMemo(() => {
     if (!isLiquidatableRaw) return false;
-    return (isLiquidatableRaw as any) === true || (isLiquidatableRaw as any)?.variant?.True !== undefined;
+    return (
+      (isLiquidatableRaw as any) === true ||
+      (isLiquidatableRaw as any)?.variant?.True !== undefined
+    );
   }, [isLiquidatableRaw]);
 
   const maxMintable = useMemo(() => {
-    return maxMintableRaw ? BigInt((maxMintableRaw as any).toString()) : BigInt(0);
+    return maxMintableRaw
+      ? BigInt((maxMintableRaw as any).toString())
+      : BigInt(0);
   }, [maxMintableRaw]);
 
   const maxWithdrawable = useMemo(() => {
-    return maxWithdrawableRaw ? BigInt((maxWithdrawableRaw as any).toString()) : BigInt(0);
+    return maxWithdrawableRaw
+      ? BigInt((maxWithdrawableRaw as any).toString())
+      : BigInt(0);
   }, [maxWithdrawableRaw]);
 
   const wbtcBalance = useMemo(() => {
-    return wbtcBalanceRaw ? BigInt((wbtcBalanceRaw as any).toString()) : BigInt(0);
+    return wbtcBalanceRaw
+      ? BigInt((wbtcBalanceRaw as any).toString())
+      : BigInt(0);
   }, [wbtcBalanceRaw]);
 
   const btsusdBalance = useMemo(() => {
-    return btsusdBalanceRaw ? BigInt((btsusdBalanceRaw as any).toString()) : BigInt(0);
+    return btsusdBalanceRaw
+      ? BigInt((btsusdBalanceRaw as any).toString())
+      : BigInt(0);
   }, [btsusdBalanceRaw]);
 
   const healthStatus = useMemo(() => {
@@ -232,14 +274,21 @@ export function useCDP() {
   // Calculate collateral value in USD
   const collateralValueUSD = useMemo(() => {
     if (position.collateral === BigInt(0) || btcPrice === BigInt(0)) return 0;
-    const value = (position.collateral * btcPrice) / WBTC_DECIMALS / PRICE_DECIMALS;
+    const value =
+      (position.collateral * btcPrice) / WBTC_DECIMALS / PRICE_DECIMALS;
     return Number(value);
   }, [position.collateral, btcPrice]);
 
   // Actions
   const depositCollateral = useCallback(
     async (amount: bigint) => {
-      if (!address || !vaultData?.address || !vaultData?.abi || !wbtcData?.address || !wbtcData?.abi) {
+      if (
+        !address ||
+        !vaultData?.address ||
+        !vaultData?.abi ||
+        !wbtcData?.address ||
+        !wbtcData?.abi
+      ) {
         throw new Error("Contracts not deployed or wallet not connected");
       }
 
@@ -250,21 +299,26 @@ export function useCDP() {
           abi: wbtcData.abi,
           address: wbtcData.address,
         });
-        const approveCall = wbtcContract.populate("approve", [vaultData.address, amount]);
+        const approveCall = wbtcContract.populate("approve", [
+          vaultData.address,
+          amount,
+        ]);
 
         // Then deposit collateral
         const vaultContract = new Contract({
           abi: vaultData.abi,
           address: vaultData.address,
         });
-        const depositCall = vaultContract.populate("deposit_collateral", [amount]);
+        const depositCall = vaultContract.populate("deposit_collateral", [
+          amount,
+        ]);
 
         await writeTransaction([approveCall as Call, depositCall as Call]);
       } finally {
         setIsDepositingCollateral(false);
       }
     },
-    [address, vaultData, wbtcData, writeTransaction]
+    [address, vaultData, wbtcData, writeTransaction],
   );
 
   const withdrawCollateral = useCallback(
@@ -279,14 +333,16 @@ export function useCDP() {
           abi: vaultData.abi,
           address: vaultData.address,
         });
-        const withdrawCall = vaultContract.populate("withdraw_collateral", [amount]);
+        const withdrawCall = vaultContract.populate("withdraw_collateral", [
+          amount,
+        ]);
 
         await writeTransaction([withdrawCall as Call]);
       } finally {
         setIsWithdrawingCollateral(false);
       }
     },
-    [address, vaultData, writeTransaction]
+    [address, vaultData, writeTransaction],
   );
 
   const mintBTSUSD = useCallback(
@@ -308,7 +364,7 @@ export function useCDP() {
         setIsMintingBTSUSD(false);
       }
     },
-    [address, vaultData, writeTransaction]
+    [address, vaultData, writeTransaction],
   );
 
   const burnBTSUSD = useCallback(
@@ -330,12 +386,18 @@ export function useCDP() {
         setIsBurningBTSUSD(false);
       }
     },
-    [address, vaultData, writeTransaction]
+    [address, vaultData, writeTransaction],
   );
 
   const depositAndMint = useCallback(
     async (collateralAmount: bigint) => {
-      if (!address || !vaultData?.address || !vaultData?.abi || !wbtcData?.address || !wbtcData?.abi) {
+      if (
+        !address ||
+        !vaultData?.address ||
+        !vaultData?.abi ||
+        !wbtcData?.address ||
+        !wbtcData?.abi
+      ) {
         throw new Error("Contracts not deployed or wallet not connected");
       }
 
@@ -347,14 +409,19 @@ export function useCDP() {
           abi: wbtcData.abi,
           address: wbtcData.address,
         });
-        const approveCall = wbtcContract.populate("approve", [vaultData.address, collateralAmount]);
+        const approveCall = wbtcContract.populate("approve", [
+          vaultData.address,
+          collateralAmount,
+        ]);
 
         // Then deposit and mint
         const vaultContract = new Contract({
           abi: vaultData.abi,
           address: vaultData.address,
         });
-        const depositMintCall = vaultContract.populate("deposit_and_mint", [collateralAmount]);
+        const depositMintCall = vaultContract.populate("deposit_and_mint", [
+          collateralAmount,
+        ]);
 
         await writeTransaction([approveCall as Call, depositMintCall as Call]);
       } finally {
@@ -362,7 +429,7 @@ export function useCDP() {
         setIsMintingBTSUSD(false);
       }
     },
-    [address, vaultData, wbtcData, writeTransaction]
+    [address, vaultData, wbtcData, writeTransaction],
   );
 
   const repayAndWithdraw = useCallback(
@@ -378,7 +445,9 @@ export function useCDP() {
           abi: vaultData.abi,
           address: vaultData.address,
         });
-        const repayWithdrawCall = vaultContract.populate("repay_and_withdraw", [btsusdAmount]);
+        const repayWithdrawCall = vaultContract.populate("repay_and_withdraw", [
+          btsusdAmount,
+        ]);
 
         await writeTransaction([repayWithdrawCall as Call]);
       } finally {
@@ -386,7 +455,7 @@ export function useCDP() {
         setIsWithdrawingCollateral(false);
       }
     },
-    [address, vaultData, writeTransaction]
+    [address, vaultData, writeTransaction],
   );
 
   // Refetch all data
