@@ -4,6 +4,72 @@
 
 ---
 
+## Session 3 — 2026-03-02: standard_vault Rust complete (OP_CAT vault)
+
+### Architecture pivot summary
+Migrated from wBTC-on-Starknet CDP → native Bitcoin OP_CAT vault + Starknet debt ledger + Chainlink CRE oracle bridge. See `CDP_EVALUATION.md` for full rationale.
+
+### Files written
+
+| File | Status | Notes |
+|------|--------|-------|
+| `standard_vault/src/vault/script.rs` | ✅ Rewritten | 3 new Tapscript leaves |
+| `standard_vault/src/vault/contract.rs` | ✅ Rewritten | New VaultCovenant struct + tx builders |
+| `standard_vault/src/main.rs` | ✅ Rewritten | New CLI actions |
+| `standard_vault/Cargo.toml` | ✅ Updated | Renamed purrfect_vault → standard_vault |
+| `standard_vault/src/vault/signature_building.rs` | 🔒 Untouched | Do not modify |
+| `standard_vault/src/wallet.rs` | 🔒 Untouched | Do not modify |
+
+### Three Tapscript leaves
+
+**Leaf A — `vault_repay(user_key, oracle_key)`**
+- 2-of-2: oracle CHECKSIGVERIFY → user CHECKSIG
+- No OP_CAT. Both Schnorr sigs commit to same tx outputs.
+- CRE signs when debt is cleared on Starknet. User chooses destination.
+- Witness: `[oracle_sig, user_sig, script, control_block]`
+
+**Leaf B — `vault_liquidate(oracle_key, liq_pool_spk)`**
+- Oracle CHECKSIGVERIFY + OP_CAT covenant
+- `liq_pool_spk` is `push_slice`'d into the script itself — hardcoded, not from witness
+- Script reconstructs sighash preimage via OP_CAT; compares against oracle's actual Schnorr sig
+- **Security property: even a fully compromised oracle cannot redirect BTC to any other address**
+- Witness: `[sigcomps..., vault_amount, vault_spk, fee_amount, fee_spk, sig63, last_byte, last_byte+1, oracle_sig, script, control_block]`
+- Key change from purrfect_vault cancel_withdrawal: replaced `OP_2DUP` + 4×TOALTSTACK with `TOALTSTACK, DUP, TOALTSTACK, push_slice(liq_pool_spk), TOALTSTACK, TOALTSTACK`
+
+**Leaf C — `vault_emergency_timeout(user_key, timelock)`**
+- CSV + user CHECKSIG. No OP_CAT.
+- After 20 blocks, user recovers BTC unilaterally. Safety valve vs oracle liveness failures.
+- Witness: `[user_sig, script, control_block]`
+
+### New VaultCovenant struct
+```
+user_keypair         — user's Schnorr key (Leaf A + C)
+oracle_keypair       — oracle key (Chainlink CRE holds private key in prod)
+liquidation_pool_address — where liquidated BTC goes (hardcoded in Leaf B script)
+timelock_in_blocks   — CSV timelock for Leaf C (default: 20)
+```
+
+### CLI commands
+```
+just deposit            → fund vault, print oracle pubkey for CRE
+just repay <addr>       → oracle + user sign, BTC returned
+just liquidate          → oracle-only, OP_CAT covenant enforces liquidation pool
+just timeout <addr>     → user-only after CSV timelock
+just status             → show vault state + oracle pubkey
+```
+
+### Build result
+```
+cargo build → Finished dev profile, 0 errors, 2 warnings (dead code in untouched original files)
+```
+
+### What's next
+1. `just bootstrap` → test all 3 spending paths on regtest
+2. Write Starknet Cairo: VaultRegistry + CDPCore + BTCUSDToken
+3. Build Chainlink CRE workflow
+
+---
+
 ## Table of Contents
 
 1. [Project Overview](#project-overview)
