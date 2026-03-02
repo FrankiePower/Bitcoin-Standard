@@ -1,44 +1,35 @@
-pub mod atomiq_adapter;
+pub mod btcusd_token;
 pub mod btsusd_oracle;
-pub mod btsusd_token;
-pub mod btsusd_vault;
-/// The Bitcoin Standard Protocol
+pub mod cdp_core;
+/// BTCStandard Protocol
 ///
-/// A Bitcoin-backed stablecoin protocol on Starknet.
+/// Native Bitcoin CDP on Starknet. Real BTC locked in OP_CAT Taproot vaults on Bitcoin;
+/// debt tracked on Starknet; oracle bridge via Chainlink CRE.
 ///
 /// ## Architecture
 ///
 /// ```
-/// BTC → Atomiq → wBTC → BTSUSDVault → BTSUSD
-///                              ↓
-///                        YieldManager → Vesu
-///                              ↓
-///                        Liquidator
+/// Bitcoin (OP_CAT vault) → register txid → VaultRegistry
+///                                                ↓
+///                                           CDPCore → BTCUSDToken (mint/burn)
+///                                                ↓
+///                               Chainlink CRE (price feed + liquidation oracle)
 ///
-/// Savings:
-///   wBTC/BTSUSD/STRK → BTSSavingsVault → sWBTC/sBTSUSD/sSTRK (share tokens)
-///                              ↑
-///                      BTSSavingsFactory (registry)
+/// Savings (Phase 1 — deployed):
+///   wBTC/STRK → BTSSavingsVault (ERC4626) → share tokens
+///                    ↑
+///           BTSSavingsFactory (registry)
 /// ```
 ///
 /// ## Modules
 ///
-/// - `interfaces`        : All contract interfaces and shared types
-/// - `btsusd_token`      : BTSUSD stablecoin ERC20 token
-/// - `btsusd_vault`      : Core vault — collateral management and minting
-/// - `vesu_yield_manager`: Yield generation via Vesu lending protocol
-/// - `liquidator`        : Undercollateralized position liquidation
-/// - `btsusd_oracle`     : BTC/USD price oracle (mock + Pragma integration)
-/// - `atomiq_adapter`    : Atomiq BTC ↔ wBTC bridge adapter
-/// - `mock_yield_manager`: Mock yield manager for Stage 1 testing
-/// - `mock_wbtc`         : Mock wBTC ERC20 for testing
-/// - `mock_btc_relay`    : Mock BTC relay for testing
-/// - `savings`           : ERC4626 savings vaults + factory registry
+/// - `interfaces`       : All contract interfaces and shared types
+/// - `btcusd_token`     : BTCUSD stablecoin ERC20 (minted against BTC collateral)
+/// - `vault_registry`   : Maps Bitcoin txid → vault owner + amount + state
+/// - `cdp_core`         : Debt tracking, health factor, oracle-triggered liquidation
+/// - `btsusd_oracle`    : Mock BTC/USD price oracle (swap for Pragma in production)
+/// - `savings`          : ERC4626 savings vaults + factory (Phase 1, deployed)
 
 pub mod interfaces;
-pub mod liquidator;
-pub mod mock_btc_relay;
-pub mod mock_wbtc;
-pub mod mock_yield_manager;
 pub mod savings;
-pub mod vesu_yield_manager;
+pub mod vault_registry;
