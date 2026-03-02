@@ -1,11 +1,10 @@
-// Test modules for BTSUSD Protocol
-mod test_btsusd_token;
-mod test_btsusd_vault;
-mod test_integration;
+// BTCStandard Protocol — Phase 2 Tests
+mod test_cdp_core;
 mod test_mock_oracle;
-mod test_mock_yield_manager;
-mod test_risk_engine;
-mod test_savings_factory;
 
-// Savings module tests
-mod test_savings_vault;
+// Phase 2 — Native Bitcoin CDP
+mod test_vault_registry;
+// Phase 1 savings tests omitted: they depend on mock_wbtc (deleted).
+// Phase 1 contracts (BTSSavingsVault, BTSSavingsFactory) are live on Sepolia.
+
+
