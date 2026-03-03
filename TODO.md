@@ -53,21 +53,25 @@ Last updated: 2026-03-02
 - [x] Write tests for VaultRegistry (register, verify_active, close, liquidate, access control) ✅ 18 tests
 - [x] Write tests for CDPCore (mint_debt, repay_debt, liquidate, get_health_factor, undercollateralization) ✅ 24 tests
 - [x] `snforge test` → 59 passed, 0 failed ✅
-- [ ] Deploy VaultRegistry to Sepolia
-- [ ] Deploy CDPCore to Sepolia
-- [ ] Deploy BTCUSDToken to Sepolia
-- [ ] Configure CDPCore → BTCUSDToken mint authority
+- [x] Deploy PragmaOracle to Sepolia ✅ `0x013e2be818f9fd0d0747159bf0e1201b6e698cc1c0744f2dd4d375eca29b5a69`
+- [x] Deploy VaultRegistry to Sepolia ✅ `0x0147864dd4a1c9849cbdaea58c22cdc36fe42a66c1102bc02ec4668932937bae`
+- [x] Deploy BTCUSDToken to Sepolia ✅ `0x075690645b6e49811b87ec11bbffb3f25aa6b00cb8070a9459983135e39cb2cd`
+- [x] Deploy CDPCore to Sepolia ✅ `0x070985a3cf9817e50a90bc2d3550f77d64f8a9bebc71577172295682f9580879`
+- [x] Configure CDPCore → BTCUSDToken mint authority ✅ (set_vault)
+- [x] Configure VaultRegistry → CDPCore ✅ (set_cdp_core)
+- [x] Verify PragmaOracle live price ✅ BTC/USD = $112,165.39 (stale — Sepolia testnet)
+- [x] Deploy MockOracle to Sepolia ✅ `0x04ed3d329fffa670f2a728444a9b53d0cae859a4397adfbde1622e0303041f14`
+- [x] Switch CDPCore oracle → MockOracle (set_oracle) ✅
+- [x] Set correct BTC price on MockOracle ✅ $69,407.00
 
-### 2c. Chainlink CRE Integration
+### 2c. Oracle Service (Bitcoin watcher)
 
-- [ ] Design CRE workflow spec (triggers, compute, outputs)
-- [ ] Implement Bitcoin UTXO monitor (check vault UTXO unspent)
-- [ ] Implement health factor compute (BTC/USD price → LTV check)
-- [ ] Implement liquidation attestation signing (oracle_keypair signs liquidate_tx)
-- [ ] Implement repayment attestation signing (oracle signs repay_tx after debt cleared)
-- [ ] Push BTC/USD price updates to Starknet CDPCore
-- [ ] Wire oracle keypair (private key in CRE secrets, public key in vault script)
-- [ ] Test CRE end-to-end on regtest → trigger liquidation via price drop
+- [ ] Write oracle service (Node.js or Rust cron)
+  - [ ] Monitor Bitcoin signet vault UTXOs
+  - [ ] Check CDPCore health factors on Starknet
+  - [ ] Sign liquidation attestations when HF < 100
+  - [ ] Sign repayment attestations when debt cleared
+- [ ] Wire oracle keypair (private key in service env, public key in vault Tapscript)
 
 ### 2d. Frontend Update
 
@@ -118,9 +122,11 @@ Last updated: 2026-03-02
 | MockYieldManager | `0x0478fbd0abaa32a8fe551ef1699dea2c64e61e837ad7092ebee383ce58d2dbdf` | Replaced |
 | BTSUSDVault | `0x071d1fb34337cb55478cc2784bbc9aa905eae7d670f4267f60dc0c9ee2ac0040` | Replaced |
 | Liquidator | `0x02fc386dc1b2642510048dc42428aef88a3c4a5b8660ce6c41f98263eb07670f` | Replaced |
-| VaultRegistry | — | Not deployed yet |
-| CDPCore | — | Not deployed yet |
-| BTCUSDToken | — | Not deployed yet |
+| PragmaOracle | `0x013e2be818f9fd0d0747159bf0e1201b6e698cc1c0744f2dd4d375eca29b5a69` | Live (stale feed) |
+| MockOracle | `0x04ed3d329fffa670f2a728444a9b53d0cae859a4397adfbde1622e0303041f14` | Live ✅ $69,407 |
+| VaultRegistry | `0x0147864dd4a1c9849cbdaea58c22cdc36fe42a66c1102bc02ec4668932937bae` | Live ✅ |
+| CDPCore | `0x070985a3cf9817e50a90bc2d3550f77d64f8a9bebc71577172295682f9580879` | Live ✅ |
+| BTCUSDToken | `0x075690645b6e49811b87ec11bbffb3f25aa6b00cb8070a9459983135e39cb2cd` | Live ✅ |
 
 ---
 
