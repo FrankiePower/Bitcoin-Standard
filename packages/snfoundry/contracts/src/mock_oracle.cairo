@@ -32,6 +32,9 @@ pub mod MockOracle {
     /// Default BTC price: $65,000 with 8 decimals
     const DEFAULT_BTC_PRICE: u256 = 65000_00000000;
 
+    /// Default BTC volatility: 0% with 8 decimals (so default MCR = 150 for existing tests)
+    const DEFAULT_BTC_VOLATILITY: u128 = 0;
+
     // ================================================================================================
     // STORAGE
     // ================================================================================================
@@ -42,6 +45,8 @@ pub mod MockOracle {
         ownable: OwnableComponent::Storage,
         /// Current BTC price with 8 decimals
         btc_price: u256,
+        /// Current BTC volatility with 8 decimals
+        btc_volatility: u128,
         /// Timestamp of last price update
         last_update: u64,
         /// Maximum allowed price age in seconds
@@ -58,12 +63,20 @@ pub mod MockOracle {
         #[flat]
         OwnableEvent: OwnableComponent::Event,
         PriceUpdated: PriceUpdated,
+        VolatilityUpdated: VolatilityUpdated,
     }
 
     #[derive(Drop, starknet::Event)]
     pub struct PriceUpdated {
         pub old_price: u256,
         pub new_price: u256,
+        pub timestamp: u64,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    pub struct VolatilityUpdated {
+        pub old_volatility: u128,
+        pub new_volatility: u128,
         pub timestamp: u64,
     }
 
@@ -75,6 +88,7 @@ pub mod MockOracle {
     fn constructor(ref self: ContractState, owner: ContractAddress) {
         self.ownable.initializer(owner);
         self.btc_price.write(DEFAULT_BTC_PRICE);
+        self.btc_volatility.write(DEFAULT_BTC_VOLATILITY);
         self.last_update.write(get_block_timestamp());
         self.max_price_age.write(DEFAULT_MAX_PRICE_AGE);
     }
@@ -102,6 +116,10 @@ pub mod MockOracle {
         fn get_max_price_age(self: @ContractState) -> u64 {
             self.max_price_age.read()
         }
+
+        fn get_btc_volatility(self: @ContractState) -> u128 {
+            self.btc_volatility.read()
+        }
     }
 
     // ================================================================================================
@@ -126,6 +144,20 @@ pub mod MockOracle {
         fn set_max_price_age(ref self: ContractState, max_age: u64) {
             self.ownable.assert_only_owner();
             self.max_price_age.write(max_age);
+        }
+
+        fn set_btc_volatility(ref self: ContractState, volatility: u128) {
+            self.ownable.assert_only_owner();
+            let old_volatility = self.btc_volatility.read();
+            self.btc_volatility.write(volatility);
+            self
+                .emit(
+                    VolatilityUpdated {
+                        old_volatility,
+                        new_volatility: volatility,
+                        timestamp: get_block_timestamp(),
+                    },
+                );
         }
     }
 }

@@ -22,6 +22,9 @@ pub trait IPriceOracle<TContractState> {
 
     /// Returns the maximum allowed price age in seconds.
     fn get_max_price_age(self: @TContractState) -> u64;
+
+    /// Returns annualized realized volatility with 8 decimals (e.g. 7076538586 = 70.76%).
+    fn get_btc_volatility(self: @TContractState) -> u128;
 }
 
 /// Admin interface for the mock oracle (testing only).
@@ -29,6 +32,7 @@ pub trait IPriceOracle<TContractState> {
 pub trait IMockOracle<TContractState> {
     fn set_btc_price(ref self: TContractState, price: u256);
     fn set_max_price_age(ref self: TContractState, max_age: u64);
+    fn set_btc_volatility(ref self: TContractState, volatility: u128);
 }
 
 // ================================================================================================

@@ -545,3 +545,41 @@ fn test_protocol_stats_tracks_debt() {
     let (_, debt_after) = cdp.get_protocol_stats();
     assert(debt_after == DEBT_30K, 'Debt not tracked');
 }
+
+// ============ Dynamic MCR Tests ============
+
+#[test]
+fn test_dynamic_mcr_from_volatility() {
+    let (cdp_addr, _, _, oracle_addr, cdp, _, _, oracle) = deploy_system();
+
+    start_cheat_caller_address(cdp_addr, USER1());
+    cdp.register_vault(TXID_1, ONE_BTC);
+    // With 0% volatility, MCR = 150. DEBT_AT_THRESHOLD yields exactly hf=100.
+    cdp.mint_debt(TXID_1, DEBT_AT_THRESHOLD);
+
+    let hf_normal = cdp.get_health_factor(TXID_1);
+    assert(hf_normal == 100, 'Expected hf=100 with 0% vol');
+
+    // Now simulate market turbulence: Bitcoin volatility spikes to 100% (10000000000)
+    // Dynamic MCR formula: mcr = 150 + (100 / 2) = 200.
+    // The same debt will now be considered undercollateralized (because MCR jumped from 150 to
+    // 200).
+    // New Health factor should be (150 / 200) * 100 = 75.
+    start_cheat_caller_address(oracle_addr, OWNER());
+    oracle.set_btc_volatility(100_0000_0000); // 100%
+    stop_cheat_caller_address(oracle_addr);
+
+    let hf_volatile = cdp.get_health_factor(TXID_1);
+    assert(hf_volatile == 75, 'Expected hf=75 with 100% vol');
+
+    // Once volatility drops back to e.g. 50% (5000000000), MCR = 175.
+    // hf = (150 / 175) * 100 = ~85
+    start_cheat_caller_address(oracle_addr, OWNER());
+    oracle.set_btc_volatility(50_0000_0000); // 50%
+    stop_cheat_caller_address(oracle_addr);
+
+    let hf_medium = cdp.get_health_factor(TXID_1);
+    assert(hf_medium == 85, 'Expected hf=85 with 50% vol');
+
+    stop_cheat_caller_address(cdp_addr);
+}

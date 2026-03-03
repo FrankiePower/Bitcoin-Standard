@@ -320,16 +320,27 @@ pub mod CDPCore {
             let oracle = IPriceOracleDispatcher { contract_address: self.oracle.read() };
             assert(!oracle.is_price_stale(), Errors::STALE_PRICE);
             let (price, _) = oracle.get_btc_price();
+            let volatility = oracle
+                .get_btc_volatility(); // % with 8 decimals, e.g. 7000000000 = 70.0%
+
+            // Base MCR = 150. Max MCR = 250 (just as a cap to prevent infinite liquidation loops)
+            // Realized Volatility: e.g. 80%. MCR = 150 + 40 = 190.
+            // Convert volatility to a whole integer percentage:
+            let vol_pct = volatility.into() / 100_000_000_u256;
+            let mut mcr = 150 + (vol_pct / 2);
+            if mcr > 250 {
+                mcr = 250;
+            }
 
             // collateral value in USD (8 decimal places)
             let collateral_usd = btc_sats * price / SAT_PRECISION;
             // debt in USD (8 decimal places)
             let debt_usd = debt_18dec * ORACLE_DECIMALS / TOKEN_DECIMALS;
 
-            // health_factor (scaled: 100 = at liquidation threshold with MIN_CR=150%)
-            // formula: hf = (collateral / debt) * (100 / MIN_CR) * 100
-            //             = collateral_usd * 10000 / (debt_usd * MIN_CR)
-            collateral_usd * 10000 / (debt_usd * MIN_CR)
+            // health_factor (scaled: 100 = at liquidation threshold with dynamic MCR)
+            // formula: hf = (collateral / debt) * (100 / MCR) * 100
+            //             = collateral_usd * 10000 / (debt_usd * mcr)
+            collateral_usd * 10000 / (debt_usd * mcr)
         }
     }
 }

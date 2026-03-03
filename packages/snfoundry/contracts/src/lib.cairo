@@ -1,6 +1,7 @@
 pub mod btcusd_token;
-pub mod btsusd_oracle;
 pub mod cdp_core;
+// pub mod pragma_oracle; // Requires pragma_lib, which currently conflicts with our
+// openzeppelin_security dependency
 /// BTCStandard Protocol
 ///
 /// Native Bitcoin CDP on Starknet. Real BTC locked in OP_CAT Taproot vaults on Bitcoin;
@@ -27,9 +28,11 @@ pub mod cdp_core;
 /// - `btcusd_token`     : BTCUSD stablecoin ERC20 (minted against BTC collateral)
 /// - `vault_registry`   : Maps Bitcoin txid → vault owner + amount + state
 /// - `cdp_core`         : Debt tracking, health factor, oracle-triggered liquidation
-/// - `btsusd_oracle`    : Mock BTC/USD price oracle (swap for Pragma in production)
+/// - `mock_oracle`      : Mock BTC/USD price oracle for testing
+/// - `pragma_oracle`    : Pragma Oracle adapter for production
 /// - `savings`          : ERC4626 savings vaults + factory (Phase 1, deployed)
 
 pub mod interfaces;
+pub mod mock_oracle;
 pub mod savings;
 pub mod vault_registry;
