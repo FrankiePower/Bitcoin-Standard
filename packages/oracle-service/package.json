@@ -1,0 +1,20 @@
+{
+  "name": "@btcstandard/oracle-service",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BTCStandard oracle service — pushes BTC price + volatility to MockOracle on Starknet Sepolia",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "node-cron": "^3.0.3",
+    "starknet": "8.5.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/node-cron": "^3.0.11",
+    "tsx": "^4.19.2",
+    "typescript": "^5.0.0"
+  }
+}
