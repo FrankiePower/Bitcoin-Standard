@@ -67,10 +67,10 @@ Last updated: 2026-03-02
 ### 2c. Oracle Service (Bitcoin watcher)
 
 - [x] Write oracle service (Node.js or Rust cron)
-  - [ ] Monitor Bitcoin signet vault UTXOs
+  - [x] Monitor Bitcoin signet vault UTXOs
   - [x] Check CDPCore health factors on Starknet
-  - [ ] Sign liquidation attestations when HF < 100
-  - [ ] Sign repayment attestations when debt cleared
+  - [x] Sign liquidation attestations when HF < 100
+  - [x] Sign repayment attestations when debt cleared
 - [ ] Wire oracle keypair (private key in service env, public key in vault Tapscript)
 
 ### 2d. Frontend Update
