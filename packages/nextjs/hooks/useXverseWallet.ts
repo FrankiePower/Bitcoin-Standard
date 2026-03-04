@@ -74,7 +74,8 @@ export const useXverseWallet = () => {
 
       if (response.status === "error") {
         const message =
-          response.error.message || "User canceled connection or an error occurred.";
+          response.error.message ||
+          "User canceled connection or an error occurred.";
         toast.error(message);
         return null;
       }
