@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
 import { useAccount } from "@starknet-react/core";
 import { useRouter } from "next/navigation";
@@ -11,7 +11,6 @@ import {
   Coins,
   Repeat2,
 } from "lucide-react";
-import { CustomConnectButton } from "~~/components/scaffold-stark/CustomConnectButton";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -55,26 +54,21 @@ export default function LandingPage() {
           {/* Nav right */}
           <div className="flex items-center gap-6">
             <a
-              href="https://github.com"
+              href="https://github.com/FrankiePower/Bitcoin-Standard"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-neutral-500 hover:text-black transition-colors hidden md:block"
             >
               GitHub
             </a>
-            {/* Invisible CustomConnectButton layered under visible Get Started pill */}
-            <div className="relative">
-              <div className="opacity-0 absolute inset-0 z-10 pointer-events-auto">
-                <CustomConnectButton />
-              </div>
-              <button
-                className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white rounded-full"
-                style={{ background: "#111", pointerEvents: "none" }}
-              >
-                Get Started
-                <ArrowUpRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white rounded-full"
+              style={{ background: "#111" }}
+            >
+              Get Started
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       </nav>
@@ -123,87 +117,87 @@ export default function LandingPage() {
           </svg>
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-12 md:py-20 w-full">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-8 md:py-12 w-full">
           <div className="max-w-xl">
             {/* Badge */}
             <div
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-10"
               style={{
-                background: "rgba(249,115,22,0.08)",
-                border: "1px solid rgba(249,115,22,0.2)",
-                color: "#ea580c",
+                background: "rgba(34,197,94,0.10)",
+                border: "1px solid rgba(34,197,94,0.30)",
+                color: "#15803d",
               }}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse inline-block" />
-              Live on Starknet
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" />
+              OP_CAT Vault Live
             </div>
 
             {/* Headline */}
             <h1
-              className="text-6xl md:text-7xl lg:text-[88px] font-black leading-[0.9] tracking-tight mb-8"
+              className="text-5xl md:text-6xl lg:text-[78px] font-black leading-[0.92] tracking-tight mb-6"
               style={{ letterSpacing: "-0.035em" }}
             >
               Bitcoin-
-              <br />
+            
               Backed
               <br />
               <span style={{ color: "#f97316" }}>Stablecoin.</span>
             </h1>
+            <p className="text-[11px] md:text-xs font-semibold tracking-[0.16em] uppercase text-neutral-500 mb-4">
+              Powered by OP_CAT covenant vaults
+            </p>
 
             {/* Subtext */}
-            <p className="text-lg text-neutral-500 max-w-sm leading-relaxed mb-10">
-              Deposit WBTC as collateral. Mint BTSUSD. Earn yield. Decentralized
-              CDP protocol on Starknet — non-custodial, over-collateralized.
+            <p className="text-base md:text-lg text-neutral-500 max-w-sm leading-relaxed mb-8">
+              Collateral remains on the Bitcoin network with OP_CAT enforced
+              covenants. No bridges, no wrapped BTC exposure, and no bridge
+              custody risk.
             </p>
 
             {/* CTA */}
             <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="opacity-0 absolute inset-0 z-10 pointer-events-auto">
-                  <CustomConnectButton />
-                </div>
-                <button
-                  className="flex items-center gap-2 px-6 py-3.5 text-sm font-semibold text-white rounded-full"
-                  style={{ background: "#111", pointerEvents: "none" }}
-                >
-                  Open App
-                  <ArrowUpRight className="w-4 h-4" />
-                </button>
-              </div>
-              <a
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-neutral-500 hover:text-black transition-colors flex items-center gap-1"
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="flex items-center gap-2 px-6 py-3.5 text-sm font-semibold text-white rounded-full"
+                style={{ background: "#111" }}
               >
-                View on GitHub <ArrowUpRight className="w-3.5 h-3.5" />
-              </a>
+                Open App
+                <ArrowUpRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
-          {/* Floating dark TVL card */}
+          {/* Floating dark protocol summary card */}
           <div
-            className="hidden lg:block absolute bottom-20 right-8 xl:right-16"
+            className="hidden lg:block absolute bottom-12 right-8 xl:right-16"
             style={{
               background: "#111",
               borderRadius: "20px",
-              padding: "28px 32px",
-              minWidth: "240px",
+              padding: "22px 24px",
+              minWidth: "220px",
             }}
           >
             <div className="text-neutral-500 text-[10px] font-semibold tracking-widest uppercase mb-2">
-              Protocol TVL
+              Protocol Model
             </div>
             <div
-              className="text-5xl font-black"
-              style={{ color: "#f97316", letterSpacing: "-0.04em" }}
+              className="text-lg font-bold"
+              style={{ color: "#f97316", letterSpacing: "-0.01em" }}
             >
-              $0.00
+              Native BTC Collateral
             </div>
             <div
               className="mt-5 pt-5"
               style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
             >
+              <div className="flex items-center gap-2 text-xs text-neutral-400 mb-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-400 inline-block" />
+                OP_CAT enforces liquidation destination
+              </div>
+              <div className="flex items-center gap-2 text-xs text-neutral-400 mb-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-400 inline-block" />
+                No bridge custody layer in collateral path
+              </div>
               <div className="flex items-center gap-2 text-xs text-neutral-500">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
                 All systems operational
@@ -213,7 +207,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── SECTION 2: WHAT YOU CAN DO WITH BTSUSD ──────────────── */}
+      {/* ── SECTION 2: PROTOCOL OVERVIEW ────────────────────────── */}
       <section
         style={{
           borderTop: "1px solid rgba(0,0,0,0.07)",
@@ -225,44 +219,44 @@ export default function LandingPage() {
           {/* Header */}
           <div className="mb-14">
             <div className="text-xs font-semibold tracking-widest text-neutral-400 uppercase mb-3">
-              What you can do
+              Protocol overview
             </div>
             <h2
               className="text-4xl md:text-5xl font-black tracking-tight"
               style={{ letterSpacing: "-0.03em" }}
             >
-              Put your BTSUSD
+              How it works,
               <br />
-              <span style={{ color: "#f97316" }}>to work.</span>
+              <span style={{ color: "#f97316" }}>what it protects.</span>
             </h2>
           </div>
 
-          {/* Use case grid */}
+          {/* Overview grid */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               {
                 icon: Landmark,
-                title: "Save",
-                desc: "Park your BTSUSD in savings vaults and earn a stable, protocol-generated yield — no impermanent loss.",
-                tag: "Coming soon",
+                title: "The Technology",
+                desc: "Vault collateral is locked in Bitcoin Taproot scripts with OP_CAT covenant constraints for controlled spend paths.",
+                tag: "Architecture",
               },
               {
                 icon: TrendingUp,
-                title: "Lend",
-                desc: "Supply BTSUSD to lending markets and earn interest from borrowers. Interest rates set by supply and demand.",
-                tag: "Coming soon",
+                title: "Risk Model",
+                desc: "The design avoids wrapped BTC bridge custody in the collateral path and reduces bridge-exploit surface area.",
+                tag: "Risk controls",
               },
               {
                 icon: Coins,
-                title: "Earn Yield",
-                desc: "Deploy into automated yield strategies across Starknet DeFi. Optimized for maximum BTC-denominated returns.",
-                tag: "Coming soon",
+                title: "What We Built",
+                desc: "Live vault lifecycle includes deposit, register, mint, repay, and covenant-enforced liquidation with oracle attestations.",
+                tag: "Implemented",
               },
               {
                 icon: Repeat2,
-                title: "Trade",
-                desc: "Swap BTSUSD across DEXs on Starknet with minimal slippage. Stable peg maintained by protocol mechanics.",
-                tag: "Coming soon",
+                title: "Use It Now",
+                desc: "Mint BTSUSD in the app and start using it across the protocol experience immediately.",
+                tag: "In app",
               },
             ].map((item) => (
               <div
@@ -317,19 +311,17 @@ export default function LandingPage() {
               height={22}
             />
             <span className="text-sm font-semibold">Bitcoin Standard</span>
-            <span className="text-neutral-300 text-sm">·</span>
-            <span className="text-neutral-400 text-sm">Starknet</span>
           </div>
 
           <div className="flex items-center gap-6 text-sm text-neutral-400">
             <a href="#" className="hover:text-black transition-colors">
               Docs
             </a>
-            <a href="#" className="hover:text-black transition-colors">
+            <a href="https://github.com/FrankiePower/Bitcoin-Standard" className="hover:text-black transition-colors">
               GitHub
             </a>
-            <a href="#" className="hover:text-black transition-colors">
-              Discord
+            <a href="https://t.me/frankie170" className="hover:text-black transition-colors">
+            Telegram
             </a>
           </div>
 

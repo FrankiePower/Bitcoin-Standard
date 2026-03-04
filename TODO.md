@@ -7,6 +7,12 @@ Last updated: 2026-03-04
 
 ---
 
+## Full E2E Test Run (March 2026)
+
+- [x] 1. Homepage copy updated to OP_CAT-native Bitcoin flow (no wBTC collateral messaging)
+
+---
+
 ## Phase 1: Savings Module ✅ COMPLETE
 
 - [x] Build BTSSavingsVault (ERC-4626 with chi/rho/vsr)
