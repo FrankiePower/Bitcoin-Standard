@@ -374,9 +374,15 @@ function RegisterVaultModal({
 
 type Tab = "register" | "mint" | "repay";
 const TOKEN_DECIMALS = BigInt("1000000000000000000");
+type RegtestKeyRecord = {
+  wallet: string;
+  address: string;
+  privateKeyWif: string;
+  createdAt: string;
+};
 
 export default function BorrowPage() {
-  const { status } = useAccount();
+  const { status, address } = useAccount();
   const isConnected = status === "connected";
 
   // Vault txid state (managed in page, passed to hook)
@@ -392,12 +398,20 @@ export default function BorrowPage() {
   const [error, setError] = useState("");
   const [oraclePubKey, setOraclePubKey] = useState("");
   const [vaultTaprootAddress, setVaultTaprootAddress] = useState("");
-  const [operatorBusy, setOperatorBusy] = useState(false);
   const [operatorMessage, setOperatorMessage] = useState("");
   const [bridgeStatus, setBridgeStatus] = useState<{
     available: boolean;
     bridgeUrl: string;
   } | null>(null);
+  const [spotPriceUSD, setSpotPriceUSD] = useState<number>(0);
+  const [regtestWalletName, setRegtestWalletName] = useState("btcstd_demo");
+  const [isCreatingRegtestAddress, setIsCreatingRegtestAddress] =
+    useState(false);
+  const [latestRegtestKey, setLatestRegtestKey] =
+    useState<RegtestKeyRecord | null>(null);
+  const [savedRegtestKeys, setSavedRegtestKeys] = useState<RegtestKeyRecord[]>(
+    [],
+  );
 
   useEffect(() => {
     fetch("/api/standard-vault/status")
@@ -412,10 +426,35 @@ export default function BorrowPage() {
   }, []);
 
   useEffect(() => {
+    const fetchSpot = () => {
+      fetch("/api/price")
+        .then((r) => r.json())
+        .then((d) => {
+          const v = Number(d?.bitcoin?.usd || 0);
+          if (!Number.isNaN(v) && v > 0) setSpotPriceUSD(v);
+        })
+        .catch(() => {});
+    };
+    fetchSpot();
+    const timer = window.setInterval(fetchSpot, 30000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
     const savedOracle = window.localStorage.getItem("btcstd:oracle_pubkey");
     const savedTaproot = window.localStorage.getItem("btcstd:taproot_address");
+    const savedKeys = window.localStorage.getItem("btcstd:regtest_keys");
     if (savedOracle) setOraclePubKey(savedOracle);
     if (savedTaproot) setVaultTaprootAddress(savedTaproot);
+    if (savedKeys) {
+      try {
+        const parsed = JSON.parse(savedKeys) as RegtestKeyRecord[];
+        setSavedRegtestKeys(parsed);
+        if (parsed.length > 0) setLatestRegtestKey(parsed[0]);
+      } catch {
+        setSavedRegtestKeys([]);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -493,12 +532,15 @@ export default function BorrowPage() {
       await cdp.registerVault(t, regBTCSats);
       setActiveTxid(t);
       setTab("mint");
+      setOperatorMessage(
+        `Vault registered and bound to Starknet owner ${address || "connected account"}.`,
+      );
       return true;
     } catch (e: any) {
       setError(e?.message ?? "Registration failed");
       return false;
     }
-  }, [regTxid, regBTCSats, cdp]);
+  }, [regTxid, regBTCSats, cdp, address]);
 
   const handleMint = useCallback(async () => {
     setError("");
@@ -514,13 +556,23 @@ export default function BorrowPage() {
       setError("Amount exceeds maximum mintable at current MCR");
       return;
     }
+    if (
+      cdp.vaultInfo?.owner &&
+      address &&
+      cdp.vaultInfo.owner.toLowerCase() !== address.toLowerCase()
+    ) {
+      setError(
+        "Connected Starknet wallet is not the registered owner of this vault.",
+      );
+      return;
+    }
     try {
       await cdp.mintDebt(activeTxid, mintAmountBigInt);
       setMintAmount("");
     } catch (e: any) {
       setError(e?.message ?? "Mint failed");
     }
-  }, [activeTxid, mintAmountBigInt, cdp]);
+  }, [activeTxid, mintAmountBigInt, cdp, address]);
 
   const handleRepay = useCallback(async () => {
     setError("");
@@ -536,54 +588,61 @@ export default function BorrowPage() {
       setError("Amount exceeds outstanding debt");
       return;
     }
+    if (
+      cdp.vaultInfo?.owner &&
+      address &&
+      cdp.vaultInfo.owner.toLowerCase() !== address.toLowerCase()
+    ) {
+      setError(
+        "Connected Starknet wallet is not the registered owner of this vault.",
+      );
+      return;
+    }
     try {
       await cdp.repayDebt(activeTxid, repayAmountBigInt);
       setRepayAmount("");
     } catch (e: any) {
       setError(e?.message ?? "Repay failed");
     }
-  }, [activeTxid, repayAmountBigInt, cdp]);
+  }, [activeTxid, repayAmountBigInt, cdp, address]);
 
-  const runOperatorAction = useCallback(
-    async (
-      action: "deposit" | "liquidate" | "repay" | "timeout",
-      body?: Record<string, unknown>,
-    ) => {
-      setError("");
-      setOperatorMessage("");
-      setOperatorBusy(true);
-      try {
-        const response = await fetch(`/api/standard-vault/${action}`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(body ?? {}),
-        });
-        const data = await response.json();
-        if (!response.ok || !data.ok) {
-          throw new Error(data?.error || data?.output || `${action} failed`);
-        }
-
-        if (action === "deposit") {
-          if (data.outpointTxid) {
-            setRegTxid(data.outpointTxid);
-            setTxidInput(data.outpointTxid);
-          }
-          if (data.oraclePubKey) setOraclePubKey(data.oraclePubKey);
-          if (data.vaultTaprootAddress)
-            setVaultTaprootAddress(data.vaultTaprootAddress);
-        }
-
-        setOperatorMessage(
-          `${action} complete${data.txid ? ` (txid: ${data.txid})` : ""}`,
-        );
-      } catch (e: any) {
-        setError(e?.message ?? `${action} failed`);
-      } finally {
-        setOperatorBusy(false);
+  const handleCreateRegtestAddress = useCallback(async () => {
+    setError("");
+    setOperatorMessage("");
+    setIsCreatingRegtestAddress(true);
+    try {
+      const response = await fetch("/api/standard-vault/new-address", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ wallet: regtestWalletName.trim() || "btcstd_demo" }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok || !data.address || !data.privateKeyWif) {
+        throw new Error(data?.error || data?.output || "Failed to create address");
       }
-    },
-    [],
-  );
+
+      const next: RegtestKeyRecord = {
+        wallet: data.wallet || "btcstd_demo",
+        address: data.address,
+        privateKeyWif: data.privateKeyWif,
+        createdAt: new Date().toISOString(),
+      };
+      setLatestRegtestKey(next);
+      setSavedRegtestKeys((prev) => {
+        const merged = [next, ...prev.filter((k) => k.address !== next.address)].slice(
+          0,
+          10,
+        );
+        window.localStorage.setItem("btcstd:regtest_keys", JSON.stringify(merged));
+        return merged;
+      });
+      setOperatorMessage(`New regtest address created: ${next.address}`);
+    } catch (e: any) {
+      setError(e?.message ?? "Failed to create regtest address");
+    } finally {
+      setIsCreatingRegtestAddress(false);
+    }
+  }, [regtestWalletName]);
 
   // ─── UI ──────────────────────────────────────────────────────────────────
 
@@ -607,10 +666,12 @@ export default function BorrowPage() {
           {[
             {
               label: "Oracle BTC Price",
-              value: cdp.btcPriceUSD
-                ? `$${cdp.btcPriceUSD.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+              value: (spotPriceUSD || cdp.btcPriceUSD)
+                ? `$${(spotPriceUSD || cdp.btcPriceUSD).toLocaleString(undefined, {
+                    maximumFractionDigits: 2,
+                  })}`
                 : "—",
-              sub: "MockOracle (Sepolia)",
+              sub: "Current BTC price feed",
             },
             {
               label: "Min Coll. Ratio",
@@ -642,62 +703,40 @@ export default function BorrowPage() {
               Before You Borrow
             </h2>
             <span
-              className={`text-xs font-medium ${bridgeStatus?.available ? "text-emerald-600" : "text-amber-600"}`}
+              className={`rounded-md border px-2 py-1 text-xs font-medium ${
+                bridgeStatus?.available
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700"
+                  : "border-amber-500/30 bg-amber-500/10 text-amber-700"
+              }`}
             >
               {bridgeStatus?.available
-                ? "Bitcoin bridge online"
-                : "Bitcoin bridge offline"}
+                ? "online"
+                : "offline"}
             </span>
           </div>
           <ul className="space-y-1 text-xs text-neutral-600">
             <li>
-              1. Register a confirmed Bitcoin vault deposit (txid + BTC amount).
+              1. Create a regtest BTC signer in the panel below and fund it on
+              your local node.
             </li>
             <li>
-              2. Borrow only within max mintable to keep health factor above
-              100.
+              2. Run <code className="text-neutral-800">just deposit</code> in{" "}
+              <code className="text-neutral-800">standard_vault/</code>.
             </li>
             <li>
-              3. Liquidation can be triggered when health factor drops below
-              100.
+              3. Register txid + BTC amount with your connected Starknet
+              wallet.
             </li>
             <li>
-              4. Local bridge endpoint:{" "}
+              4. Mint BTCUSD and keep health factor above 100.
+            </li>
+            <li>
+              5. Bridge endpoint:{" "}
               <code className="text-neutral-800">
                 {bridgeStatus?.bridgeUrl || "http://127.0.0.1:4040"}
               </code>
             </li>
           </ul>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <button
-              onClick={() => void runOperatorAction("deposit")}
-              disabled={operatorBusy}
-              className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs font-medium text-neutral-800 hover:border-orange-500 hover:text-orange-600 disabled:opacity-50"
-            >
-              Run BTC Deposit
-            </button>
-            <button
-              onClick={() => void runOperatorAction("liquidate")}
-              disabled={operatorBusy}
-              className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs font-medium text-neutral-800 hover:border-orange-500 hover:text-orange-600 disabled:opacity-50"
-            >
-              Run Liquidate
-            </button>
-            <button
-              onClick={() => void runOperatorAction("repay")}
-              disabled={operatorBusy}
-              className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs font-medium text-neutral-800 hover:border-orange-500 hover:text-orange-600 disabled:opacity-50"
-            >
-              Run Repay
-            </button>
-            <button
-              onClick={() => void runOperatorAction("timeout")}
-              disabled={operatorBusy}
-              className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs font-medium text-neutral-800 hover:border-orange-500 hover:text-orange-600 disabled:opacity-50"
-            >
-              Run Timeout
-            </button>
-          </div>
           {operatorMessage && (
             <p className="mt-2 text-xs text-emerald-600">{operatorMessage}</p>
           )}
@@ -751,12 +790,59 @@ export default function BorrowPage() {
                 <p className="mt-0.5 text-xs text-neutral-600">
                   First, deposit BTC into an OP_CAT Taproot vault on Bitcoin (
                   <code className="text-neutral-800">just deposit</code>). Then
-                  register with txid + amount on Starknet.
+                  register with txid + amount on Starknet. The connected
+                  Starknet wallet becomes the vault owner for mint/repay.
                 </p>
               </div>
             </div>
 
             <div className="space-y-3 rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+              <div className="rounded-lg border border-neutral-200 bg-white p-3">
+                <div className="mb-2 text-xs font-medium text-neutral-700">
+                  Create Regtest BTC Signer
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={regtestWalletName}
+                    onChange={(e) => setRegtestWalletName(e.target.value)}
+                    placeholder="wallet name (e.g. btcstd_demo)"
+                    className="flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-900 placeholder-neutral-400 focus:border-orange-500 focus:outline-none"
+                  />
+                  <button
+                    onClick={() => void handleCreateRegtestAddress()}
+                    disabled={isCreatingRegtestAddress}
+                    className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
+                  >
+                    {isCreatingRegtestAddress ? "Creating..." : "Create"}
+                  </button>
+                </div>
+                {latestRegtestKey && (
+                  <div className="mt-2 space-y-1 text-xs text-neutral-700">
+                    <div>
+                      Address:{" "}
+                      <code className="text-neutral-900">
+                        {latestRegtestKey.address}
+                      </code>
+                    </div>
+                    <div>
+                      Private Key (WIF):{" "}
+                      <code className="text-neutral-900 break-all">
+                        {latestRegtestKey.privateKeyWif}
+                      </code>
+                    </div>
+                    <div className="text-[11px] text-neutral-500">
+                      Saved locally in this browser for testing only.
+                    </div>
+                  </div>
+                )}
+                {savedRegtestKeys.length > 1 && (
+                  <div className="mt-2 text-[11px] text-neutral-500">
+                    Stored keys: {savedRegtestKeys.length}
+                  </div>
+                )}
+              </div>
+
               <div className="text-xs text-neutral-600">
                 Step A: Run{" "}
                 <code className="text-neutral-800">just deposit</code> in{" "}
@@ -820,6 +906,13 @@ export default function BorrowPage() {
                     </span>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {activeTxid && cdp.vaultInfo?.owner && (
+              <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-xs text-neutral-700">
+                Vault owner on Starknet:{" "}
+                <code className="text-neutral-900">{cdp.vaultInfo.owner}</code>
               </div>
             )}
           </div>

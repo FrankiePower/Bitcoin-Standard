@@ -44,6 +44,15 @@ export type StandardVaultActionResult = {
   error?: string;
 };
 
+export type RegtestAddressResult = {
+  ok: boolean;
+  wallet: string;
+  address?: string;
+  privateKeyWif?: string;
+  output: string;
+  error?: string;
+};
+
 function maybeExtract(
   output: string,
   regex: RegExp,
@@ -154,28 +163,61 @@ async function runStandardVaultAction(
 }
 
 async function getMinerAddress(): Promise<string> {
-  const { standardVaultDir } = await getPaths();
-  const cli = path.join(
-    standardVaultDir,
-    "bitcoin-core-cat",
-    "src",
-    "bitcoin-cli",
-  );
-  const result = await runCommand(
-    cli,
-    [
-      "-regtest",
-      "-rpcuser=user",
-      "-rpcpassword=password",
-      "-rpcwallet=miner",
-      "getnewaddress",
-    ],
-    standardVaultDir,
-  );
+  const result = await runBitcoinCli(["-rpcwallet=miner", "getnewaddress"]);
   if (result.code !== 0) {
     throw new Error(`Failed to fetch miner address: ${result.output}`);
   }
   return result.stdout.trim();
+}
+
+async function getBitcoinCliPath() {
+  const { standardVaultDir } = await getPaths();
+  const cli = path.join(standardVaultDir, "bitcoin-core-cat", "src", "bitcoin-cli");
+  return { standardVaultDir, cli };
+}
+
+async function runBitcoinCli(args: string[]): Promise<CommandResult> {
+  const { standardVaultDir, cli } = await getBitcoinCliPath();
+  return runCommand(
+    cli,
+    ["-regtest", "-rpcuser=user", "-rpcpassword=password", ...args],
+    standardVaultDir,
+  );
+}
+
+async function ensureWalletLoaded(wallet: string): Promise<void> {
+  const listRes = await runBitcoinCli(["listwallets"]);
+  if (listRes.code !== 0) {
+    throw new Error(`Unable to list wallets: ${listRes.output}`);
+  }
+
+  let loadedWallets: string[] = [];
+  try {
+    loadedWallets = JSON.parse(listRes.stdout) as string[];
+  } catch {
+    loadedWallets = [];
+  }
+
+  if (loadedWallets.includes(wallet)) return;
+
+  const loadRes = await runBitcoinCli(["loadwallet", wallet]);
+  if (loadRes.code === 0) return;
+
+  const createRes = await runBitcoinCli([
+    "createwallet",
+    wallet,
+    "false",
+    "false",
+    "",
+    "false",
+    "false",
+    "false",
+  ]);
+  if (createRes.code !== 0) {
+    throw new Error(
+      `Unable to load or create wallet "${wallet}": ${createRes.output || loadRes.output}`,
+    );
+  }
 }
 
 async function readVaultFile() {
@@ -324,4 +366,49 @@ export async function timeoutVault(
     output: result.output,
     error: result.code === 0 ? undefined : result.output,
   };
+}
+
+export async function createRegtestAddress(
+  wallet: string = "btcstd_demo",
+): Promise<RegtestAddressResult> {
+  try {
+    await ensureWalletLoaded(wallet);
+
+    const addressRes = await runBitcoinCli(["-rpcwallet=" + wallet, "getnewaddress"]);
+    if (addressRes.code !== 0) {
+      return {
+        ok: false,
+        wallet,
+        output: addressRes.output,
+        error: addressRes.output || "Failed to create regtest address",
+      };
+    }
+
+    const address = addressRes.stdout.trim();
+    const keyRes = await runBitcoinCli(["-rpcwallet=" + wallet, "dumpprivkey", address]);
+    if (keyRes.code !== 0) {
+      return {
+        ok: false,
+        wallet,
+        address,
+        output: `${addressRes.output}\n${keyRes.output}`.trim(),
+        error: keyRes.output || "Failed to export regtest private key",
+      };
+    }
+
+    return {
+      ok: true,
+      wallet,
+      address,
+      privateKeyWif: keyRes.stdout.trim(),
+      output: `${addressRes.output}\n${keyRes.output}`.trim(),
+    };
+  } catch (e: any) {
+    return {
+      ok: false,
+      wallet,
+      output: "",
+      error: e?.message ?? "Failed to create regtest address",
+    };
+  }
 }
