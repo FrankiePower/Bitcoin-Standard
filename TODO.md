@@ -1,6 +1,6 @@
 # BTCStandard Protocol — TODO
 
-Last updated: 2026-03-02
+Last updated: 2026-03-04
 
 > **Architecture pivot:** migrated from wBTC-on-Starknet to native Bitcoin OP_CAT vaults.
 > Real BTC locked on Bitcoin via OP_CAT covenant | debt tracked on Starknet | oracle bridge via Chainlink CRE.
@@ -40,7 +40,7 @@ Last updated: 2026-03-02
 - [x] Test deposit → repay path end-to-end ✅ (txid: 9abf64468f72904efe5c1bcdb1c796a15582fa5ed57dee3144d8cba58bb27c01)
 - [x] Test deposit → liquidate path end-to-end ✅ (txid: 7b44b7efa7d0014399dd547a403c21be43cf34fd933483431ad08701b02a8858)
 - [x] Test deposit → timeout path (mine timelock blocks) ✅ (txid: dd65d8f72bbfe22095917407ed764afa1f2ee171127e5a9f3143533fd08f608f)
-- [ ] Verify OP_CAT covenant: confirm liquidate output cannot be redirected
+- [x] Verify OP_CAT covenant: confirm liquidate output cannot be redirected ✅
 
 ### 2b. Starknet Contracts — CDP Layer
 
