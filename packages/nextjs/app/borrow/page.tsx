@@ -142,7 +142,7 @@ function HealthFactorBar({ hf, mcr }: { hf: bigint; mcr: number }) {
 
 // ─── Vault Status Card ─────────────────────────────────────────────────────────
 
-function VaultStatusCard({
+function BitcoinVaultStatus({
   vaultInfo,
   position,
   healthFactor,
@@ -232,6 +232,144 @@ function VaultStatusCard({
   );
 }
 
+function RegisterVaultModal({
+  open,
+  onClose,
+  regTxid,
+  setRegTxid,
+  regBTC,
+  setRegBTC,
+  regBTCSats,
+  oraclePubKey,
+  setOraclePubKey,
+  vaultTaprootAddress,
+  setVaultTaprootAddress,
+  isConnected,
+  isRegistering,
+  onRegister,
+}: {
+  open: boolean;
+  onClose: () => void;
+  regTxid: string;
+  setRegTxid: (value: string) => void;
+  regBTC: string;
+  setRegBTC: (value: string) => void;
+  regBTCSats: bigint;
+  oraclePubKey: string;
+  setOraclePubKey: (value: string) => void;
+  vaultTaprootAddress: string;
+  setVaultTaprootAddress: (value: string) => void;
+  isConnected: boolean;
+  isRegistering: boolean;
+  onRegister: () => Promise<void>;
+}) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-xl rounded-2xl border border-zinc-700 bg-zinc-900 p-5 shadow-2xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-base font-semibold text-white">Register Vault</h3>
+          <button
+            onClick={onClose}
+            className="rounded-md border border-zinc-700 px-2.5 py-1 text-xs text-zinc-300 hover:border-zinc-500 hover:text-white"
+          >
+            Close
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-zinc-300">
+              Bitcoin Deposit TxID
+            </label>
+            <input
+              type="text"
+              value={regTxid}
+              onChange={(e) => setRegTxid(e.target.value)}
+              placeholder="64-char hex (e.g. 9abf6446...)"
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2.5 font-mono text-sm text-white placeholder-zinc-600 focus:border-orange-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-zinc-300">
+              BTC Amount
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                value={regBTC}
+                onChange={(e) => setRegBTC(e.target.value)}
+                placeholder="e.g. 1.0"
+                step="0.00000001"
+                min="0"
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2.5 pr-16 text-sm text-white placeholder-zinc-600 focus:border-orange-500 focus:outline-none"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-zinc-400">
+                BTC
+              </span>
+            </div>
+            {regBTCSats > BigInt(0) && (
+              <p className="mt-1 text-xs text-zinc-500">
+                = {regBTCSats.toLocaleString()} satoshis
+              </p>
+            )}
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-zinc-300">
+                Oracle Public Key
+              </label>
+              <input
+                type="text"
+                value={oraclePubKey}
+                onChange={(e) => setOraclePubKey(e.target.value)}
+                placeholder="x-only pubkey from `just deposit`"
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2.5 font-mono text-xs text-white placeholder-zinc-600 focus:border-orange-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-zinc-300">
+                Vault Taproot Address
+              </label>
+              <input
+                type="text"
+                value={vaultTaprootAddress}
+                onChange={(e) => setVaultTaprootAddress(e.target.value)}
+                placeholder="bcrt1... from `just deposit`"
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2.5 font-mono text-xs text-white placeholder-zinc-600 focus:border-orange-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-zinc-700 bg-zinc-800/60 p-3 text-xs text-zinc-400">
+            Save values from `standard_vault` output so operators can verify the
+            Bitcoin vault metadata before minting.
+          </div>
+
+          <button
+            onClick={() => {
+              void onRegister();
+            }}
+            disabled={!isConnected || isRegistering}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isRegistering ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Zap size={16} />
+            )}
+            {isRegistering ? "Registering..." : "Register Vault"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 type Tab = "register" | "mint" | "repay";
@@ -248,9 +386,34 @@ export default function BorrowPage() {
   const cdp = useNativeCDP({ txid: activeTxid || undefined });
 
   const [tab, setTab] = useState<Tab>("register");
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [mintAmount, setMintAmount] = useState("");
   const [repayAmount, setRepayAmount] = useState("");
   const [error, setError] = useState("");
+  const [oraclePubKey, setOraclePubKey] = useState("");
+  const [vaultTaprootAddress, setVaultTaprootAddress] = useState("");
+
+  useEffect(() => {
+    const savedOracle = window.localStorage.getItem("btcstd:oracle_pubkey");
+    const savedTaproot = window.localStorage.getItem("btcstd:taproot_address");
+    if (savedOracle) setOraclePubKey(savedOracle);
+    if (savedTaproot) setVaultTaprootAddress(savedTaproot);
+  }, []);
+
+  useEffect(() => {
+    if (oraclePubKey.trim()) {
+      window.localStorage.setItem("btcstd:oracle_pubkey", oraclePubKey.trim());
+    }
+  }, [oraclePubKey]);
+
+  useEffect(() => {
+    if (vaultTaprootAddress.trim()) {
+      window.localStorage.setItem(
+        "btcstd:taproot_address",
+        vaultTaprootAddress.trim(),
+      );
+    }
+  }, [vaultTaprootAddress]);
 
   // ─── Derived amounts ──────────────────────────────────────────────────────
 
@@ -302,18 +465,20 @@ export default function BorrowPage() {
     const t = regTxid.trim().replace(/^0x/, "");
     if (t.length !== 64) {
       setError("TxID must be 64 hex characters");
-      return;
+      return false;
     }
     if (regBTCSats === BigInt(0)) {
       setError("Enter a BTC amount");
-      return;
+      return false;
     }
     try {
       await cdp.registerVault(t, regBTCSats);
       setActiveTxid(t);
       setTab("mint");
+      return true;
     } catch (e: any) {
       setError(e?.message ?? "Registration failed");
+      return false;
     }
   }, [regTxid, regBTCSats, cdp]);
 
@@ -458,65 +623,29 @@ export default function BorrowPage() {
                 <p className="mt-0.5 text-xs text-zinc-400">
                   First, deposit BTC into an OP_CAT Taproot vault on Bitcoin (
                   <code className="text-zinc-300">just deposit</code>). Then
-                  paste the resulting txid here.
+                  register with txid + amount on Starknet.
                 </p>
               </div>
             </div>
 
-            <div className="space-y-3">
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-zinc-300">
-                  Bitcoin Deposit TxID
-                </label>
-                <input
-                  type="text"
-                  value={regTxid}
-                  onChange={(e) => setRegTxid(e.target.value)}
-                  placeholder="64-char hex (e.g. 9abf6446...)"
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2.5 font-mono text-sm text-white placeholder-zinc-600 focus:border-orange-500 focus:outline-none"
-                />
+            <div className="space-y-3 rounded-lg border border-zinc-700 bg-zinc-900/40 p-4">
+              <div className="text-xs text-zinc-400">
+                Step A: Run <code className="text-zinc-200">just deposit</code>{" "}
+                in <code className="text-zinc-200">standard_vault/</code>.
               </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-zinc-300">
-                  BTC Amount
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    value={regBTC}
-                    onChange={(e) => setRegBTC(e.target.value)}
-                    placeholder="e.g. 1.0"
-                    step="0.00000001"
-                    min="0"
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2.5 pr-16 text-sm text-white placeholder-zinc-600 focus:border-orange-500 focus:outline-none"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-zinc-400">
-                    BTC
-                  </span>
-                </div>
-                {regBTCSats > BigInt(0) && (
-                  <p className="mt-1 text-xs text-zinc-500">
-                    = {regBTCSats.toLocaleString()} satoshis
-                  </p>
-                )}
+              <div className="text-xs text-zinc-400">
+                Step B: Open the modal and paste txid, BTC amount, oracle
+                pubkey, and Taproot address.
               </div>
-
               <button
-                onClick={handleRegisterVault}
-                disabled={!isConnected || cdp.isRegistering}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() => setIsRegisterModalOpen(true)}
+                className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-3 py-2 text-xs font-semibold text-white hover:bg-orange-600"
               >
-                {cdp.isRegistering ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <Zap size={16} />
-                )}
-                {cdp.isRegistering ? "Registering..." : "Register Vault"}
+                Open RegisterVaultModal
+                <ChevronRight size={14} />
               </button>
-
               {!isConnected && (
-                <p className="text-center text-xs text-zinc-500">
+                <p className="text-xs text-zinc-500">
                   Connect your Starknet wallet to register.
                 </p>
               )}
@@ -542,6 +671,28 @@ export default function BorrowPage() {
                 </button>
               </div>
             </div>
+
+            {(oraclePubKey || vaultTaprootAddress) && (
+              <div className="rounded-lg border border-zinc-700 bg-zinc-900/60 p-3 text-xs">
+                <div className="mb-2 font-medium text-zinc-300">
+                  Current Vault Metadata
+                </div>
+                <div className="space-y-1.5 text-zinc-400">
+                  <div className="font-mono break-all">
+                    Oracle PubKey:{" "}
+                    <span className="text-zinc-200">
+                      {oraclePubKey || "Not set"}
+                    </span>
+                  </div>
+                  <div className="font-mono break-all">
+                    Taproot Address:{" "}
+                    <span className="text-zinc-200">
+                      {vaultTaprootAddress || "Not set"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -550,7 +701,7 @@ export default function BorrowPage() {
           <div className="space-y-4">
             {/* Vault status */}
             {activeTxid ? (
-              <VaultStatusCard
+              <BitcoinVaultStatus
                 vaultInfo={cdp.vaultInfo}
                 position={cdp.position}
                 healthFactor={cdp.healthFactor}
@@ -667,7 +818,7 @@ export default function BorrowPage() {
           <div className="space-y-4">
             {/* Vault status */}
             {activeTxid ? (
-              <VaultStatusCard
+              <BitcoinVaultStatus
                 vaultInfo={cdp.vaultInfo}
                 position={cdp.position}
                 healthFactor={cdp.healthFactor}
@@ -817,6 +968,25 @@ export default function BorrowPage() {
           </ol>
         </div>
       </div>
+      <RegisterVaultModal
+        open={isRegisterModalOpen}
+        onClose={() => setIsRegisterModalOpen(false)}
+        regTxid={regTxid}
+        setRegTxid={setRegTxid}
+        regBTC={regBTC}
+        setRegBTC={setRegBTC}
+        regBTCSats={regBTCSats}
+        oraclePubKey={oraclePubKey}
+        setOraclePubKey={setOraclePubKey}
+        vaultTaprootAddress={vaultTaprootAddress}
+        setVaultTaprootAddress={setVaultTaprootAddress}
+        isConnected={isConnected}
+        isRegistering={cdp.isRegistering}
+        onRegister={async () => {
+          const ok = await handleRegisterVault();
+          if (ok) setIsRegisterModalOpen(false);
+        }}
+      />
     </DashboardLayout>
   );
 }

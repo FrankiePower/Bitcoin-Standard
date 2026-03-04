@@ -66,23 +66,23 @@ Last updated: 2026-03-02
 
 ### 2c. Oracle Service (Bitcoin watcher)
 
-- [ ] Write oracle service (Node.js or Rust cron)
+- [x] Write oracle service (Node.js or Rust cron)
   - [ ] Monitor Bitcoin signet vault UTXOs
-  - [ ] Check CDPCore health factors on Starknet
+  - [x] Check CDPCore health factors on Starknet
   - [ ] Sign liquidation attestations when HF < 100
   - [ ] Sign repayment attestations when debt cleared
 - [ ] Wire oracle keypair (private key in service env, public key in vault Tapscript)
 
 ### 2d. Frontend Update
 
-- [ ] Rewrite useCDP hook (register vault by btc_txid, not deposit collateral)
-- [ ] Build RegisterVaultModal (user pastes btc_txid after on-chain deposit)
-- [ ] Update Borrow page: show vault status, debt, health factor
-- [ ] Add mint/repay BTCUSD flow
-- [ ] Remove wBTC collateral deposit UI
-- [ ] Show oracle public key + vault Taproot address during deposit flow
-- [ ] Health factor warnings + liquidation risk display
-- [ ] Add BitcoinVaultStatus component (UTXO confirmed, depth, amount)
+- [x] Rewrite useCDP hook (register vault by btc_txid, not deposit collateral)
+- [x] Build RegisterVaultModal (user pastes btc_txid after on-chain deposit)
+- [x] Update Borrow page: show vault status, debt, health factor
+- [x] Add mint/repay BTCUSD flow
+- [x] Remove wBTC collateral deposit UI
+- [x] Show oracle public key + vault Taproot address during deposit flow
+- [x] Health factor warnings + liquidation risk display
+- [x] Add BitcoinVaultStatus component (UTXO confirmed, depth, amount)
 
 ---
 
