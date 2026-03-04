@@ -482,3 +482,144 @@ impl VaultCovenant {
         Ok(txn)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bitcoin::secp256k1::schnorr;
+    use bitcoin::{ScriptBuf, Txid};
+
+    fn setup_covenant(
+        vault_amount_sat: u64,
+    ) -> (VaultCovenant, Address, OutPoint, TxOut) {
+        let secp = Secp256k1::new();
+
+        let liquidation_pool_keypair = Keypair::new(&secp, &mut rand::thread_rng());
+        let liquidation_pool_address = Address::p2tr(
+            &secp,
+            liquidation_pool_keypair.x_only_public_key().0,
+            None,
+            Network::Regtest,
+        );
+
+        let fee_spk_keypair = Keypair::new(&secp, &mut rand::thread_rng());
+        let fee_script_pubkey = Address::p2tr(
+            &secp,
+            fee_spk_keypair.x_only_public_key().0,
+            None,
+            Network::Regtest,
+        )
+        .script_pubkey();
+
+        let mut covenant = VaultCovenant::default();
+        covenant.set_amount(Amount::from_sat(vault_amount_sat));
+        covenant.set_current_outpoint(OutPoint::new(Txid::from_slice(&[2u8; 32]).unwrap(), 0));
+        covenant.set_liquidation_pool_address(Some(liquidation_pool_address.clone()));
+
+        let fee_paying_utxo = OutPoint::new(Txid::from_slice(&[3u8; 32]).unwrap(), 1);
+        let fee_paying_output = TxOut {
+            value: Amount::from_sat(2_000),
+            script_pubkey: fee_script_pubkey,
+        };
+
+        (covenant, liquidation_pool_address, fee_paying_utxo, fee_paying_output)
+    }
+
+    fn extract_oracle_sig(tx: &Transaction) -> Vec<u8> {
+        let witness = &tx.input[0].witness;
+        witness
+            .nth(witness.len() - 3)
+            .expect("oracle signature should be present")
+            .to_vec()
+    }
+
+    fn liquidate_leaf_hash(covenant: &VaultCovenant, liquidation_spk: &ScriptBuf) -> TapLeafHash {
+        TapLeafHash::from_script(
+            &vault_liquidate(covenant.oracle_x_only_public_key(), liquidation_spk),
+            LeafVersion::TapScript,
+        )
+    }
+
+    #[test]
+    fn liquidation_tx_output_is_fixed_to_liquidation_pool() {
+        let (covenant, liquidation_pool_address, fee_paying_utxo, fee_paying_output) =
+            setup_covenant(120_000);
+
+        let tx = covenant
+            .create_liquidate_tx(&fee_paying_utxo, fee_paying_output)
+            .expect("liquidation tx should build");
+
+        assert_eq!(tx.output.len(), 1);
+        assert_eq!(
+            tx.output[0].script_pubkey,
+            liquidation_pool_address.script_pubkey()
+        );
+    }
+
+    #[test]
+    fn liquidation_oracle_signature_breaks_if_output_is_redirected() {
+        let (covenant, liquidation_pool_address, fee_paying_utxo, fee_paying_output) =
+            setup_covenant(150_000);
+        let secp = Secp256k1::new();
+
+        let tx = covenant
+            .create_liquidate_tx(&fee_paying_utxo, fee_paying_output.clone())
+            .expect("liquidation tx should build");
+
+        let vault_prevout = TxOut {
+            script_pubkey: covenant.address().expect("vault address").script_pubkey(),
+            value: Amount::from_sat(150_000),
+        };
+        let prevouts = [vault_prevout, fee_paying_output];
+        let leaf_hash = liquidate_leaf_hash(&covenant, &liquidation_pool_address.script_pubkey());
+
+        let oracle_sig_bytes = extract_oracle_sig(&tx);
+        let oracle_sig = schnorr::Signature::from_slice(&oracle_sig_bytes)
+            .expect("oracle signature must be 64-byte schnorr");
+
+        let mut cache = SighashCache::new(&tx);
+        let original_sighash = cache
+            .taproot_script_spend_signature_hash(
+                0,
+                &Prevouts::All(&prevouts),
+                leaf_hash,
+                TapSighashType::Default,
+            )
+            .expect("sighash should compute");
+        let original_msg = Message::from_digest_slice(original_sighash.as_byte_array()).unwrap();
+
+        assert!(
+            secp.verify_schnorr(&oracle_sig, &original_msg, &covenant.oracle_x_only_public_key())
+                .is_ok(),
+            "original liquidation tx must satisfy oracle signature"
+        );
+
+        let attacker_keypair = Keypair::new(&secp, &mut rand::thread_rng());
+        let attacker_address = Address::p2tr(
+            &secp,
+            attacker_keypair.x_only_public_key().0,
+            None,
+            Network::Regtest,
+        );
+
+        let mut redirected_tx = tx;
+        redirected_tx.output[0].script_pubkey = attacker_address.script_pubkey();
+
+        let mut tampered_cache = SighashCache::new(&redirected_tx);
+        let tampered_sighash = tampered_cache
+            .taproot_script_spend_signature_hash(
+                0,
+                &Prevouts::All(&prevouts),
+                leaf_hash,
+                TapSighashType::Default,
+            )
+            .expect("sighash should compute");
+        let tampered_msg = Message::from_digest_slice(tampered_sighash.as_byte_array()).unwrap();
+
+        assert!(
+            secp.verify_schnorr(&oracle_sig, &tampered_msg, &covenant.oracle_x_only_public_key())
+                .is_err(),
+            "redirecting liquidation output must invalidate the witness signature"
+        );
+    }
+}
