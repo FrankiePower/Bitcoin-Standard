@@ -253,8 +253,8 @@ export function parseU256(raw: any): bigint {
     return BigInt(raw.low) + (BigInt(raw.high) << BigInt(128));
   }
   // [low, high] tuple — true array or object with numeric keys (starknet-react tuples)
-  const r0 = Array.isArray(raw) ? raw[0] : raw[0] ?? raw["0"];
-  const r1 = Array.isArray(raw) ? raw[1] : raw[1] ?? raw["1"];
+  const r0 = Array.isArray(raw) ? raw[0] : (raw[0] ?? raw["0"]);
+  const r1 = Array.isArray(raw) ? raw[1] : (raw[1] ?? raw["1"]);
   if (r0 !== undefined && r1 !== undefined) {
     return BigInt(r0) + (BigInt(r1) << BigInt(128));
   }
