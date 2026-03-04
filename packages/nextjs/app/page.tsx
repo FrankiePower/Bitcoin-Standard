@@ -137,9 +137,7 @@ export default function LandingPage() {
               className="text-5xl md:text-6xl lg:text-[78px] font-black leading-[0.92] tracking-tight mb-6"
               style={{ letterSpacing: "-0.035em" }}
             >
-              Bitcoin-
-            
-              Backed
+              Bitcoin- Backed
               <br />
               <span style={{ color: "#f97316" }}>Stablecoin.</span>
             </h1>
@@ -317,11 +315,17 @@ export default function LandingPage() {
             <a href="#" className="hover:text-black transition-colors">
               Docs
             </a>
-            <a href="https://github.com/FrankiePower/Bitcoin-Standard" className="hover:text-black transition-colors">
+            <a
+              href="https://github.com/FrankiePower/Bitcoin-Standard"
+              className="hover:text-black transition-colors"
+            >
               GitHub
             </a>
-            <a href="https://t.me/frankie170" className="hover:text-black transition-colors">
-            Telegram
+            <a
+              href="https://t.me/frankie170"
+              className="hover:text-black transition-colors"
+            >
+              Telegram
             </a>
           </div>
 
