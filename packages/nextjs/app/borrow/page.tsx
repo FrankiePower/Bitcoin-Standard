@@ -235,6 +235,7 @@ function VaultStatusCard({
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 type Tab = "register" | "mint" | "repay";
+const TOKEN_DECIMALS = BigInt("1000000000000000000");
 
 export default function BorrowPage() {
   const { status } = useAccount();
@@ -252,8 +253,6 @@ export default function BorrowPage() {
   const [error, setError] = useState("");
 
   // ─── Derived amounts ──────────────────────────────────────────────────────
-
-  const TOKEN_DECIMALS = BigInt("1000000000000000000");
 
   const mintAmountBigInt = useMemo(() => {
     if (!mintAmount || isNaN(Number(mintAmount))) return BigInt(0);

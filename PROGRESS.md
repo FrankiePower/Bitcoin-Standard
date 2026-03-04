@@ -1,185 +1,112 @@
 # Bitcoin Standard Protocol - Progress Report
 
+Last updated: 2026-03-04
+
 ## Project Overview
 
-The Bitcoin Standard Protocol is a Bitcoin-backed DeFi protocol on Starknet with two main pillars:
+Bitcoin Standard is a native Bitcoin-backed CDP protocol on Starknet:
 
-1. **CDP/Stablecoin System** - Borrow BTSUSD stablecoin against wBTC collateral
-2. **Savings System** - Earn yield on wBTC, BTSUSD, and STRK through ERC-4626 vaults
+1. Native BTC collateral locked in Bitcoin OP_CAT vaults (`standard_vault`)
+2. Debt engine and stablecoin accounting on Starknet (`VaultRegistry`, `CDPCore`, `BTCUSDToken`)
+3. Savings vault module on Starknet (`BTSSavingsVault`)
 
----
-
-## Architecture
-
-```
-BTC → Atomiq → wBTC → BTSUSDVault → BTSUSD
-                             ↓
-                       YieldManager → Vesu
-                             ↓
-                       Liquidator
-
-Savings:
-  wBTC/BTSUSD/STRK → BTSSavingsVault → sWBTC/sBTSUSD/sSTRK (share tokens)
-                             ↑
-                     BTSSavingsFactory (registry)
-```
+The prior wBTC-first CDP stack is now considered legacy/replaced.
 
 ---
 
-## Development Log
+## Current Architecture (Active)
 
-### 2026-03-01 - CDP System Deployed
+```text
+Bitcoin L1 (OP_CAT Vault UTXO)
+  -> deposit txid + sats
+  -> registered on Starknet (VaultRegistry)
+  -> debt minted on Starknet (CDPCore -> BTCUSDToken)
+  -> health factor driven by oracle price + volatility
+  -> repay path: close vault
+  -> liquidation path: mark liquidated + trigger covenant flow on Bitcoin
 
-**Deployed to Sepolia:**
-- MockOracle: `0x03d86bc966d124fce2c7fdec8ccbb5af4e429ecafa7e97b84b14b98812d5ab6e`
-- BTSUSDToken: `0x065b99291375dd031316a50f44718ba6f7582802cbae093f9327e1dd1ddc94ce`
-- MockYieldManager: `0x0478fbd0abaa32a8fe551ef1699dea2c64e61e837ad7092ebee383ce58d2dbdf`
-- BTSUSDVault: `0x071d1fb34337cb55478cc2784bbc9aa905eae7d670f4267f60dc0c9ee2ac0040`
-- Liquidator: `0x02fc386dc1b2642510048dc42428aef88a3c4a5b8660ce6c41f98263eb07670f`
-
-**CDP Features:**
-- Deposit wBTC collateral
-- Mint BTSUSD stablecoin (up to 66.67% LTV)
-- 150% minimum collateral ratio
-- 120% liquidation threshold
-- Mock oracle providing $65,000 BTC price
-
-**Configuration:**
-- BTSUSDToken vault → BTSUSDVault
-- MockYieldManager vault → BTSUSDVault
-- BTSUSDVault liquidator → Liquidator
-
-**Frontend:**
-- `useCDP` hook - reads vault stats, user position, executes deposit/withdraw/mint/repay
-- Borrow page - full CDP management UI with collateral deposit, borrowing, repayment
-- Health status indicators (healthy/warning/danger)
-- LTV visualization bar
-
----
-
-### 2026-03-01 - Savings Module Complete
-
-**Deployed to Sepolia:**
-- MockWBTC: `0x0455bfec3f128001fd0fc6c7c243a5a446d93aa813a6d76d1a26002f27093fa0`
-- BTSSavingsVault: `0x01286e3af345995555c0248f6ab32c3a10ac1a882343730de9400ea07f1714c0`
-
-**Contracts Built:**
-- `BTSSavingsVault` - ERC-4626 vault with Spark-style chi/rho/vsr rate accumulation (~4% APY)
-- `BTSSavingsFactory` - Registry for multiple savings vaults
-- `MockWBTC` - Test ERC-20 token for development
-
-**Tests:**
-- 43 unit tests passing (vault + factory coverage)
-
-**Frontend:**
-- `useSavingsVault` hook - reads vault stats, user position, executes deposit/withdraw/redeem
-- `useTestTokens` hook - mints 1000 test wBTC from faucet
-- `FaucetModal` component - UI for minting test tokens
-- Dashboard page - savings UI with vault stats, deposit modal, position display
-
-**Configuration:**
-- Scaffold config set to Sepolia testnet
-- Deployed contracts added to `deployedContracts.ts`
-
----
-
-## Comparison: Bitcoin Standard vs Reference btcusd-stablecoin
-
-| Feature | Reference | Bitcoin Standard | Status |
-|---------|-----------|------------------|--------|
-| CDP Vault | BTCUSDVault | BTSUSDVault | **Deployed** |
-| Stablecoin | BTCUSDToken | BTSUSDToken | **Deployed** |
-| Price Oracle | PriceOracle | MockOracle | **Deployed** |
-| Liquidator | Liquidator | Liquidator | **Deployed** |
-| Mock wBTC | MockWBTC | MockWBTC | **Deployed** |
-| Mock Yield Manager | YieldManager | MockYieldManager | **Deployed** |
-| BTC Bridge | AtomiqAdapter | AtomiqAdapter | Built |
-| Yield Manager | VesuYieldManager | VesuYieldManager | Built |
-| **Savings Vaults** | Not included | BTSSavingsVault | **Deployed** |
-| **Intent System** | Not included | Planned | Not started |
-| Mobile App | React Native | Next.js Web | Different |
-| Backend API | Node.js | Not built | Not started |
-
-**Key Differentiators:**
-1. Savings vaults with Spark-style VSR mechanism (unique to Bitcoin Standard)
-2. Web-first approach vs mobile-first
-3. Intent system planned for large withdrawals
-
----
-
-## Technical Details
-
-### Savings Vault Mechanism
-
-The BTSSavingsVault implements the Spark/MakerDAO rate accumulation pattern:
-
-- **chi** - Rate accumulator tracking cumulative growth (starts at RAY = 1e27)
-- **rho** - Timestamp of last rate update
-- **vsr** - Vault Savings Rate (per-second rate in ray precision)
-
-**Rate Formula:**
-```
-chi_new = chi_old * (vsr)^(time_delta) / RAY
-totalAssets = totalShares * nowChi() / RAY
-```
-
-**Current Configuration:**
-- VSR: `1000000001243680656318820312` (~4% APY)
-- Decimals: 8 (matching wBTC)
-
-### Deployment Method
-
-Using `sncast` (Starknet Foundry) for reliable deployment:
-
-```bash
-# Declare contract class
-sncast --account=sepolia declare --contract-name=MockWBTC --network=sepolia
-
-# Deploy instance
-sncast --account=sepolia deploy \
-  --class-hash 0x467ff1f... \
-  --arguments '0x069571...' \
-  --network sepolia
+Savings (separate module):
+  underlying token -> BTSSavingsVault (ERC-4626, chi/rho/vsr)
 ```
 
 ---
 
-## Files Modified/Created
+## Status By Area
 
-### Contracts
-- `packages/snfoundry/contracts/src/savings/savings_vault.cairo`
-- `packages/snfoundry/contracts/src/savings/savings_factory.cairo`
-- `packages/snfoundry/contracts/src/savings/interfaces.cairo`
-- `packages/snfoundry/contracts/tests/test_savings_vault.cairo`
-- `packages/snfoundry/contracts/tests/test_savings_factory.cairo`
+### 1) Bitcoin Vault Runtime (`standard_vault`) - Done
 
-### Frontend
-- `packages/nextjs/hooks/useSavingsVault.ts`
-- `packages/nextjs/hooks/useTestTokens.ts`
-- `packages/nextjs/components/FaucetModal.tsx`
-- `packages/nextjs/app/dashboard/page.tsx`
-- `packages/nextjs/components/layout/navbar.tsx`
-- `packages/nextjs/contracts/deployedContracts.ts`
-- `packages/nextjs/scaffold.config.ts`
+- OP_CAT covenant vault logic implemented (repay, liquidate, timeout paths)
+- CLI flows implemented and tested on regtest
+- Regtest end-to-end flows completed for:
+  - deposit -> repay
+  - deposit -> liquidate
+  - deposit -> timeout
+- Remaining hardening item:
+  - enforce/verify liquidate output redirection constraints end-to-end
 
-### Configuration
-- `packages/snfoundry/.env` (Sepolia credentials)
-- `packages/snfoundry/contracts/snfoundry.toml`
+### 2) Starknet CDP Contracts - Done
+
+- `VaultRegistry.cairo` implemented and deployed
+- `CDPCore.cairo` implemented and deployed
+- `BTCUSDToken.cairo` implemented and deployed
+- `MockOracle.cairo` deployed and wired as active oracle
+- Access wiring complete:
+  - registry `set_cdp_core`
+  - token `set_vault`
+  - cdp `set_oracle`
+- Automated quality status (2026-03-04):
+  - `yarn compile`: pass
+  - `yarn test` (snforge): 60 passed, 0 failed
+
+### 3) Frontend (`packages/nextjs`) - In Progress
+
+- Native CDP UI/hook exists (`useNativeCDP`, borrow page) and is wired to deployed addresses
+- Savings dashboard/hook exists and is wired
+- Quality status (2026-03-04):
+  - `yarn next:check-types`: fixed and passing after native hook contract-instantiation patch
+  - `yarn next:lint`: passing with no warnings after dependency cleanup
+- Open product work:
+  - complete native vault UX polish (registration guidance, risk messaging, lifecycle clarity)
+  - expand component-level tests for key flows
+
+### 4) Oracle Service (`packages/oracle-service`) - Partial
+
+- Service can fetch BTC price/volatility from CoinGecko and push to MockOracle on Starknet
+- Scheduling/cron flow implemented
+- Not yet a full Bitcoin vault watcher/attestation signer
 
 ---
 
-## Next Steps
+## Deployed Starknet Contracts (Sepolia)
 
-1. **Deploy CDP System** - BTSUSDVault, BTSUSDToken, Oracle, Liquidator
-2. **Build Borrow UI** - Collateral management, mint/repay BTSUSD
-3. **Multi-Vault Savings** - Deploy factory and additional vaults
-4. **Bridge Integration** - AtomiqAdapter + backend API
+- `VaultRegistry`:
+  `0x0147864dd4a1c9849cbdaea58c22cdc36fe42a66c1102bc02ec4668932937bae`
+- `CDPCore`:
+  `0x070985a3cf9817e50a90bc2d3550f77d64f8a9bebc71577172295682f9580879`
+- `BTCUSDToken`:
+  `0x075690645b6e49811b87ec11bbffb3f25aa6b00cb8070a9459983135e39cb2cd`
+- `MockOracle`:
+  `0x04ed3d329fffa670f2a728444a9b53d0cae859a4397adfbde1622e0303041f14`
+- `BTSSavingsVault`:
+  `0x01286e3af345995555c0248f6ab32c3a10ac1a882343730de9400ea07f1714c0`
 
 ---
 
-## Resources
+## Legacy Notes
 
-- [Spark Vaults V2 Reference](sparksvault.md)
-- [Spark Savings Intents Reference](sparkssavingsintent.md)
-- [Reference btcusd-stablecoin](references/btcusd-stablecoin/)
-- [Deployment Guide](packages/snfoundry/deployment_guide.md)
+The following previously deployed contracts were part of the wBTC-era CDP path and are no longer the active architecture target:
+
+- legacy `BTSUSDVault`
+- legacy `Liquidator`
+- legacy `MockYieldManager`
+- earlier `MockOracle`/`BTSUSDToken` instances
+
+Keep them for historical traceability only.
+
+---
+
+## Next Priorities
+
+1. Complete oracle watcher/attestation behavior for native vault lifecycle events
+2. Finalize frontend UX around txid registration and liquidation risk communication
+3. Add/repair frontend automated tests to cover borrow/register/repay critical path

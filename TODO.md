@@ -150,3 +150,9 @@ snforge test
 # Frontend
 cd packages/nextjs && yarn dev
 ```
+
+---
+
+## Known Environment Issue
+
+- [ ] Fix frontend test runner environment mismatch: `yarn test:nextjs` fails with esbuild host/binary version mismatch (`0.25.9` vs `0.27.3`).

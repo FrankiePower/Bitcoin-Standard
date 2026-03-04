@@ -155,8 +155,10 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
   const btcPrice = useMemo(() => {
     if (!oraclePriceRaw) return BigInt(0);
     const raw = oraclePriceRaw as any;
-    // Returns (u256, u64) — price is first element
-    if (Array.isArray(raw)) return parseU256(raw[0]);
+    // Returns (u256, u64) — price is first element.
+    // starknet-react may return tuples as object with numeric keys, not a true Array.
+    const first = Array.isArray(raw) ? raw[0] : (raw[0] ?? raw["0"]);
+    if (first !== undefined) return parseU256(first);
     return parseU256(raw);
   }, [oraclePriceRaw]);
 
@@ -270,7 +272,10 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
       if (!address) throw new Error("Wallet not connected");
 
       const felt = txidToFelt(depositTxid);
-      const cdp = new Contract(CDP_CORE_ABI as any, NATIVE_ADDRESSES.CDP_CORE);
+      const cdp = new Contract({
+        abi: CDP_CORE_ABI as any,
+        address: NATIVE_ADDRESSES.CDP_CORE,
+      });
       const call = cdp.populate("register_vault", [
         felt,
         cairo.uint256(btcAmountSats),
@@ -296,7 +301,10 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
       if (!address) throw new Error("Wallet not connected");
 
       const felt = txidToFelt(depositTxid);
-      const cdp = new Contract(CDP_CORE_ABI as any, NATIVE_ADDRESSES.CDP_CORE);
+      const cdp = new Contract({
+        abi: CDP_CORE_ABI as any,
+        address: NATIVE_ADDRESSES.CDP_CORE,
+      });
       const call = cdp.populate("mint_debt", [felt, cairo.uint256(amount)]);
 
       setIsMinting(true);
@@ -319,7 +327,10 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
       if (!address) throw new Error("Wallet not connected");
 
       const felt = txidToFelt(depositTxid);
-      const cdp = new Contract(CDP_CORE_ABI as any, NATIVE_ADDRESSES.CDP_CORE);
+      const cdp = new Contract({
+        abi: CDP_CORE_ABI as any,
+        address: NATIVE_ADDRESSES.CDP_CORE,
+      });
       const call = cdp.populate("repay_debt", [felt, cairo.uint256(amount)]);
 
       setIsRepaying(true);

@@ -252,18 +252,25 @@ export function parseU256(raw: any): bigint {
   if (raw.low !== undefined && raw.high !== undefined) {
     return BigInt(raw.low) + (BigInt(raw.high) << BigInt(128));
   }
-  // [low, high] tuple
-  if (Array.isArray(raw) && raw.length >= 2) {
-    return BigInt(raw[0]) + (BigInt(raw[1]) << BigInt(128));
+  // [low, high] tuple — true array or object with numeric keys (starknet-react tuples)
+  const r0 = Array.isArray(raw) ? raw[0] : raw[0] ?? raw["0"];
+  const r1 = Array.isArray(raw) ? raw[1] : raw[1] ?? raw["1"];
+  if (r0 !== undefined && r1 !== undefined) {
+    return BigInt(r0) + (BigInt(r1) << BigInt(128));
   }
-  return BigInt(raw.toString());
+  try {
+    return BigInt(raw.toString());
+  } catch {
+    return BigInt(0);
+  }
 }
 
 /** BTC amount in satoshis → formatted BTC string */
 export function formatBTC(sats: bigint, decimals = 8): string {
   if (sats === BigInt(0)) return "0";
-  const whole = sats / BigInt(1e8);
-  const frac = sats % BigInt(1e8);
+  const SATS_PER_BTC = BigInt(100000000);
+  const whole = sats / SATS_PER_BTC;
+  const frac = sats % SATS_PER_BTC;
   const fracStr = frac.toString().padStart(8, "0").slice(0, decimals);
   return `${whole.toLocaleString()}.${fracStr}`;
 }
@@ -271,7 +278,7 @@ export function formatBTC(sats: bigint, decimals = 8): string {
 /** BTCUSD amount (18 decimals) → formatted string */
 export function formatBTCUSD(amount: bigint, decimals = 2): string {
   if (amount === BigInt(0)) return "0";
-  const divisor = BigInt(1e18);
+  const divisor = BigInt("1000000000000000000");
   const whole = amount / divisor;
   const frac = amount % divisor;
   const fracStr = frac.toString().padStart(18, "0").slice(0, decimals);

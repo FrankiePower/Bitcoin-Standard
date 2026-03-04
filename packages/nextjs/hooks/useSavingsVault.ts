@@ -38,7 +38,7 @@ export function formatTokenAmount(
   displayDecimals: number = 4,
 ): string {
   if (!amount || amount === BigInt(0)) return "0";
-  const divisor = BigInt(10 ** decimals);
+  const divisor = BigInt(10) ** BigInt(decimals);
   const integerPart = amount / divisor;
   const fractionalPart = amount % divisor;
 
