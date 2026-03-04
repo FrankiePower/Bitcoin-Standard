@@ -8,7 +8,6 @@ import {
   Menu,
   Droplets,
   TrendingUp,
-  Repeat2,
   Sparkles,
 } from "lucide-react";
 import { CustomConnectButton } from "~~/components/scaffold-stark/CustomConnectButton";
@@ -19,31 +18,16 @@ export function Navbar() {
   const { status } = useAccount();
   const { disconnect } = useDisconnect();
   const isConnected = status === "connected";
-  const [bannerVisible, setBannerVisible] = useState(true);
   const [faucetOpen, setFaucetOpen] = useState(false);
 
   const navLinks = [
-    { name: "Savings", href: "/dashboard", badge: "4%" },
+    { name: "BTSUSD", href: "/dashboard" },
     { name: "Borrow", href: "/borrow" },
-    { name: "BTSUSD", href: "/btsusd" },
-    { name: "Swap", href: "/swap" },
+    { name: "Savings", href: "/btsusd", badge: "4%" },
   ];
 
   return (
     <>
-      {/* Top Banner */}
-      {bannerVisible && (
-        <div className="bg-[#6c48ff] text-white text-xs font-semibold py-2 px-4 flex justify-center items-center relative">
-          <span>Save with WBTC and STRK in Bitcoin Standard Savings</span>
-          <button
-            onClick={() => setBannerVisible(false)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 opacity-70 hover:opacity-100"
-          >
-            ×
-          </button>
-        </div>
-      )}
-
       {/* Main Navbar */}
       <nav className="border-b border-black/5 bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-[1400px] mx-auto px-4 md:px-8 h-[68px] flex justify-between items-center">
@@ -81,26 +65,6 @@ export function Navbar() {
                       <span className="px-1.5 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-black">
                         {link.badge}
                       </span>
-                    </Link>
-                  );
-                }
-
-                // Specialized styling for Swap
-                if (link.name === "Swap") {
-                  return (
-                    <Link
-                      key={link.name}
-                      href={link.href}
-                      className={`flex items-center gap-2 px-4 py-1.5 rounded-[12px] text-[14px] font-bold transition-all border ${
-                        isActive
-                          ? "bg-white border-purple-500/30 shadow-sm text-purple-600"
-                          : "bg-neutral-50/50 border-transparent text-neutral-500 hover:text-black hover:bg-white hover:border-neutral-200"
-                      }`}
-                    >
-                      <div className="w-5 h-5 rounded-md bg-purple-100 flex items-center justify-center">
-                        <Repeat2 className="w-3 h-3 text-purple-600" />
-                      </div>
-                      {link.name}
                     </Link>
                   );
                 }

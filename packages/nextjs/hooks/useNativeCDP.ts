@@ -376,6 +376,7 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
     dynamicMCR,
 
     // Protocol
+    totalBTC: protocolStats.totalBTC,
     totalDebt: protocolStats.totalDebt,
     totalVaults,
     totalSupply,
