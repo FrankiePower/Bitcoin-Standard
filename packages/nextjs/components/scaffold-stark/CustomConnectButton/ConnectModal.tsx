@@ -58,7 +58,9 @@ const ConnectModal = () => {
   };
 
   // Xverse-first connector filtering for single-wallet UX.
-  const nonBurnerConnectors = connectors.filter((c) => c.id !== "burner-wallet");
+  const nonBurnerConnectors = connectors.filter(
+    (c) => c.id !== "burner-wallet",
+  );
   const xverseConnectors = nonBurnerConnectors.filter(isXverseConnector);
   const mainConnectors =
     xverseConnectors.length > 0 ? xverseConnectors : nonBurnerConnectors;
@@ -175,7 +177,6 @@ const ConnectModal = () => {
                           {isStarknetConnected ? "Connected" : "Connect"}
                         </button>
                       </div>
-
                     </div>
                   ) : (
                     /* Native Starknet Connectors List */

@@ -52,10 +52,10 @@ function BTCMarketBanner() {
   const up = (market?.change_24h ?? 0) >= 0;
 
   return (
-    <div className="flex flex-wrap items-center gap-x-6 gap-y-1 rounded-xl border border-orange-500/20 bg-orange-500/5 px-4 py-2 text-sm">
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-1 rounded-xl border border-orange-500/30 bg-orange-50 px-4 py-2.5 text-sm">
       <div className="flex items-center gap-2">
         <Bitcoin size={16} className="text-orange-400" />
-        <span className="font-semibold text-white">
+        <span className="font-semibold text-black">
           {market ? `$${market.price.toLocaleString()}` : "—"}
         </span>
         {market && (
@@ -70,21 +70,21 @@ function BTCMarketBanner() {
       </div>
       {market && (
         <>
-          <div className="text-zinc-400">
+          <div className="text-neutral-600">
             MCap:{" "}
-            <span className="text-zinc-200">
+            <span className="text-neutral-800">
               ${(market.market_cap / 1e9).toFixed(0)}B
             </span>
           </div>
-          <div className="text-zinc-400">
+          <div className="text-neutral-600">
             Vol 24h:{" "}
-            <span className="text-zinc-200">
+            <span className="text-neutral-800">
               ${(market.volume_24h / 1e9).toFixed(1)}B
             </span>
           </div>
         </>
       )}
-      <div className="ml-auto text-xs text-zinc-500">via CoinGecko</div>
+      <div className="ml-auto text-xs text-neutral-500">via CoinGecko</div>
     </div>
   );
 }
@@ -165,7 +165,7 @@ function BitcoinVaultStatus({
 }) {
   if (!vaultInfo) {
     return (
-      <div className="rounded-xl border border-zinc-700 bg-zinc-800/40 p-4 text-sm text-zinc-400">
+      <div className="rounded-xl border border-neutral-200 bg-white p-4 text-sm text-neutral-500 shadow-sm">
         Loading vault...
       </div>
     );
@@ -186,9 +186,9 @@ function BitcoinVaultStatus({
         : XCircle;
 
   return (
-    <div className="rounded-xl border border-zinc-700 bg-zinc-800/40 p-4 space-y-3">
+    <div className="rounded-xl border border-neutral-200 bg-white p-4 space-y-3 shadow-sm">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-semibold text-zinc-200">
+        <span className="text-sm font-semibold text-neutral-800">
           Vault Status
         </span>
         <span
@@ -199,27 +199,27 @@ function BitcoinVaultStatus({
         </span>
       </div>
 
-      <div className="font-mono text-xs text-zinc-500 break-all">{txid}</div>
+      <div className="font-mono text-xs text-neutral-500 break-all">{txid}</div>
 
       <div className="grid grid-cols-2 gap-3 text-sm">
-        <div className="rounded-lg bg-zinc-900/60 p-3">
-          <div className="text-zinc-400 text-xs mb-1">BTC Locked</div>
-          <div className="font-semibold text-white">
+        <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+          <div className="text-neutral-500 text-xs mb-1">BTC Locked</div>
+          <div className="font-semibold text-neutral-900">
             {formatBTC(position.btcSats)} BTC
           </div>
-          <div className="text-xs text-zinc-400">
+          <div className="text-xs text-neutral-500">
             ≈ $
             {collateralUSD.toLocaleString(undefined, {
               maximumFractionDigits: 2,
             })}
           </div>
         </div>
-        <div className="rounded-lg bg-zinc-900/60 p-3">
-          <div className="text-zinc-400 text-xs mb-1">BTCUSD Debt</div>
-          <div className="font-semibold text-white">
+        <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+          <div className="text-neutral-500 text-xs mb-1">BTCUSD Debt</div>
+          <div className="font-semibold text-neutral-900">
             {formatBTCUSD(position.debtBTCUSD)} BTCUSD
           </div>
-          <div className="text-xs text-zinc-400">
+          <div className="text-xs text-neutral-500">
             ≈ ${debtUSD.toLocaleString(undefined, { maximumFractionDigits: 2 })}
           </div>
         </div>
@@ -392,6 +392,24 @@ export default function BorrowPage() {
   const [error, setError] = useState("");
   const [oraclePubKey, setOraclePubKey] = useState("");
   const [vaultTaprootAddress, setVaultTaprootAddress] = useState("");
+  const [operatorBusy, setOperatorBusy] = useState(false);
+  const [operatorMessage, setOperatorMessage] = useState("");
+  const [bridgeStatus, setBridgeStatus] = useState<{
+    available: boolean;
+    bridgeUrl: string;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/standard-vault/status")
+      .then((r) => r.json())
+      .then((d) =>
+        setBridgeStatus({
+          available: !!d.available,
+          bridgeUrl: d.bridgeUrl || "http://127.0.0.1:4040",
+        }),
+      )
+      .catch(() => setBridgeStatus(null));
+  }, []);
 
   useEffect(() => {
     const savedOracle = window.localStorage.getItem("btcstd:oracle_pubkey");
@@ -526,6 +544,46 @@ export default function BorrowPage() {
     }
   }, [activeTxid, repayAmountBigInt, cdp]);
 
+  const runOperatorAction = useCallback(
+    async (
+      action: "deposit" | "liquidate" | "repay" | "timeout",
+      body?: Record<string, unknown>,
+    ) => {
+      setError("");
+      setOperatorMessage("");
+      setOperatorBusy(true);
+      try {
+        const response = await fetch(`/api/standard-vault/${action}`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body ?? {}),
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          throw new Error(data?.error || data?.output || `${action} failed`);
+        }
+
+        if (action === "deposit") {
+          if (data.outpointTxid) {
+            setRegTxid(data.outpointTxid);
+            setTxidInput(data.outpointTxid);
+          }
+          if (data.oraclePubKey) setOraclePubKey(data.oraclePubKey);
+          if (data.vaultTaprootAddress) setVaultTaprootAddress(data.vaultTaprootAddress);
+        }
+
+        setOperatorMessage(
+          `${action} complete${data.txid ? ` (txid: ${data.txid})` : ""}`,
+        );
+      } catch (e: any) {
+        setError(e?.message ?? `${action} failed`);
+      } finally {
+        setOperatorBusy(false);
+      }
+    },
+    [],
+  );
+
   // ─── UI ──────────────────────────────────────────────────────────────────
 
   return (
@@ -533,8 +591,8 @@ export default function BorrowPage() {
       <div className="space-y-5 max-w-2xl mx-auto">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-white">Borrow BTCUSD</h1>
-          <p className="mt-1 text-sm text-zinc-400">
+          <h1 className="text-2xl font-bold text-neutral-900">Borrow BTCUSD</h1>
+          <p className="mt-1 text-sm text-neutral-600">
             Lock native Bitcoin in an OP_CAT vault, then mint BTCUSD stablecoin
             against it on Starknet.
           </p>
@@ -566,17 +624,78 @@ export default function BorrowPage() {
           ].map((s) => (
             <div
               key={s.label}
-              className="rounded-xl border border-zinc-700 bg-zinc-800/40 p-3"
+              className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm"
             >
-              <div className="text-xs text-zinc-500">{s.label}</div>
-              <div className="mt-1 text-lg font-bold text-white">{s.value}</div>
-              <div className="text-xs text-zinc-500">{s.sub}</div>
+              <div className="text-xs text-neutral-500">{s.label}</div>
+              <div className="mt-1 text-lg font-bold text-neutral-900">{s.value}</div>
+              <div className="text-xs text-neutral-500">{s.sub}</div>
             </div>
           ))}
         </div>
 
+        <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-neutral-900">
+              Before You Borrow
+            </h2>
+            <span
+              className={`text-xs font-medium ${bridgeStatus?.available ? "text-emerald-600" : "text-amber-600"}`}
+            >
+              {bridgeStatus?.available
+                ? "Bitcoin bridge online"
+                : "Bitcoin bridge offline"}
+            </span>
+          </div>
+          <ul className="space-y-1 text-xs text-neutral-600">
+            <li>1. Register a confirmed Bitcoin vault deposit (txid + BTC amount).</li>
+            <li>
+              2. Borrow only within max mintable to keep health factor above 100.
+            </li>
+            <li>
+              3. Liquidation can be triggered when health factor drops below 100.
+            </li>
+            <li>
+              4. Local bridge endpoint:{" "}
+              <code className="text-neutral-800">{bridgeStatus?.bridgeUrl || "http://127.0.0.1:4040"}</code>
+            </li>
+          </ul>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button
+              onClick={() => void runOperatorAction("deposit")}
+              disabled={operatorBusy}
+              className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs font-medium text-neutral-800 hover:border-orange-500 hover:text-orange-600 disabled:opacity-50"
+            >
+              Run BTC Deposit
+            </button>
+            <button
+              onClick={() => void runOperatorAction("liquidate")}
+              disabled={operatorBusy}
+              className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs font-medium text-neutral-800 hover:border-orange-500 hover:text-orange-600 disabled:opacity-50"
+            >
+              Run Liquidate
+            </button>
+            <button
+              onClick={() => void runOperatorAction("repay")}
+              disabled={operatorBusy}
+              className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs font-medium text-neutral-800 hover:border-orange-500 hover:text-orange-600 disabled:opacity-50"
+            >
+              Run Repay
+            </button>
+            <button
+              onClick={() => void runOperatorAction("timeout")}
+              disabled={operatorBusy}
+              className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs font-medium text-neutral-800 hover:border-orange-500 hover:text-orange-600 disabled:opacity-50"
+            >
+              Run Timeout
+            </button>
+          </div>
+          {operatorMessage && (
+            <p className="mt-2 text-xs text-emerald-600">{operatorMessage}</p>
+          )}
+        </div>
+
         {/* Tab navigation */}
-        <div className="flex gap-1 rounded-xl bg-zinc-800/60 p-1">
+        <div className="flex gap-1 rounded-xl border border-neutral-200 bg-neutral-100 p-1">
           {(
             [
               { id: "register", label: "1. Register Vault" },
@@ -593,7 +712,7 @@ export default function BorrowPage() {
               className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
                 tab === t.id
                   ? "bg-orange-500 text-white"
-                  : "text-zinc-400 hover:text-white"
+                  : "text-neutral-600 hover:text-neutral-900"
               }`}
             >
               {t.label}
@@ -611,29 +730,29 @@ export default function BorrowPage() {
 
         {/* ── Tab: Register Vault ──────────────────────────────────────────── */}
         {tab === "register" && (
-          <div className="space-y-4 rounded-xl border border-zinc-700 bg-zinc-800/40 p-5">
+          <div className="space-y-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
             <div className="flex items-start gap-3">
               <div className="rounded-full bg-orange-500/15 p-2">
                 <Bitcoin size={18} className="text-orange-400" />
               </div>
               <div>
-                <h2 className="font-semibold text-white">
+                <h2 className="font-semibold text-neutral-900">
                   Register Bitcoin Vault
                 </h2>
-                <p className="mt-0.5 text-xs text-zinc-400">
+                <p className="mt-0.5 text-xs text-neutral-600">
                   First, deposit BTC into an OP_CAT Taproot vault on Bitcoin (
-                  <code className="text-zinc-300">just deposit</code>). Then
+                  <code className="text-neutral-800">just deposit</code>). Then
                   register with txid + amount on Starknet.
                 </p>
               </div>
             </div>
 
-            <div className="space-y-3 rounded-lg border border-zinc-700 bg-zinc-900/40 p-4">
-              <div className="text-xs text-zinc-400">
-                Step A: Run <code className="text-zinc-200">just deposit</code>{" "}
-                in <code className="text-zinc-200">standard_vault/</code>.
+            <div className="space-y-3 rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+              <div className="text-xs text-neutral-600">
+                Step A: Run <code className="text-neutral-800">just deposit</code>{" "}
+                in <code className="text-neutral-800">standard_vault/</code>.
               </div>
-              <div className="text-xs text-zinc-400">
+              <div className="text-xs text-neutral-600">
                 Step B: Open the modal and paste txid, BTC amount, oracle
                 pubkey, and Taproot address.
               </div>
@@ -645,14 +764,14 @@ export default function BorrowPage() {
                 <ChevronRight size={14} />
               </button>
               {!isConnected && (
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-neutral-500">
                   Connect your Starknet wallet to register.
                 </p>
               )}
             </div>
 
-            <div className="border-t border-zinc-700 pt-3">
-              <p className="text-xs text-zinc-500 mb-2">
+            <div className="border-t border-neutral-200 pt-3">
+              <p className="text-xs text-neutral-500 mb-2">
                 Already have a vault?
               </p>
               <div className="flex gap-2">
@@ -661,11 +780,11 @@ export default function BorrowPage() {
                   value={txidInput}
                   onChange={(e) => setTxidInput(e.target.value)}
                   placeholder="Paste txid to load vault"
-                  className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 font-mono text-xs text-white placeholder-zinc-600 focus:border-orange-500 focus:outline-none"
+                  className="flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 font-mono text-xs text-neutral-900 placeholder-neutral-400 focus:border-orange-500 focus:outline-none"
                 />
                 <button
                   onClick={handleLoadVault}
-                  className="flex items-center gap-1 rounded-lg border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-300 hover:border-orange-500 hover:text-orange-400 transition"
+                  className="flex items-center gap-1 rounded-lg border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-700 hover:border-orange-500 hover:text-orange-600 transition"
                 >
                   Load <ChevronRight size={14} />
                 </button>
@@ -673,20 +792,20 @@ export default function BorrowPage() {
             </div>
 
             {(oraclePubKey || vaultTaprootAddress) && (
-              <div className="rounded-lg border border-zinc-700 bg-zinc-900/60 p-3 text-xs">
-                <div className="mb-2 font-medium text-zinc-300">
+              <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-xs">
+                <div className="mb-2 font-medium text-neutral-700">
                   Current Vault Metadata
                 </div>
-                <div className="space-y-1.5 text-zinc-400">
+                <div className="space-y-1.5 text-neutral-600">
                   <div className="font-mono break-all">
                     Oracle PubKey:{" "}
-                    <span className="text-zinc-200">
+                    <span className="text-neutral-900">
                       {oraclePubKey || "Not set"}
                     </span>
                   </div>
                   <div className="font-mono break-all">
                     Taproot Address:{" "}
-                    <span className="text-zinc-200">
+                    <span className="text-neutral-900">
                       {vaultTaprootAddress || "Not set"}
                     </span>
                   </div>
@@ -720,12 +839,12 @@ export default function BorrowPage() {
             )}
 
             {/* Mint form */}
-            <div className="rounded-xl border border-zinc-700 bg-zinc-800/40 p-5 space-y-3">
-              <h2 className="font-semibold text-white">Mint BTCUSD</h2>
+            <div className="rounded-xl border border-neutral-200 bg-white p-5 space-y-3 shadow-sm">
+              <h2 className="font-semibold text-neutral-900">Mint BTCUSD</h2>
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-zinc-300">
+                  <label className="text-xs font-medium text-neutral-700">
                     Amount
                   </label>
                   <button
@@ -736,7 +855,7 @@ export default function BorrowPage() {
                           : "",
                       )
                     }
-                    className="text-xs text-orange-400 hover:text-orange-300"
+                  className="text-xs text-orange-600 hover:text-orange-500"
                   >
                     Max:{" "}
                     {cdp.maxMintable > BigInt(0)
@@ -751,9 +870,9 @@ export default function BorrowPage() {
                     onChange={(e) => setMintAmount(e.target.value)}
                     placeholder="0.00"
                     min="0"
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2.5 pr-20 text-sm text-white placeholder-zinc-600 focus:border-orange-500 focus:outline-none"
+                    className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 pr-20 text-sm text-neutral-900 placeholder-neutral-400 focus:border-orange-500 focus:outline-none"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-zinc-400">
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-neutral-500">
                     BTCUSD
                   </span>
                 </div>
@@ -761,9 +880,9 @@ export default function BorrowPage() {
 
               {/* Projected health factor */}
               {projectedHF !== null && (
-                <div className="rounded-lg bg-zinc-900/60 p-3 space-y-1">
+                <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 space-y-1">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-zinc-400">
+                    <span className="text-neutral-500">
                       Projected Health Factor
                     </span>
                     <span
@@ -803,7 +922,7 @@ export default function BorrowPage() {
                 {cdp.isMinting ? "Minting..." : "Mint BTCUSD"}
               </button>
 
-              <div className="flex items-start gap-2 text-xs text-zinc-500">
+              <div className="flex items-start gap-2 text-xs text-neutral-500">
                 <Info size={12} className="mt-0.5 shrink-0" />
                 BTCUSD is a BTC-backed stablecoin. Maintain health factor above
                 100 to avoid liquidation. MCR is dynamic and increases with BTC
@@ -837,23 +956,23 @@ export default function BorrowPage() {
             )}
 
             {/* Repay form */}
-            <div className="rounded-xl border border-zinc-700 bg-zinc-800/40 p-5 space-y-3">
-              <h2 className="font-semibold text-white">Repay Debt</h2>
+            <div className="rounded-xl border border-neutral-200 bg-white p-5 space-y-3 shadow-sm">
+              <h2 className="font-semibold text-neutral-900">Repay Debt</h2>
 
-              <div className="rounded-lg bg-zinc-900/60 p-3 grid grid-cols-2 gap-2 text-sm">
+              <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 grid grid-cols-2 gap-2 text-sm">
                 <div>
-                  <div className="text-xs text-zinc-400 mb-0.5">
+                  <div className="text-xs text-neutral-500 mb-0.5">
                     Outstanding Debt
                   </div>
-                  <div className="font-semibold text-white">
+                  <div className="font-semibold text-neutral-900">
                     {formatBTCUSD(cdp.position.debtBTCUSD)} BTCUSD
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-zinc-400 mb-0.5">
+                  <div className="text-xs text-neutral-500 mb-0.5">
                     Your Balance
                   </div>
-                  <div className="font-semibold text-white">
+                  <div className="font-semibold text-neutral-900">
                     {formatBTCUSD(cdp.btcusdBalance)} BTCUSD
                   </div>
                 </div>
@@ -861,7 +980,7 @@ export default function BorrowPage() {
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-zinc-300">
+                  <label className="text-xs font-medium text-neutral-700">
                     Amount
                   </label>
                   <button
@@ -876,7 +995,7 @@ export default function BorrowPage() {
                           : "",
                       );
                     }}
-                    className="text-xs text-orange-400 hover:text-orange-300"
+                    className="text-xs text-orange-600 hover:text-orange-500"
                   >
                     Max
                   </button>
@@ -888,9 +1007,9 @@ export default function BorrowPage() {
                     onChange={(e) => setRepayAmount(e.target.value)}
                     placeholder="0.00"
                     min="0"
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2.5 pr-20 text-sm text-white placeholder-zinc-600 focus:border-orange-500 focus:outline-none"
+                    className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 pr-20 text-sm text-neutral-900 placeholder-neutral-400 focus:border-orange-500 focus:outline-none"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-zinc-400">
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-neutral-500">
                     BTCUSD
                   </span>
                 </div>
@@ -914,7 +1033,7 @@ export default function BorrowPage() {
                   repayAmountBigInt === BigInt(0) ||
                   cdp.position.debtBTCUSD === BigInt(0)
                 }
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-700 py-3 text-sm font-semibold text-white transition hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-800 py-3 text-sm font-semibold text-white transition hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {cdp.isRepaying ? (
                   <Loader2 size={16} className="animate-spin" />
@@ -934,33 +1053,33 @@ export default function BorrowPage() {
         )}
 
         {/* Demo flow hint */}
-        <div className="rounded-xl border border-zinc-700/50 bg-zinc-900/40 p-4">
-          <div className="text-xs font-medium text-zinc-400 mb-2 flex items-center gap-1.5">
+        <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+          <div className="text-xs font-medium text-neutral-500 mb-2 flex items-center gap-1.5">
             <Zap size={12} className="text-orange-400" />
             Demo Flow
           </div>
-          <ol className="space-y-1 text-xs text-zinc-500">
+          <ol className="space-y-1 text-xs text-neutral-600">
             <li>
-              <span className="text-zinc-300">1.</span>{" "}
+              <span className="text-neutral-800">1.</span>{" "}
               <code className="text-orange-300">just deposit</code> in{" "}
-              <code className="text-zinc-300">standard_vault/</code> → creates
+              <code className="text-neutral-800">standard_vault/</code> → creates
               OP_CAT UTXO, prints txid
             </li>
             <li>
-              <span className="text-zinc-300">2.</span> Paste txid + amount
+              <span className="text-neutral-800">2.</span> Paste txid + amount
               above → Register Vault on Starknet
             </li>
             <li>
-              <span className="text-zinc-300">3.</span> Mint BTCUSD stablecoin
+              <span className="text-neutral-800">3.</span> Mint BTCUSD stablecoin
               against your locked BTC
             </li>
             <li>
-              <span className="text-zinc-300">4.</span> To repay:{" "}
+              <span className="text-neutral-800">4.</span> To repay:{" "}
               <code className="text-orange-300">just repay &lt;addr&gt;</code>{" "}
               on Bitcoin + Repay Debt here
             </li>
             <li>
-              <span className="text-zinc-300">5.</span> Liquidation: oracle
+              <span className="text-neutral-800">5.</span> Liquidation: oracle
               detects HF &lt; 100 →{" "}
               <code className="text-orange-300">just liquidate</code> triggers
               OP_CAT covenant
