@@ -1,24 +1,15 @@
-import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAccount, useDisconnect } from "@starknet-react/core";
-import {
-  LogOut,
-  Menu,
-  Droplets,
-  TrendingUp,
-  Sparkles,
-} from "lucide-react";
+import { LogOut, Menu, TrendingUp, Sparkles } from "lucide-react";
 import { CustomConnectButton } from "~~/components/scaffold-stark/CustomConnectButton";
-import { FaucetModal } from "~~/components/FaucetModal";
 
 export function Navbar() {
   const pathname = usePathname();
   const { status } = useAccount();
   const { disconnect } = useDisconnect();
   const isConnected = status === "connected";
-  const [faucetOpen, setFaucetOpen] = useState(false);
 
   const navLinks = [
     { name: "BTSUSD", href: "/dashboard" },
@@ -94,26 +85,6 @@ export function Navbar() {
 
           {/* Right Section */}
           <div className="flex items-center gap-3">
-            {/* Faucet Button */}
-            <button
-              onClick={() => setFaucetOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-full text-[14px] font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 transition-all"
-              title="Get test tokens"
-            >
-              <Droplets className="w-4 h-4" />
-              <span className="hidden sm:inline">Faucet</span>
-            </button>
-
-            <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center border border-black/10">
-              <Image
-                src="/bitcoin-btc-logo.svg"
-                alt="Network"
-                width={16}
-                height={16}
-                className="opacity-70"
-              />
-            </div>
-
             <CustomConnectButton />
 
             {isConnected && (
@@ -132,9 +103,6 @@ export function Navbar() {
           </div>
         </div>
       </nav>
-
-      {/* Faucet Modal */}
-      <FaucetModal isOpen={faucetOpen} onClose={() => setFaucetOpen(false)} />
     </>
   );
 }

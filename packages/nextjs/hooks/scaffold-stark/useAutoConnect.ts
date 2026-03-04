@@ -43,6 +43,12 @@ export const useAutoConnect = (): void => {
     const connector = connectors.find((c) => c.id === savedConnector?.id);
     if (!connector || !connector.ready) return;
 
+    // Single-wallet mode: only auto-reconnect Xverse connectors.
+    const isXverse =
+      (connector.id || "").toLowerCase().includes("xverse") ||
+      (connector.name || "").toLowerCase().includes("xverse");
+    if (!isXverse) return;
+
     const shouldReconnect = !account || ttlExpired;
 
     if (

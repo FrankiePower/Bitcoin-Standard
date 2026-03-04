@@ -10,29 +10,40 @@ export interface BitcoinAddress {
   addressType?: "p2wpkh" | "p2tr" | "p2sh" | "p2pkh" | string;
 }
 
+export interface StarknetAddress {
+  address: string;
+  publicKey: string;
+}
+
 export const useXverseWallet = () => {
   const [btcAddress, setBtcAddress] = useState<string | null>(null);
+  const [starknetAddress, setStarknetAddress] = useState<string | null>(null);
   const [isBtcConnected, setIsBtcConnected] = useState(false);
 
   // Rehydrate from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem("xverse_payment_address");
-    if (saved) {
-      setBtcAddress(saved);
+    const savedPayment = localStorage.getItem("xverse_payment_address");
+    const savedStarknet = localStorage.getItem("xverse_starknet_address");
+    if (savedPayment) {
+      setBtcAddress(savedPayment);
       setIsBtcConnected(true);
     }
+    if (savedStarknet) setStarknetAddress(savedStarknet);
   }, []);
 
   const connectBtc = async () => {
     try {
       const response = await satsConnect.request("getAccounts", {
-        purposes: [AddressPurpose.Payment],
+        purposes: [AddressPurpose.Payment, AddressPurpose.Starknet],
         message: "BTCUSD Protocol wants to connect to your wallet",
       });
 
       if (response.status === "success" && response.result) {
         const paymentAccount = response.result.find(
           (acc: any) => acc.purpose === AddressPurpose.Payment,
+        );
+        const starknetAccount = response.result.find(
+          (acc: any) => acc.purpose === AddressPurpose.Starknet,
         );
 
         if (paymentAccount) {
@@ -43,6 +54,14 @@ export const useXverseWallet = () => {
             paymentAccount.address,
           );
           toast.success("Bitcoin wallet connected!");
+        }
+
+        if (starknetAccount) {
+          setStarknetAddress(starknetAccount.address);
+          localStorage.setItem(
+            "xverse_starknet_address",
+            starknetAccount.address,
+          );
         }
       } else {
         toast.error("User canceled connection or an error occurred.");
@@ -55,13 +74,16 @@ export const useXverseWallet = () => {
 
   const disconnectBtc = () => {
     setBtcAddress(null);
+    setStarknetAddress(null);
     setIsBtcConnected(false);
     localStorage.removeItem("xverse_payment_address");
+    localStorage.removeItem("xverse_starknet_address");
     toast.info("Bitcoin wallet disconnected");
   };
 
   return {
     btcAddress,
+    starknetAddress,
     isBtcConnected,
     connectBtc,
     disconnectBtc,

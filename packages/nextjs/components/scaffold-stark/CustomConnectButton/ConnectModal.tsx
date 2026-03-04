@@ -5,12 +5,16 @@ import {
   useDisconnect,
 } from "@starknet-react/core";
 import { useRef, useState } from "react";
-import GenericModal from "./GenericModal";
 import { createPortal } from "react-dom";
-import { useXverseWallet } from "~~/hooks/useXverseWallet";
 import { useLocalStorage } from "usehooks-ts";
 import { LAST_CONNECTED_TIME_LOCALSTORAGE_KEY } from "~~/utils/Constants";
 import Image from "next/image";
+
+const isXverseConnector = (connector: Connector) => {
+  const id = (connector.id || "").toLowerCase();
+  const name = (connector.name || "").toLowerCase();
+  return id.includes("xverse") || name.includes("xverse");
+};
 
 const ConnectModal = () => {
   const modalRef = useRef<HTMLInputElement>(null);
@@ -20,10 +24,6 @@ const ConnectModal = () => {
   const { address: starknetAddress, status: starknetStatus } = useAccount();
   const { disconnect: disconnectStarknet } = useDisconnect();
   const isStarknetConnected = starknetStatus === "connected";
-
-  // Bitcoin
-  const { btcAddress, isBtcConnected, connectBtc, disconnectBtc } =
-    useXverseWallet();
 
   const [, setLastConnector] = useLocalStorage<{ id: string; ix?: number }>(
     "lastUsedConnector",
@@ -53,34 +53,21 @@ const ConnectModal = () => {
     }
   };
 
-  const handleConnectBtc = async () => {
-    try {
-      await connectBtc();
-      handleCloseModal();
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
   const disconnectAll = () => {
     if (isStarknetConnected) disconnectStarknet();
-    if (isBtcConnected) disconnectBtc();
   };
 
-  // Filter out burner and other unwanted wallets to keep it clean (Argent, Braavos, etc.)
-  const mainConnectors = connectors.filter((c) => c.id !== "burner-wallet");
+  // Xverse-first connector filtering for single-wallet UX.
+  const nonBurnerConnectors = connectors.filter((c) => c.id !== "burner-wallet");
+  const xverseConnectors = nonBurnerConnectors.filter(isXverseConnector);
+  const mainConnectors =
+    xverseConnectors.length > 0 ? xverseConnectors : nonBurnerConnectors;
 
-  const anyConnected = isStarknetConnected || isBtcConnected;
+  const anyConnected = isStarknetConnected;
 
   const buttonLabel = () => {
-    if (isStarknetConnected && isBtcConnected) {
-      return `SN + BTC Connected`;
-    }
     if (isStarknetConnected) {
       return `${starknetAddress?.slice(0, 4)}...${starknetAddress?.slice(-4)}`;
-    }
-    if (isBtcConnected) {
-      return `BTC: ${btcAddress?.slice(0, 4)}...${btcAddress?.slice(-4)}`;
     }
     return "Connect Wallet";
   };
@@ -136,7 +123,7 @@ const ConnectModal = () => {
                     BTCUSD
                   </h2>
                   <p className="text-neutral-400 text-sm">
-                    Connect Your Wallets
+                    Connect Your Wallet
                   </p>
                 </div>
 
@@ -144,11 +131,11 @@ const ConnectModal = () => {
                   {/* Info Section */}
                   <div className="bg-[#1a1a1a] rounded-xl p-4 mb-6 border border-white/5">
                     <h3 className="text-white text-[15px] font-bold mb-1.5">
-                      Two Wallets, One Protocol
+                      Xverse Wallet
                     </h3>
                     <p className="text-neutral-400 text-[13px] leading-relaxed">
-                      Connect your Starknet wallet to manage your position, and
-                      optionally connect Xverse to bridge BTC directly.
+                      Use Xverse to connect and sign the protocol flow across
+                      Bitcoin and Starknet.
                     </p>
                   </div>
 
@@ -162,12 +149,14 @@ const ConnectModal = () => {
                           </div>
                           <div className="flex-1">
                             <h4 className="text-white font-semibold text-[15px] mb-0.5">
-                              Starknet Wallet
+                              Xverse (Starknet)
                             </h4>
                             <p className="text-neutral-400 text-xs">
                               {isStarknetConnected
                                 ? `Connected: ${starknetAddress?.slice(0, 6)}...${starknetAddress?.slice(-4)}`
-                                : "ArgentX, Braavos, or any Starknet wallet"}
+                                : xverseConnectors.length > 0
+                                  ? "Connect your Xverse Starknet account"
+                                  : "Xverse connector not detected. Showing available wallets."}
                             </p>
                           </div>
                         </div>
@@ -187,41 +176,6 @@ const ConnectModal = () => {
                         </button>
                       </div>
 
-                      {/* BTC Wallet Card */}
-                      <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5 transition-all hover:border-white/10">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white p-2">
-                            <Image
-                              src="/bitcoin-btc-logo.svg"
-                              alt="BTC"
-                              width={20}
-                              height={20}
-                              className="filter brightness-0 invert"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="text-white font-semibold text-[15px] mb-0.5">
-                              Bitcoin Wallet
-                            </h4>
-                            <p className="text-neutral-400 text-xs">
-                              {isBtcConnected
-                                ? `Connected: ${btcAddress?.slice(0, 6)}...${btcAddress?.slice(-4)}`
-                                : "Xverse wallet for BTC bridging (optional)"}
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={handleConnectBtc}
-                          disabled={isBtcConnected}
-                          className={`w-full py-3 rounded-lg text-[15px] font-semibold transition-all ${
-                            isBtcConnected
-                              ? "bg-green-500/10 text-green-500 cursor-default"
-                              : "bg-orange-500 text-white hover:bg-orange-600 shadow-[0_0_15px_rgba(249,115,22,0.3)]"
-                          }`}
-                        >
-                          {isBtcConnected ? "Connected" : "Connect"}
-                        </button>
-                      </div>
                     </div>
                   ) : (
                     /* Native Starknet Connectors List */
@@ -268,7 +222,7 @@ const ConnectModal = () => {
                   )}
 
                   {/* Footer / Disconnect All */}
-                  {(isStarknetConnected || isBtcConnected) && (
+                  {isStarknetConnected && (
                     <div className="mt-6 pt-6 border-t border-white/5 flex justify-center">
                       <button
                         onClick={() => {

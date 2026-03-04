@@ -10,11 +10,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  useNativeCDP,
-  formatBTC,
-  formatBTCUSD,
-} from "~~/hooks/useNativeCDP";
+import { useNativeCDP, formatBTC, formatBTCUSD } from "~~/hooks/useNativeCDP";
 import { NATIVE_ADDRESSES } from "~~/contracts/nativeContracts";
 
 export default function BTSUSDPage() {
@@ -96,8 +92,8 @@ export default function BTSUSDPage() {
           <div className="bg-white border border-neutral-100 rounded-[28px] p-8 shadow-sm">
             <h3 className="text-xl font-bold mb-6">About BTSUSD</h3>
             <p className="text-neutral-700 text-[15px] md:text-base leading-relaxed">
-              BTSUSD is the core stablecoin of the Bitcoin Standard Protocol.
-              It keeps collateral in Bitcoin-native vaults while debt and user
+              BTSUSD is the core stablecoin of the Bitcoin Standard Protocol. It
+              keeps collateral in Bitcoin-native vaults while debt and user
               account logic run on Starknet.
             </p>
 
@@ -160,7 +156,10 @@ export default function BTSUSDPage() {
                 <div className="flex items-center justify-between text-sm font-medium">
                   <span className="text-sky-700">Collateral USD Value</span>
                   <span className="text-sky-900">
-                    ${collateralUSD.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    $
+                    {collateralUSD.toLocaleString(undefined, {
+                      maximumFractionDigits: 2,
+                    })}
                   </span>
                 </div>
               </div>
