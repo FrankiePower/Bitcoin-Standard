@@ -569,7 +569,8 @@ export default function BorrowPage() {
             setTxidInput(data.outpointTxid);
           }
           if (data.oraclePubKey) setOraclePubKey(data.oraclePubKey);
-          if (data.vaultTaprootAddress) setVaultTaprootAddress(data.vaultTaprootAddress);
+          if (data.vaultTaprootAddress)
+            setVaultTaprootAddress(data.vaultTaprootAddress);
         }
 
         setOperatorMessage(
@@ -627,7 +628,9 @@ export default function BorrowPage() {
               className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm"
             >
               <div className="text-xs text-neutral-500">{s.label}</div>
-              <div className="mt-1 text-lg font-bold text-neutral-900">{s.value}</div>
+              <div className="mt-1 text-lg font-bold text-neutral-900">
+                {s.value}
+              </div>
               <div className="text-xs text-neutral-500">{s.sub}</div>
             </div>
           ))}
@@ -647,16 +650,22 @@ export default function BorrowPage() {
             </span>
           </div>
           <ul className="space-y-1 text-xs text-neutral-600">
-            <li>1. Register a confirmed Bitcoin vault deposit (txid + BTC amount).</li>
             <li>
-              2. Borrow only within max mintable to keep health factor above 100.
+              1. Register a confirmed Bitcoin vault deposit (txid + BTC amount).
             </li>
             <li>
-              3. Liquidation can be triggered when health factor drops below 100.
+              2. Borrow only within max mintable to keep health factor above
+              100.
+            </li>
+            <li>
+              3. Liquidation can be triggered when health factor drops below
+              100.
             </li>
             <li>
               4. Local bridge endpoint:{" "}
-              <code className="text-neutral-800">{bridgeStatus?.bridgeUrl || "http://127.0.0.1:4040"}</code>
+              <code className="text-neutral-800">
+                {bridgeStatus?.bridgeUrl || "http://127.0.0.1:4040"}
+              </code>
             </li>
           </ul>
           <div className="mt-3 grid grid-cols-2 gap-2">
@@ -749,8 +758,9 @@ export default function BorrowPage() {
 
             <div className="space-y-3 rounded-lg border border-neutral-200 bg-neutral-50 p-4">
               <div className="text-xs text-neutral-600">
-                Step A: Run <code className="text-neutral-800">just deposit</code>{" "}
-                in <code className="text-neutral-800">standard_vault/</code>.
+                Step A: Run{" "}
+                <code className="text-neutral-800">just deposit</code> in{" "}
+                <code className="text-neutral-800">standard_vault/</code>.
               </div>
               <div className="text-xs text-neutral-600">
                 Step B: Open the modal and paste txid, BTC amount, oracle
@@ -855,7 +865,7 @@ export default function BorrowPage() {
                           : "",
                       )
                     }
-                  className="text-xs text-orange-600 hover:text-orange-500"
+                    className="text-xs text-orange-600 hover:text-orange-500"
                   >
                     Max:{" "}
                     {cdp.maxMintable > BigInt(0)
@@ -1062,16 +1072,16 @@ export default function BorrowPage() {
             <li>
               <span className="text-neutral-800">1.</span>{" "}
               <code className="text-orange-300">just deposit</code> in{" "}
-              <code className="text-neutral-800">standard_vault/</code> → creates
-              OP_CAT UTXO, prints txid
+              <code className="text-neutral-800">standard_vault/</code> →
+              creates OP_CAT UTXO, prints txid
             </li>
             <li>
               <span className="text-neutral-800">2.</span> Paste txid + amount
               above → Register Vault on Starknet
             </li>
             <li>
-              <span className="text-neutral-800">3.</span> Mint BTCUSD stablecoin
-              against your locked BTC
+              <span className="text-neutral-800">3.</span> Mint BTCUSD
+              stablecoin against your locked BTC
             </li>
             <li>
               <span className="text-neutral-800">4.</span> To repay:{" "}

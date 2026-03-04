@@ -15,6 +15,11 @@ export interface StarknetAddress {
   publicKey: string;
 }
 
+type SignPsbtResult = {
+  psbt: string;
+  txid?: string;
+};
+
 export const useXverseWallet = () => {
   const [btcAddress, setBtcAddress] = useState<string | null>(null);
   const [starknetAddress, setStarknetAddress] = useState<string | null>(null);
@@ -63,13 +68,56 @@ export const useXverseWallet = () => {
             starknetAccount.address,
           );
         }
-      } else {
-        toast.error("User canceled connection or an error occurred.");
+
+        return paymentAccount?.address ?? null;
       }
+
+      if (response.status === "error") {
+        const message =
+          response.error.message || "User canceled connection or an error occurred.";
+        toast.error(message);
+        return null;
+      }
+
+      toast.error("User canceled connection or an error occurred.");
+      return null;
     } catch (error) {
       console.error("Xverse connect error:", error);
       toast.error("Failed to connect to Xverse");
+      return null;
     }
+  };
+
+  const signPsbt = async (
+    psbtBase64: string,
+    signingIndexes: number[],
+    addressOverride?: string,
+  ): Promise<SignPsbtResult> => {
+    const targetAddress = addressOverride || btcAddress || (await connectBtc());
+    if (!targetAddress) {
+      throw new Error("Connect Xverse payment address before signing");
+    }
+
+    const response = await satsConnect.request("signPsbt", {
+      psbt: psbtBase64,
+      signInputs: {
+        [targetAddress]: signingIndexes,
+      },
+      broadcast: false,
+    });
+
+    if (response.status === "error") {
+      throw new Error(response.error.message || "PSBT signing rejected");
+    }
+
+    if (!response.result?.psbt) {
+      throw new Error("PSBT signing rejected");
+    }
+
+    return {
+      psbt: response.result.psbt,
+      txid: response.result.txid,
+    };
   };
 
   const disconnectBtc = () => {
@@ -87,5 +135,6 @@ export const useXverseWallet = () => {
     isBtcConnected,
     connectBtc,
     disconnectBtc,
+    signPsbt,
   };
 };

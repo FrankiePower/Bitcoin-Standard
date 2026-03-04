@@ -69,7 +69,7 @@ function runCommand(
   command: string,
   args: string[],
   cwd: string,
-  env?: NodeJS.ProcessEnv,
+  env?: Record<string, string | undefined>,
 ): Promise<CommandResult> {
   return new Promise((resolve) => {
     const child = spawn(command, args, {
@@ -106,8 +106,18 @@ async function getPaths() {
 }
 
 async function resolveStandardVaultCommand(standardVaultDir: string) {
-  const releaseBin = path.join(standardVaultDir, "target", "release", "standard_vault");
-  const debugBin = path.join(standardVaultDir, "target", "debug", "standard_vault");
+  const releaseBin = path.join(
+    standardVaultDir,
+    "target",
+    "release",
+    "standard_vault",
+  );
+  const debugBin = path.join(
+    standardVaultDir,
+    "target",
+    "debug",
+    "standard_vault",
+  );
 
   try {
     await fs.access(releaseBin);
@@ -131,7 +141,8 @@ async function runStandardVaultAction(
   extraArgs: string[] = [],
 ): Promise<CommandResult> {
   const { standardVaultDir } = await getPaths();
-  const { command, prefixArgs } = await resolveStandardVaultCommand(standardVaultDir);
+  const { command, prefixArgs } =
+    await resolveStandardVaultCommand(standardVaultDir);
   const args = [
     ...prefixArgs,
     "--settings-file",
@@ -144,7 +155,12 @@ async function runStandardVaultAction(
 
 async function getMinerAddress(): Promise<string> {
   const { standardVaultDir } = await getPaths();
-  const cli = path.join(standardVaultDir, "bitcoin-core-cat", "src", "bitcoin-cli");
+  const cli = path.join(
+    standardVaultDir,
+    "bitcoin-core-cat",
+    "src",
+    "bitcoin-cli",
+  );
   const result = await runCommand(
     cli,
     [
@@ -223,8 +239,14 @@ export async function getStandardVaultStatus(): Promise<StandardVaultStatus> {
 
 export async function depositVault(): Promise<StandardVaultActionResult> {
   const result = await runStandardVaultAction("deposit");
-  const txid = maybeExtract(result.output, /Deposit outpoint:\s*([0-9a-f]{64}):\d+/i);
-  const voutRaw = maybeExtract(result.output, /Deposit outpoint:\s*[0-9a-f]{64}:(\d+)/i);
+  const txid = maybeExtract(
+    result.output,
+    /Deposit outpoint:\s*([0-9a-f]{64}):\d+/i,
+  );
+  const voutRaw = maybeExtract(
+    result.output,
+    /Deposit outpoint:\s*[0-9a-f]{64}:(\d+)/i,
+  );
   const oraclePubKey = maybeExtract(
     result.output,
     /Oracle public key .*?:\s*([0-9a-fA-F]{64})/i,
@@ -268,7 +290,9 @@ export async function liquidateVault(): Promise<StandardVaultActionResult> {
   };
 }
 
-export async function repayVault(destination?: string): Promise<StandardVaultActionResult> {
+export async function repayVault(
+  destination?: string,
+): Promise<StandardVaultActionResult> {
   const dst = destination || (await getMinerAddress());
   const result = await runStandardVaultAction("repay", [dst]);
   const txid = maybeExtract(result.output, /repay txid:\s*([0-9a-f]{64})/i);
@@ -284,7 +308,9 @@ export async function repayVault(destination?: string): Promise<StandardVaultAct
   };
 }
 
-export async function timeoutVault(destination?: string): Promise<StandardVaultActionResult> {
+export async function timeoutVault(
+  destination?: string,
+): Promise<StandardVaultActionResult> {
   const dst = destination || (await getMinerAddress());
   const result = await runStandardVaultAction("timeout", [dst]);
   const txid = maybeExtract(result.output, /timeout txid:\s*([0-9a-f]{64})/i);
