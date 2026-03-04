@@ -4,7 +4,7 @@ use bitcoin::consensus::Encodable;
 use bitcoin::hex::{Case, DisplayHex};
 use bitcoin::hashes::{sha256, Hash};
 use bitcoin::key::{Keypair, Secp256k1};
-use bitcoin::secp256k1::{rand, Message, ThirtyTwoByteHash};
+use bitcoin::secp256k1::{rand, Message, SecretKey, ThirtyTwoByteHash};
 use bitcoin::taproot::{LeafVersion, Signature, TaprootBuilder, TaprootSpendInfo};
 use bitcoin::transaction::Version;
 use bitcoin::{
@@ -62,9 +62,24 @@ impl Default for VaultCovenant {
 
 impl VaultCovenant {
     pub(crate) fn new(timelock_in_blocks: u16, settings: &Settings) -> Result<Self> {
+        let secp = Secp256k1::new();
+        let oracle_keypair = if let Some(sk_hex) = settings
+            .oracle_private_key_hex
+            .as_ref()
+            .map(|s| s.trim())
+            .filter(|s| !s.is_empty())
+        {
+            let secret_key = SecretKey::from_str(sk_hex)
+                .map_err(|e| anyhow!("invalid oracle_private_key_hex in settings: {}", e))?;
+            Keypair::from_secret_key(&secp, &secret_key)
+        } else {
+            Keypair::new(&secp, &mut rand::thread_rng())
+        };
+
         Ok(Self {
             network: settings.network,
             timelock_in_blocks,
+            oracle_keypair,
             ..Default::default()
         })
     }

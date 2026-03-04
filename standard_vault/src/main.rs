@@ -220,6 +220,17 @@ fn deposit(settings: &Settings) -> Result<()> {
     let timelock_in_blocks = 20;
     let mut vault = VaultCovenant::new(timelock_in_blocks, settings)?;
 
+    if settings
+        .oracle_private_key_hex
+        .as_ref()
+        .map(|v| !v.trim().is_empty())
+        .unwrap_or(false)
+    {
+        info!("Using fixed oracle keypair from settings.toml");
+    } else {
+        info!("Using randomly generated oracle keypair for this vault");
+    }
+
     // Set the liquidation pool address — in production this is the protocol's multisig.
     // For the demo we use a fresh miner address (funds stay recoverable).
     let liq_pool_address = miner_wallet.get_new_address()?;

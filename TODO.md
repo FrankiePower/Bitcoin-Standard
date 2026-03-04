@@ -71,7 +71,7 @@ Last updated: 2026-03-02
   - [x] Check CDPCore health factors on Starknet
   - [x] Sign liquidation attestations when HF < 100
   - [x] Sign repayment attestations when debt cleared
-- [ ] Wire oracle keypair (private key in service env, public key in vault Tapscript)
+- [x] Wire oracle keypair (private key in service env, public key in vault Tapscript)
 
 ### 2d. Frontend Update
 

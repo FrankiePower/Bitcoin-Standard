@@ -88,6 +88,18 @@ Re-building a TXID on the stack to introspect previous transactions was actually
 
 ## How to run it
 
+### Oracle Keypair Wiring (BTCStandard)
+
+For BTCStandard integration, pin the oracle keypair instead of using a random one per vault:
+
+1. Set `oracle_private_key_hex` in `settings.toml` (64 hex chars, no `0x`).
+2. Run `just deposit` and record the printed oracle x-only pubkey.
+3. In `packages/oracle-service/.env`, set:
+   - `ORACLE_BTC_PRIVATE_KEY` to the same private key
+   - `EXPECTED_ORACLE_XONLY_PUBKEY` to the printed x-only pubkey
+
+This ensures the oracle-service and vault tapscript are wired to the same oracle identity.
+
 You will need to be able to build bitcoin-core. Go get set up with a C++ compiler for your platform. Those directions are outside the scope of this document.
 
 From there, there are some scripts and helpers in this project to build a copy of bitcoin-core that has OP_CAT enabled, and then you can use [Just](https://github.com/casey/just) as a command runner to build and run the vault demo.

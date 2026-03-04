@@ -13,6 +13,7 @@
  */
 
 import cron from "node-cron";
+import { createECDH } from "crypto";
 import { fetchBTCPrice, fetchBTCVolatility } from "./coingecko.js";
 import {
   fetchRegisteredVaultTxidsFromEvents,
@@ -50,6 +51,9 @@ const MONITOR_REGISTRY_EVENTS =
   (process.env.MONITOR_REGISTRY_EVENTS ?? "true").toLowerCase() !== "false";
 const AUTO_LIQUIDATE =
   (process.env.AUTO_LIQUIDATE ?? "false").toLowerCase() === "true";
+const ORACLE_BTC_PRIVATE_KEY = process.env.ORACLE_BTC_PRIVATE_KEY?.trim();
+const EXPECTED_ORACLE_XONLY_PUBKEY =
+  process.env.EXPECTED_ORACLE_XONLY_PUBKEY?.trim();
 const STATE_PATH = resolve(
   process.cwd(),
   process.env.ORACLE_STATE_PATH ?? ".oracle-state.json",
@@ -78,6 +82,17 @@ function persistState() {
   } catch (err) {
     console.error("Failed to persist oracle state:", err);
   }
+}
+
+function normalizeHex(value: string): string {
+  return value.replace(/^0x/, "").toLowerCase();
+}
+
+function deriveXOnlyPubKeyFromPrivKey(privKeyHex: string): string {
+  const ecdh = createECDH("secp256k1");
+  ecdh.setPrivateKey(Buffer.from(normalizeHex(privKeyHex), "hex"));
+  const compressed = ecdh.getPublicKey(undefined, "compressed"); // 33 bytes
+  return compressed.subarray(1).toString("hex"); // x-only 32 bytes
 }
 
 function getConfiguredVaultTxids(): string[] {
@@ -264,6 +279,28 @@ console.log(
 );
 console.log(`  Auto-liquidate: ${AUTO_LIQUIDATE ? "ON" : "OFF"}`);
 console.log(`  Oracle: ${process.env.MOCK_ORACLE_ADDRESS ?? "(not set)"}`);
+if (ORACLE_BTC_PRIVATE_KEY) {
+  try {
+    const derived = deriveXOnlyPubKeyFromPrivKey(ORACLE_BTC_PRIVATE_KEY);
+    console.log(`  Oracle BTC x-only pubkey: ${derived}`);
+    if (EXPECTED_ORACLE_XONLY_PUBKEY) {
+      const expected = normalizeHex(EXPECTED_ORACLE_XONLY_PUBKEY);
+      if (expected !== derived) {
+        console.warn(
+          "  ⚠ EXPECTED_ORACLE_XONLY_PUBKEY does not match ORACLE_BTC_PRIVATE_KEY",
+        );
+      } else {
+        console.log("  Oracle keypair wiring check: OK");
+      }
+    }
+  } catch (err) {
+    console.warn("  ⚠ Failed to derive Oracle BTC pubkey from private key:", err);
+  }
+} else {
+  console.warn(
+    "  ⚠ ORACLE_BTC_PRIVATE_KEY not set (cannot verify tapscript oracle key wiring)",
+  );
+}
 console.log("");
 
 // Run immediately on start

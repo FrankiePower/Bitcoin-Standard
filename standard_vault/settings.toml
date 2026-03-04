@@ -4,3 +4,6 @@ bitcoin_rpc_password = "password"
 create_wallets = true
 miner_wallet_name = "miner"
 fee_wallet_name = "fee_payment"
+# Optional fixed oracle secp256k1 private key (64 hex chars, no 0x).
+# If empty/unset, a random oracle keypair is generated for each new vault.
+oracle_private_key_hex = ""

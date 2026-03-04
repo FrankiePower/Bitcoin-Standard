@@ -13,6 +13,9 @@ pub(crate) struct Settings {
     pub miner_wallet_name: String,
     pub fee_wallet_name: String,
     pub vault_file: Option<String>,
+    /// Optional fixed oracle secp256k1 private key (hex, 32 bytes, no 0x).
+    /// If unset, a random oracle keypair is generated per vault.
+    pub oracle_private_key_hex: Option<String>,
 }
 
 impl Settings {
@@ -33,6 +36,7 @@ impl Default for Settings {
             miner_wallet_name: "miner".to_string(),
             fee_wallet_name: "fee_payment".to_string(),
             vault_file: None,
+            oracle_private_key_hex: None,
         }
     }
 }
