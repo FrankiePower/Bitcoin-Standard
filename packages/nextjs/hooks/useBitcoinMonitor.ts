@@ -19,6 +19,6 @@ export function useBitcoinMonitor(intervalMs = 15_000) {
 
     const id = setInterval(() => void refreshBalances(), intervalMs);
     return () => clearInterval(id);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [btcAddress, status, intervalMs]);
 }

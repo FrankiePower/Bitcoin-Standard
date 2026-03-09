@@ -96,10 +96,14 @@ const ConnectModal = () => {
                       {btcAddress && (
                         <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5 space-y-2">
                           <div className="flex items-center justify-between">
-                            <p className="text-neutral-400 text-xs">Bitcoin Wallet</p>
+                            <p className="text-neutral-400 text-xs">
+                              Bitcoin Wallet
+                            </p>
                             <div className="flex items-center gap-2">
                               {btcBalance !== null && (
-                                <span className="text-xs font-mono text-orange-400">{btcBalance.toFixed(4)} BTC</span>
+                                <span className="text-xs font-mono text-orange-400">
+                                  {btcBalance.toFixed(4)} BTC
+                                </span>
                               )}
                               {bitcoinNetwork && (
                                 <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400">
@@ -116,11 +120,17 @@ const ConnectModal = () => {
                       {vaultBtcBalance !== null && (
                         <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5">
                           <div className="flex items-center justify-between mb-1">
-                            <p className="text-neutral-400 text-xs">Vault (OP_CAT)</p>
+                            <p className="text-neutral-400 text-xs">
+                              Vault (OP_CAT)
+                            </p>
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-mono text-emerald-400">{vaultBtcBalance.toFixed(4)} BTC</span>
+                              <span className="text-xs font-mono text-emerald-400">
+                                {vaultBtcBalance.toFixed(4)} BTC
+                              </span>
                               {vaultState && (
-                                <span className={`text-xs px-2 py-0.5 rounded-full ${vaultState === "Active" ? "bg-emerald-500/10 text-emerald-400" : "bg-zinc-500/10 text-zinc-400"}`}>
+                                <span
+                                  className={`text-xs px-2 py-0.5 rounded-full ${vaultState === "Active" ? "bg-emerald-500/10 text-emerald-400" : "bg-zinc-500/10 text-zinc-400"}`}
+                                >
                                   {vaultState}
                                 </span>
                               )}

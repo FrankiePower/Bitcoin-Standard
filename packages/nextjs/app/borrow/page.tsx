@@ -418,12 +418,18 @@ export default function BorrowPage() {
   useEffect(() => {
     fetch("/api/standard-vault/status")
       .then((r) => r.json())
-      .then((d) =>
+      .then((d) => {
         setBridgeStatus({
           available: !!d.available,
           bridgeUrl: d.bridgeUrl || "http://127.0.0.1:4040",
-        }),
-      )
+        });
+        // Auto-populate activeTxid from the vault file if not already set
+        const txid = d.currentOutpoint?.txid as string | undefined;
+        if (txid && txid.length === 64) {
+          setActiveTxid((prev) => prev || txid);
+          setRegTxid((prev) => prev || txid);
+        }
+      })
       .catch(() => setBridgeStatus(null));
   }, []);
 
@@ -446,8 +452,13 @@ export default function BorrowPage() {
     const savedOracle = window.localStorage.getItem("btcstd:oracle_pubkey");
     const savedTaproot = window.localStorage.getItem("btcstd:taproot_address");
     const savedKeys = window.localStorage.getItem("btcstd:regtest_keys");
+    const savedActiveTxid = window.localStorage.getItem("btcstd:active_txid");
     if (savedOracle) setOraclePubKey(savedOracle);
     if (savedTaproot) setVaultTaprootAddress(savedTaproot);
+    if (savedActiveTxid) {
+      setActiveTxid(savedActiveTxid);
+      setRegTxid(savedActiveTxid);
+    }
     if (savedKeys) {
       try {
         const parsed = JSON.parse(savedKeys) as RegtestKeyRecord[];
@@ -487,6 +498,12 @@ export default function BorrowPage() {
       );
     }
   }, [vaultTaprootAddress]);
+
+  useEffect(() => {
+    if (activeTxid.trim()) {
+      window.localStorage.setItem("btcstd:active_txid", activeTxid.trim());
+    }
+  }, [activeTxid]);
 
   // ─── Derived amounts ──────────────────────────────────────────────────────
 
@@ -607,6 +624,7 @@ export default function BorrowPage() {
     }
     setError("");
     setActiveTxid(t);
+    setRegTxid(t);
     setTab("mint");
   }, [txidInput]);
 
@@ -785,9 +803,10 @@ export default function BorrowPage() {
             {
               label: "Total Vaults",
               value: vaultState === "Active" ? "1" : "0",
-              sub: vaultBtcBalance !== null
-                ? `${parseFloat(vaultBtcBalance.toFixed(8))} BTC locked`
-                : "No active vault",
+              sub:
+                vaultBtcBalance !== null
+                  ? `${parseFloat(vaultBtcBalance.toFixed(8))} BTC locked`
+                  : "No active vault",
             },
           ].map((s) => (
             <div
@@ -980,6 +999,8 @@ export default function BorrowPage() {
                   onClick={() => {
                     const t = depositTxid.replace(/^0x/, "");
                     setActiveTxid(t);
+                    setRegTxid(t);
+                    setRegBTC(depositAmount);
                     setTab("mint");
                   }}
                   className="flex items-center gap-1 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-400 transition"
@@ -997,27 +1018,6 @@ export default function BorrowPage() {
               </div>
             )}
 
-            {/* Load existing vault */}
-            <div className="border-t border-neutral-200 pt-3">
-              <p className="text-xs text-neutral-500 mb-2">
-                Already have a vault txid?
-              </p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={txidInput}
-                  onChange={(e) => setTxidInput(e.target.value)}
-                  placeholder="Paste txid to load vault"
-                  className="flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 font-mono text-xs text-neutral-900 placeholder-neutral-400 focus:border-orange-500 focus:outline-none"
-                />
-                <button
-                  onClick={handleLoadVault}
-                  className="flex items-center gap-1 rounded-lg border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-700 hover:border-orange-500 hover:text-orange-600 transition"
-                >
-                  Load <ChevronRight size={14} />
-                </button>
-              </div>
-            </div>
           </div>
         )}
 
@@ -1040,18 +1040,70 @@ export default function BorrowPage() {
             ) : (
               <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-400">
                 <AlertTriangle size={16} className="inline mr-2" />
-                No vault loaded. Register a vault or load an existing one first.
+                No vault loaded. Deposit BTC first or paste a txid below.
               </div>
             )}
 
-            {/* Mint form */}
-            <div className="rounded-xl border border-neutral-200 bg-white p-5 space-y-3 shadow-sm">
-              <h2 className="font-semibold text-neutral-900">Mint BTCUSD</h2>
+            {/* Step 1: Register on Starknet (shown until vault is registered) */}
+            {activeTxid && !cdp.vaultInfo && (
+              <div className="rounded-xl border border-orange-500/30 bg-orange-500/5 p-5 space-y-3 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white">1</div>
+                  <h2 className="font-semibold text-neutral-900">Register Vault on Starknet</h2>
+                </div>
+                <p className="text-xs text-neutral-500">
+                  Link your Bitcoin deposit to your Starknet account so you can mint BTCUSD.
+                </p>
+                <div className="space-y-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-neutral-700">BTC Amount</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={regBTC}
+                        onChange={(e) => setRegBTC(e.target.value)}
+                        placeholder="e.g. 1.0"
+                        min="0.0001"
+                        step="0.0001"
+                        className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 pr-12 text-sm text-neutral-900 placeholder-neutral-400 focus:border-orange-500 focus:outline-none"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-neutral-500">BTC</span>
+                    </div>
+                    {regBTCSats > BigInt(0) && (
+                      <p className="mt-1 text-xs text-neutral-400">= {regBTCSats.toLocaleString()} satoshis</p>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => void handleRegisterVault()}
+                  disabled={!isConnected || cdp.isRegistering || regTxid.trim().length !== 64 || regBTCSats === BigInt(0)}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {cdp.isRegistering ? <Loader2 size={16} className="animate-spin" /> : null}
+                  {cdp.isRegistering ? "Registering…" : "Register Vault on Starknet"}
+                </button>
+                {!isConnected && (
+                  <p className="text-xs text-neutral-500 text-center">Connect your Starknet wallet (ArgentX / Braavos) to register.</p>
+                )}
+              </div>
+            )}
+
+            {/* Step 2: Mint form (shown only after vault is registered) */}
+            <div className={`rounded-xl border border-neutral-200 bg-white p-5 space-y-3 shadow-sm ${activeTxid && !cdp.vaultInfo ? "opacity-40 pointer-events-none" : ""}`}>
+              <div className="flex items-center gap-2">
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white">2</div>
+                <h2 className="font-semibold text-neutral-900">Mint BTCUSD</h2>
+              </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs font-medium text-neutral-700">
                     Amount
+                    {vaultBtcBalance !== null && (
+                      <span className="ml-2 font-normal text-neutral-400">
+                        · {parseFloat(vaultBtcBalance.toFixed(8))} BTC in vault
+                      </span>
+                    )}
                   </label>
                   <button
                     onClick={() =>

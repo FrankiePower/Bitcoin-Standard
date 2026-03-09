@@ -66,14 +66,18 @@ export const useXverseStore = create<XverseWalletState>((set, get) => ({
       .then((d) => (d.vaultState as string | undefined) ?? null)
       .catch(() => null);
 
-    if (vaultBal !== null) localStorage.setItem("btcstd:vault_btc_balance", String(vaultBal));
-    if (vaultState !== null) localStorage.setItem("btcstd:vault_state", vaultState);
+    if (vaultBal !== null)
+      localStorage.setItem("btcstd:vault_btc_balance", String(vaultBal));
+    if (vaultState !== null)
+      localStorage.setItem("btcstd:vault_state", vaultState);
 
     set({
       btcBalance: walletBal,
       vaultBtcBalance: vaultBal,
       vaultState,
-      ...(vaultAddr && !storedVaultAddr ? { vaultTaprootAddress: vaultAddr } : {}),
+      ...(vaultAddr && !storedVaultAddr
+        ? { vaultTaprootAddress: vaultAddr }
+        : {}),
     });
   },
 
@@ -91,7 +95,8 @@ export const useXverseStore = create<XverseWalletState>((set, get) => ({
         bitcoinNetwork,
         status: "connected",
         vaultTaprootAddress,
-        vaultBtcBalance: cachedVaultBalance !== null ? Number(cachedVaultBalance) : null,
+        vaultBtcBalance:
+          cachedVaultBalance !== null ? Number(cachedVaultBalance) : null,
         vaultState: cachedVaultState,
       });
     }
