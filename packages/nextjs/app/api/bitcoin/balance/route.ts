@@ -32,8 +32,6 @@ export async function GET(request: Request) {
       );
     }
 
-
-
     const scan = await rpc("scantxoutset", ["start", [`addr(${address})`]]);
 
     return Response.json({

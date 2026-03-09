@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use anyhow::Result;
 use bitcoin::consensus::Encodable;
-use bitcoin::{Address, Amount, OutPoint, TxOut};
+use bitcoin::{Address, Amount, OutPoint, Txid, TxOut};
 use bitcoincore_rpc::RawTx;
 use clap::Parser;
 use log::{debug, error, info};
@@ -30,6 +30,20 @@ struct Cli {
 enum Action {
     /// Fund the vault with BTC (creates the Taproot UTXO)
     Deposit,
+    /// Create vault covenant and print Taproot address — does NOT deposit BTC.
+    /// The user deposits from their own wallet (e.g. Xverse), then runs 'activate'.
+    Prepare,
+    /// Activate a vault with an externally-created deposit (e.g. from Xverse).
+    /// Updates the saved vault covenant with the deposit txid, output index, and amount.
+    Activate {
+        /// Transaction ID of the deposit (64 hex chars)
+        txid: String,
+        /// Output index (usually 0)
+        #[arg(default_value = "0")]
+        vout: u32,
+        /// Amount deposited in satoshis
+        amount_sats: u64,
+    },
     /// Repay debt and recover BTC to <destination> (oracle + user both sign)
     Repay { destination: String },
     /// Oracle-triggered liquidation — sends BTC to the liquidation pool
@@ -63,6 +77,8 @@ fn main() -> Result<()> {
 
     match args.action {
         Action::Deposit => deposit(&settings)?,
+        Action::Prepare => prepare(&settings)?,
+        Action::Activate { txid, vout, amount_sats } => activate(&txid, vout, amount_sats, &settings)?,
         Action::Repay { destination } => repay(&destination, &settings)?,
         Action::Liquidate => liquidate(&settings)?,
         Action::Timeout { destination } => timeout(&destination, &settings)?,
@@ -194,6 +210,63 @@ fn timeout(destination: &str, settings: &Settings) -> Result<()> {
     vault.set_current_outpoint(OutPoint { txid, vout: 0 });
     vault.set_state(VaultState::Repaid);
     vault.to_file(&settings.vault_file)?;
+    Ok(())
+}
+
+fn prepare(settings: &Settings) -> Result<()> {
+    // If a vault file already exists, just print its address (idempotent).
+    if let Ok(vault) = VaultCovenant::from_file(&settings.vault_file) {
+        info!("Vault covenant already exists — reusing it.");
+        info!("Vault Taproot address: {}", vault.address()?);
+        info!(
+            "Oracle public key (give to Chainlink CRE): {}",
+            vault.oracle_x_only_public_key()
+        );
+        return Ok(());
+    }
+
+    let timelock_in_blocks = 20;
+    let mut vault = VaultCovenant::new(timelock_in_blocks, settings)?;
+
+    // The liquidation pool address is baked into the Taproot script tree, so we
+    // need one before computing the address.  We use a fresh miner address here;
+    // in production this would be the protocol multisig.
+    let miner_wallet = Wallet::new("miner", settings);
+    let liq_pool_address = miner_wallet.get_new_address()?;
+    vault.set_liquidation_pool_address(Some(liq_pool_address.clone()));
+    info!("Liquidation pool address: {}", liq_pool_address);
+
+    info!(
+        "Oracle public key (give to Chainlink CRE): {}",
+        vault.oracle_x_only_public_key()
+    );
+
+    let vault_address = vault.address()?;
+    info!("Vault Taproot address: {}", vault_address);
+
+    vault.to_file(&settings.vault_file)?;
+    info!("Vault covenant saved. Deposit BTC to the address above, then run 'activate'.");
+    Ok(())
+}
+
+fn activate(txid_str: &str, vout: u32, amount_sats: u64, settings: &Settings) -> Result<()> {
+    info!(
+        "Activating vault with deposit {}:{} ({} sats)",
+        txid_str, vout, amount_sats
+    );
+    let mut vault = VaultCovenant::from_file(&settings.vault_file).map_err(|e| {
+        error!("No vault found: {}. Run 'prepare' first.", e);
+        e
+    })?;
+
+    let txid = Txid::from_str(txid_str)?;
+    vault.set_current_outpoint(OutPoint { txid, vout });
+    vault.set_amount(Amount::from_sat(amount_sats));
+    vault.set_state(VaultState::Active);
+    vault.to_file(&settings.vault_file)?;
+
+    info!("Vault activated. Deposit outpoint: {}:{}", txid_str, vout);
+    info!("Vault Taproot address: {}", vault.address()?);
     Ok(())
 }
 

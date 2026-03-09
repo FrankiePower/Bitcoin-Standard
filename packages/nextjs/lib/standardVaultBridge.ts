@@ -323,6 +323,60 @@ export async function depositVault(): Promise<StandardVaultActionResult> {
   };
 }
 
+export async function prepareVault(): Promise<StandardVaultActionResult> {
+  const result = await runStandardVaultAction("prepare");
+  const vaultTaprootAddress = maybeExtract(
+    result.output,
+    /Vault Taproot address:\s*(\S+)/i,
+  );
+  const oraclePubKey = maybeExtract(
+    result.output,
+    /Oracle public key .*?:\s*([0-9a-fA-F]{64})/i,
+  );
+  const liquidationPoolAddress = maybeExtract(
+    result.output,
+    /Liquidation pool address:\s*(\S+)/i,
+  );
+  return {
+    ok: result.code === 0,
+    action: "prepare",
+    code: result.code,
+    vaultTaprootAddress,
+    oraclePubKey,
+    liquidationPoolAddress,
+    output: result.output,
+    error: result.code === 0 ? undefined : result.output,
+  };
+}
+
+export async function activateVault(
+  txid: string,
+  vout: number,
+  amountSats: number,
+): Promise<StandardVaultActionResult> {
+  const result = await runStandardVaultAction("activate", [
+    txid,
+    String(vout),
+    String(amountSats),
+  ]);
+  const vaultTaprootAddress = maybeExtract(
+    result.output,
+    /Vault Taproot address:\s*(\S+)/i,
+  );
+  return {
+    ok: result.code === 0,
+    action: "activate",
+    code: result.code,
+    txid,
+    outpointTxid: txid,
+    outpointVout: vout,
+    state: result.code === 0 ? "Active" : undefined,
+    vaultTaprootAddress,
+    output: result.output,
+    error: result.code === 0 ? undefined : result.output,
+  };
+}
+
 export async function liquidateVault(): Promise<StandardVaultActionResult> {
   const result = await runStandardVaultAction("liquidate");
   const txid = maybeExtract(result.output, /liquidate txid:\s*([0-9a-f]{64})/i);

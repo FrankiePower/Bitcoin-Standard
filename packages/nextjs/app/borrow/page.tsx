@@ -465,6 +465,20 @@ export default function BorrowPage() {
     }
   }, [oraclePubKey]);
 
+  // Auto-fetch vault taproot address from the standard_vault binary when the
+  // deposit tab is open and no address is loaded yet.
+  useEffect(() => {
+    if (tab !== "register" || vaultTaprootAddress) return;
+    fetch("/api/standard-vault/prepare", { method: "POST" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.ok && d.vaultTaprootAddress)
+          setVaultTaprootAddress(d.vaultTaprootAddress);
+        if (d.ok && d.oraclePubKey) setOraclePubKey(d.oraclePubKey);
+      })
+      .catch(() => {});
+  }, [tab, vaultTaprootAddress]);
+
   useEffect(() => {
     if (vaultTaprootAddress.trim()) {
       window.localStorage.setItem(
@@ -535,7 +549,11 @@ export default function BorrowPage() {
       const prepRes = await fetch("/api/bitcoin/test-sign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fromAddress: btcAddress, toAddress: dest, amount: amt }),
+        body: JSON.stringify({
+          fromAddress: btcAddress,
+          toAddress: dest,
+          amount: amt,
+        }),
       }).then((r) => r.json());
       if (!prepRes.ok) throw new Error(prepRes.error);
 
@@ -559,6 +577,21 @@ export default function BorrowPage() {
 
       setDepositTxid(finalRes.txid);
       setTxidInput(finalRes.txid);
+
+      // Activate the vault with the confirmed deposit outpoint.
+      const amtSats = Math.round(amt * 1e8);
+      await fetch("/api/standard-vault/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          txid: finalRes.txid,
+          vout: 0,
+          amountSats: amtSats,
+        }),
+      })
+        .then((r) => r.json())
+        .catch(() => {});
+
       setDepositStep("done");
     } catch (e: any) {
       setDepositError(e?.message ?? "Deposit failed");
@@ -850,9 +883,12 @@ export default function BorrowPage() {
                 <Bitcoin size={18} className="text-orange-400" />
               </div>
               <div>
-                <h2 className="font-semibold text-neutral-900">Deposit Bitcoin</h2>
+                <h2 className="font-semibold text-neutral-900">
+                  Deposit Bitcoin
+                </h2>
                 <p className="mt-0.5 text-xs text-neutral-600">
-                  Send BTC from your Xverse wallet to the vault. Sign with Xverse to get your deposit txid.
+                  Send BTC from your Xverse wallet to the vault. Sign with
+                  Xverse to get your deposit txid.
                 </p>
               </div>
             </div>
@@ -874,7 +910,9 @@ export default function BorrowPage() {
             {/* Amount input */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-medium text-neutral-700">Amount (BTC)</label>
+                <label className="text-xs font-medium text-neutral-700">
+                  Amount (BTC)
+                </label>
                 {btcAddress && (
                   <span className="text-xs text-neutral-500">
                     From: {btcAddress.slice(0, 8)}…{btcAddress.slice(-6)}
@@ -906,13 +944,15 @@ export default function BorrowPage() {
               }
               className="w-full rounded-lg bg-orange-500 py-3 text-[15px] font-semibold text-white hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
             >
-              {["preparing", "signing", "broadcasting"].includes(depositStep) && (
-                <Loader2 size={16} className="animate-spin" />
-              )}
+              {["preparing", "signing", "broadcasting"].includes(
+                depositStep,
+              ) && <Loader2 size={16} className="animate-spin" />}
               {depositStep === "preparing" && "Building transaction…"}
               {depositStep === "signing" && "Waiting for Xverse…"}
               {depositStep === "broadcasting" && "Broadcasting…"}
-              {(depositStep === "idle" || depositStep === "done" || depositStep === "error") &&
+              {(depositStep === "idle" ||
+                depositStep === "done" ||
+                depositStep === "error") &&
                 "Deposit & Sign with Xverse"}
             </button>
 
@@ -927,9 +967,13 @@ export default function BorrowPage() {
               <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <CheckCircle size={14} className="text-emerald-400" />
-                  <span className="text-xs font-semibold text-emerald-400">Deposit confirmed</span>
+                  <span className="text-xs font-semibold text-emerald-400">
+                    Deposit confirmed
+                  </span>
                 </div>
-                <p className="font-mono text-[11px] text-emerald-300 break-all mb-3">{depositTxid}</p>
+                <p className="font-mono text-[11px] text-emerald-300 break-all mb-3">
+                  {depositTxid}
+                </p>
                 <button
                   onClick={() => {
                     const t = depositTxid.replace(/^0x/, "");
@@ -953,7 +997,9 @@ export default function BorrowPage() {
 
             {/* Load existing vault */}
             <div className="border-t border-neutral-200 pt-3">
-              <p className="text-xs text-neutral-500 mb-2">Already have a vault txid?</p>
+              <p className="text-xs text-neutral-500 mb-2">
+                Already have a vault txid?
+              </p>
               <div className="flex gap-2">
                 <input
                   type="text"
