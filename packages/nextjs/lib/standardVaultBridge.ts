@@ -236,9 +236,38 @@ async function readVaultFile() {
   }
 }
 
+function parseCurrentOutpoint(
+  value: unknown,
+): { txid?: string; vout?: number } | undefined {
+  if (!value) return undefined;
+
+  if (typeof value === "string") {
+    const [txid, voutRaw] = value.split(":");
+    const vout = Number(voutRaw);
+    return {
+      txid,
+      vout: Number.isFinite(vout) ? vout : undefined,
+    };
+  }
+
+  if (typeof value === "object") {
+    const outpoint = value as { txid?: unknown; vout?: unknown };
+    const txid = typeof outpoint.txid === "string" ? outpoint.txid : undefined;
+    const vout =
+      typeof outpoint.vout === "number" ? outpoint.vout : Number(outpoint.vout);
+    return {
+      txid,
+      vout: Number.isFinite(vout) ? vout : undefined,
+    };
+  }
+
+  return undefined;
+}
+
 export async function getStandardVaultStatus(): Promise<StandardVaultStatus> {
   const { repoRoot, standardVaultDir, vaultFilePath } = await getPaths();
   const vaultInfo = await readVaultFile();
+  const currentOutpoint = parseCurrentOutpoint(vaultInfo.parsed?.current_outpoint);
   const result = await runStandardVaultAction("status");
 
   const oraclePubKey = maybeExtract(
@@ -256,10 +285,7 @@ export async function getStandardVaultStatus(): Promise<StandardVaultStatus> {
       vaultFilePath,
       vaultFileExists: vaultInfo.exists,
       vaultState: vaultInfo.parsed?.state,
-      currentOutpoint: {
-        txid: vaultInfo.parsed?.current_outpoint?.txid,
-        vout: vaultInfo.parsed?.current_outpoint?.vout,
-      },
+      currentOutpoint,
       oraclePubKey: oraclePubKey,
       lastCommand: { action: "status", code: result.code },
       error: result.output || "standard_vault status failed",
@@ -275,10 +301,7 @@ export async function getStandardVaultStatus(): Promise<StandardVaultStatus> {
     vaultFilePath,
     vaultFileExists: vaultInfo.exists,
     vaultState: vaultInfo.parsed?.state,
-    currentOutpoint: {
-      txid: vaultInfo.parsed?.current_outpoint?.txid,
-      vout: vaultInfo.parsed?.current_outpoint?.vout,
-    },
+    currentOutpoint,
     oraclePubKey,
     lastCommand: { action: "status", code: result.code },
   };

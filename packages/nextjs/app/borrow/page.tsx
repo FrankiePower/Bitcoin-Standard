@@ -167,8 +167,13 @@ function BitcoinVaultStatus({
 }) {
   if (!vaultInfo) {
     return (
-      <div className="rounded-xl border border-neutral-200 bg-white p-4 text-sm text-neutral-500 shadow-sm">
-        Loading vault...
+      <div className="rounded-xl border border-neutral-200 bg-white p-4 text-sm text-neutral-600 shadow-sm space-y-1">
+        <div className="font-medium text-neutral-800">Vault txid loaded</div>
+        <div className="font-mono text-xs text-neutral-500 break-all">{txid}</div>
+        <div>
+          Not registered on Starknet yet. Complete Step 1 below to enable
+          minting.
+        </div>
       </div>
     );
   }
@@ -1017,7 +1022,6 @@ export default function BorrowPage() {
                 {depositError}
               </div>
             )}
-
           </div>
         )}
 
@@ -1048,15 +1052,22 @@ export default function BorrowPage() {
             {activeTxid && !cdp.vaultInfo && (
               <div className="rounded-xl border border-orange-500/30 bg-orange-500/5 p-5 space-y-3 shadow-sm">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white">1</div>
-                  <h2 className="font-semibold text-neutral-900">Register Vault on Starknet</h2>
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white">
+                    1
+                  </div>
+                  <h2 className="font-semibold text-neutral-900">
+                    Register Vault on Starknet
+                  </h2>
                 </div>
                 <p className="text-xs text-neutral-500">
-                  Link your Bitcoin deposit to your Starknet account so you can mint BTCUSD.
+                  Link your Bitcoin deposit to your Starknet account so you can
+                  mint BTCUSD.
                 </p>
                 <div className="space-y-2">
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-neutral-700">BTC Amount</label>
+                    <label className="mb-1 block text-xs font-medium text-neutral-700">
+                      BTC Amount
+                    </label>
                     <div className="relative">
                       <input
                         type="number"
@@ -1067,31 +1078,51 @@ export default function BorrowPage() {
                         step="0.0001"
                         className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 pr-12 text-sm text-neutral-900 placeholder-neutral-400 focus:border-orange-500 focus:outline-none"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-neutral-500">BTC</span>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-neutral-500">
+                        BTC
+                      </span>
                     </div>
                     {regBTCSats > BigInt(0) && (
-                      <p className="mt-1 text-xs text-neutral-400">= {regBTCSats.toLocaleString()} satoshis</p>
+                      <p className="mt-1 text-xs text-neutral-400">
+                        = {regBTCSats.toLocaleString()} satoshis
+                      </p>
                     )}
                   </div>
                 </div>
                 <button
                   onClick={() => void handleRegisterVault()}
-                  disabled={!isConnected || cdp.isRegistering || regTxid.trim().length !== 64 || regBTCSats === BigInt(0)}
+                  disabled={
+                    !isConnected ||
+                    cdp.isRegistering ||
+                    regTxid.trim().length !== 64 ||
+                    regBTCSats === BigInt(0)
+                  }
                   className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {cdp.isRegistering ? <Loader2 size={16} className="animate-spin" /> : null}
-                  {cdp.isRegistering ? "Registering…" : "Register Vault on Starknet"}
+                  {cdp.isRegistering ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : null}
+                  {cdp.isRegistering
+                    ? "Registering…"
+                    : "Register Vault on Starknet"}
                 </button>
                 {!isConnected && (
-                  <p className="text-xs text-neutral-500 text-center">Connect your Starknet wallet (ArgentX / Braavos) to register.</p>
+                  <p className="text-xs text-neutral-500 text-center">
+                    Connect your Starknet wallet (ArgentX / Braavos) to
+                    register.
+                  </p>
                 )}
               </div>
             )}
 
             {/* Step 2: Mint form (shown only after vault is registered) */}
-            <div className={`rounded-xl border border-neutral-200 bg-white p-5 space-y-3 shadow-sm ${activeTxid && !cdp.vaultInfo ? "opacity-40 pointer-events-none" : ""}`}>
+            <div
+              className={`rounded-xl border border-neutral-200 bg-white p-5 space-y-3 shadow-sm ${activeTxid && !cdp.vaultInfo ? "opacity-40 pointer-events-none" : ""}`}
+            >
               <div className="flex items-center gap-2">
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white">2</div>
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white">
+                  2
+                </div>
                 <h2 className="font-semibold text-neutral-900">Mint BTCUSD</h2>
               </div>
 

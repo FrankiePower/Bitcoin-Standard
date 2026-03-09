@@ -16,6 +16,10 @@ async function rpc(method: string, params: unknown[]) {
     body: JSON.stringify({ jsonrpc: "1.0", id: String(++_id), method, params }),
     cache: "no-store",
   });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`RPC ${method} HTTP ${res.status}: ${text}`);
+  }
   const json = await res.json();
   if (json.error) throw new Error(`RPC ${method}: ${json.error.message}`);
   return json.result;
@@ -41,8 +45,13 @@ export async function GET(request: Request) {
     });
   } catch (e: any) {
     return Response.json(
-      { ok: false, error: e?.message ?? "balance fetch failed" },
-      { status: 500 },
+      {
+        ok: false,
+        balance: null,
+        utxos: null,
+        error: e?.message ?? "balance fetch failed",
+      },
+      { status: 200 },
     );
   }
 }
