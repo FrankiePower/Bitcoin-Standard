@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useAccount } from "@starknet-react/core";
+import Wallet from "sats-connect";
 import { DashboardLayout } from "~~/components/layout/dashboard-layout";
 import {
   AlertTriangle,
@@ -22,6 +23,7 @@ import {
   formatHealthFactor,
   healthStatus,
 } from "~~/hooks/useNativeCDP";
+import { useXverseStore } from "~~/services/store/xverseStore";
 
 // ─── BTC Market Banner ─────────────────────────────────────────────────────────
 
@@ -484,6 +486,15 @@ export default function BorrowPage() {
     return BigInt(Math.floor(Number(repayAmount) * 1e18));
   }, [repayAmount]);
 
+  // Deposit BTC via Xverse PSBT
+  const { btcAddress } = useXverseStore();
+  const [depositAmount, setDepositAmount] = useState("1");
+  const [depositStep, setDepositStep] = useState<
+    "idle" | "preparing" | "signing" | "broadcasting" | "done" | "error"
+  >("idle");
+  const [depositTxid, setDepositTxid] = useState<string | null>(null);
+  const [depositError, setDepositError] = useState<string | null>(null);
+
   // Register vault inputs
   const [regTxid, setRegTxid] = useState("");
   const [regBTC, setRegBTC] = useState(""); // in BTC (e.g. "1.0")
@@ -505,6 +516,55 @@ export default function BorrowPage() {
   }, [mintAmountBigInt, cdp]);
 
   // ─── Handlers ────────────────────────────────────────────────────────────
+
+  const handleDepositBtc = useCallback(async () => {
+    if (!btcAddress) {
+      setDepositError("Connect your Xverse wallet first");
+      return;
+    }
+    const amt = parseFloat(depositAmount);
+    if (!amt || amt <= 0) {
+      setDepositError("Enter a valid BTC amount");
+      return;
+    }
+    setDepositError(null);
+    setDepositTxid(null);
+    setDepositStep("preparing");
+    try {
+      const dest = vaultTaprootAddress.trim() || undefined;
+      const prepRes = await fetch("/api/bitcoin/test-sign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fromAddress: btcAddress, toAddress: dest, amount: amt }),
+      }).then((r) => r.json());
+      if (!prepRes.ok) throw new Error(prepRes.error);
+
+      setDepositStep("signing");
+      const signRes = await Wallet.request("signPsbt", {
+        psbt: prepRes.psbt,
+        signInputs: { [btcAddress]: [0] },
+        broadcast: false,
+      } as any);
+      if (signRes.status !== "success" || !(signRes.result as any)?.psbt) {
+        throw new Error((signRes as any).error?.message ?? "Signing rejected");
+      }
+
+      setDepositStep("broadcasting");
+      const finalRes = await fetch("/api/bitcoin/finalize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ psbt: (signRes.result as any).psbt }),
+      }).then((r) => r.json());
+      if (!finalRes.ok) throw new Error(finalRes.error);
+
+      setDepositTxid(finalRes.txid);
+      setTxidInput(finalRes.txid);
+      setDepositStep("done");
+    } catch (e: any) {
+      setDepositError(e?.message ?? "Deposit failed");
+      setDepositStep("error");
+    }
+  }, [btcAddress, depositAmount, vaultTaprootAddress]);
 
   const handleLoadVault = useCallback(() => {
     const t = txidInput.trim().replace(/^0x/, "");
@@ -782,7 +842,7 @@ export default function BorrowPage() {
           </div>
         )}
 
-        {/* ── Tab: Register Vault ──────────────────────────────────────────── */}
+        {/* ── Tab: Deposit BTC ─────────────────────────────────────────────── */}
         {tab === "register" && (
           <div className="space-y-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
             <div className="flex items-start gap-3">
@@ -790,92 +850,110 @@ export default function BorrowPage() {
                 <Bitcoin size={18} className="text-orange-400" />
               </div>
               <div>
-                <h2 className="font-semibold text-neutral-900">
-                  Deposit Bitcoin
-                </h2>
+                <h2 className="font-semibold text-neutral-900">Deposit Bitcoin</h2>
                 <p className="mt-0.5 text-xs text-neutral-600">
-                  First, deposit BTC into an OP_CAT Taproot vault on Bitcoin (
-                  <code className="text-neutral-800">just deposit</code>). Then
-                  register with txid + amount on Starknet. The connected
-                  Starknet wallet becomes the vault owner for mint/repay.
+                  Send BTC from your Xverse wallet to the vault. Sign with Xverse to get your deposit txid.
                 </p>
               </div>
             </div>
 
-            <div className="space-y-3 rounded-lg border border-neutral-200 bg-neutral-50 p-4">
-              <div className="rounded-lg border border-neutral-200 bg-white p-3">
-                <div className="mb-2 text-xs font-medium text-neutral-700">
-                  Create Regtest BTC Signer
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={regtestWalletName}
-                    onChange={(e) => setRegtestWalletName(e.target.value)}
-                    placeholder="wallet name (e.g. btcstd_demo)"
-                    className="flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-900 placeholder-neutral-400 focus:border-orange-500 focus:outline-none"
-                  />
-                  <button
-                    onClick={() => void handleCreateRegtestAddress()}
-                    disabled={isCreatingRegtestAddress}
-                    className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
-                  >
-                    {isCreatingRegtestAddress ? "Creating..." : "Create"}
-                  </button>
-                </div>
-                {latestRegtestKey && (
-                  <div className="mt-2 space-y-1 text-xs text-neutral-700">
-                    <div>
-                      Address:{" "}
-                      <code className="text-neutral-900">
-                        {latestRegtestKey.address}
-                      </code>
-                    </div>
-                    <div>
-                      Private Key (WIF):{" "}
-                      <code className="text-neutral-900 break-all">
-                        {latestRegtestKey.privateKeyWif}
-                      </code>
-                    </div>
-                    <div className="text-[11px] text-neutral-500">
-                      Saved locally in this browser for testing only.
-                    </div>
-                  </div>
-                )}
-                {savedRegtestKeys.length > 1 && (
-                  <div className="mt-2 text-[11px] text-neutral-500">
-                    Stored keys: {savedRegtestKeys.length}
-                  </div>
-                )}
-              </div>
+            {/* Vault destination address */}
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-neutral-700">
+                Vault Address (destination)
+              </label>
+              <input
+                type="text"
+                value={vaultTaprootAddress}
+                onChange={(e) => setVaultTaprootAddress(e.target.value)}
+                placeholder="bcrt1p... (Taproot vault address)"
+                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 font-mono text-xs text-neutral-900 placeholder-neutral-400 focus:border-orange-500 focus:outline-none"
+              />
+            </div>
 
-              <div className="text-xs text-neutral-600">
-                Step A: Run{" "}
-                <code className="text-neutral-800">just deposit</code> in{" "}
-                <code className="text-neutral-800">standard_vault/</code>.
+            {/* Amount input */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-medium text-neutral-700">Amount (BTC)</label>
+                {btcAddress && (
+                  <span className="text-xs text-neutral-500">
+                    From: {btcAddress.slice(0, 8)}…{btcAddress.slice(-6)}
+                  </span>
+                )}
               </div>
-              <div className="text-xs text-neutral-600">
-                Step B: Open the modal and paste txid, BTC amount, oracle
-                pubkey, and Taproot address.
+              <div className="relative">
+                <input
+                  type="number"
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                  placeholder="0.00"
+                  min="0.0001"
+                  step="0.0001"
+                  className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 pr-16 text-sm text-neutral-900 placeholder-neutral-400 focus:border-orange-500 focus:outline-none"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-neutral-500">
+                  BTC
+                </span>
               </div>
-              <button
-                onClick={() => setIsRegisterModalOpen(true)}
-                className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-3 py-2 text-xs font-semibold text-white hover:bg-orange-600"
-              >
-                Open RegisterVaultModal
-                <ChevronRight size={14} />
-              </button>
-              {!isConnected && (
-                <p className="text-xs text-neutral-500">
-                  Connect your Starknet wallet to register.
-                </p>
+            </div>
+
+            {/* Deposit button */}
+            <button
+              onClick={() => void handleDepositBtc()}
+              disabled={
+                !btcAddress ||
+                ["preparing", "signing", "broadcasting"].includes(depositStep)
+              }
+              className="w-full rounded-lg bg-orange-500 py-3 text-[15px] font-semibold text-white hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            >
+              {["preparing", "signing", "broadcasting"].includes(depositStep) && (
+                <Loader2 size={16} className="animate-spin" />
               )}
-            </div>
+              {depositStep === "preparing" && "Building transaction…"}
+              {depositStep === "signing" && "Waiting for Xverse…"}
+              {depositStep === "broadcasting" && "Broadcasting…"}
+              {(depositStep === "idle" || depositStep === "done" || depositStep === "error") &&
+                "Deposit & Sign with Xverse"}
+            </button>
 
-            <div className="border-t border-neutral-200 pt-3">
-              <p className="text-xs text-neutral-500 mb-2">
-                Already have a vault?
+            {!btcAddress && (
+              <p className="text-xs text-neutral-500 text-center">
+                Connect your Xverse wallet to deposit.
               </p>
+            )}
+
+            {/* Success */}
+            {depositStep === "done" && depositTxid && (
+              <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle size={14} className="text-emerald-400" />
+                  <span className="text-xs font-semibold text-emerald-400">Deposit confirmed</span>
+                </div>
+                <p className="font-mono text-[11px] text-emerald-300 break-all mb-3">{depositTxid}</p>
+                <button
+                  onClick={() => {
+                    const t = depositTxid.replace(/^0x/, "");
+                    setActiveTxid(t);
+                    setTab("mint");
+                  }}
+                  className="flex items-center gap-1 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-400 transition"
+                >
+                  Continue to Mint BTCUSD <ChevronRight size={14} />
+                </button>
+              </div>
+            )}
+
+            {/* Error */}
+            {depositStep === "error" && depositError && (
+              <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-xs text-red-400">
+                <AlertTriangle size={14} />
+                {depositError}
+              </div>
+            )}
+
+            {/* Load existing vault */}
+            <div className="border-t border-neutral-200 pt-3">
+              <p className="text-xs text-neutral-500 mb-2">Already have a vault txid?</p>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -892,35 +970,6 @@ export default function BorrowPage() {
                 </button>
               </div>
             </div>
-
-            {(oraclePubKey || vaultTaprootAddress) && (
-              <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-xs">
-                <div className="mb-2 font-medium text-neutral-700">
-                  Current Vault Metadata
-                </div>
-                <div className="space-y-1.5 text-neutral-600">
-                  <div className="font-mono break-all">
-                    Oracle PubKey:{" "}
-                    <span className="text-neutral-900">
-                      {oraclePubKey || "Not set"}
-                    </span>
-                  </div>
-                  <div className="font-mono break-all">
-                    Taproot Address:{" "}
-                    <span className="text-neutral-900">
-                      {vaultTaprootAddress || "Not set"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTxid && cdp.vaultInfo?.owner && (
-              <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-xs text-neutral-700">
-                Vault owner on Starknet:{" "}
-                <code className="text-neutral-900">{cdp.vaultInfo.owner}</code>
-              </div>
-            )}
           </div>
         )}
 
