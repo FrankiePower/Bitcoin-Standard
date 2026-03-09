@@ -614,11 +614,15 @@ export default function BorrowPage() {
       const response = await fetch("/api/standard-vault/new-address", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ wallet: regtestWalletName.trim() || "btcstd_demo" }),
+        body: JSON.stringify({
+          wallet: regtestWalletName.trim() || "btcstd_demo",
+        }),
       });
       const data = await response.json();
       if (!response.ok || !data.ok || !data.address || !data.privateKeyWif) {
-        throw new Error(data?.error || data?.output || "Failed to create address");
+        throw new Error(
+          data?.error || data?.output || "Failed to create address",
+        );
       }
 
       const next: RegtestKeyRecord = {
@@ -629,11 +633,14 @@ export default function BorrowPage() {
       };
       setLatestRegtestKey(next);
       setSavedRegtestKeys((prev) => {
-        const merged = [next, ...prev.filter((k) => k.address !== next.address)].slice(
-          0,
-          10,
+        const merged = [
+          next,
+          ...prev.filter((k) => k.address !== next.address),
+        ].slice(0, 10);
+        window.localStorage.setItem(
+          "btcstd:regtest_keys",
+          JSON.stringify(merged),
         );
-        window.localStorage.setItem("btcstd:regtest_keys", JSON.stringify(merged));
         return merged;
       });
       setOperatorMessage(`New regtest address created: ${next.address}`);
@@ -666,11 +673,15 @@ export default function BorrowPage() {
           {[
             {
               label: "Oracle BTC Price",
-              value: (spotPriceUSD || cdp.btcPriceUSD)
-                ? `$${(spotPriceUSD || cdp.btcPriceUSD).toLocaleString(undefined, {
-                    maximumFractionDigits: 2,
-                  })}`
-                : "—",
+              value:
+                spotPriceUSD || cdp.btcPriceUSD
+                  ? `$${(spotPriceUSD || cdp.btcPriceUSD).toLocaleString(
+                      undefined,
+                      {
+                        maximumFractionDigits: 2,
+                      },
+                    )}`
+                  : "—",
               sub: "Current BTC price feed",
             },
             {
@@ -709,9 +720,7 @@ export default function BorrowPage() {
                   : "border-amber-500/30 bg-amber-500/10 text-amber-700"
               }`}
             >
-              {bridgeStatus?.available
-                ? "online"
-                : "offline"}
+              {bridgeStatus?.available ? "online" : "offline"}
             </span>
           </div>
           <ul className="space-y-1 text-xs text-neutral-600">
@@ -724,12 +733,9 @@ export default function BorrowPage() {
               <code className="text-neutral-800">standard_vault/</code>.
             </li>
             <li>
-              3. Register txid + BTC amount with your connected Starknet
-              wallet.
+              3. Register txid + BTC amount with your connected Starknet wallet.
             </li>
-            <li>
-              4. Mint BTCUSD and keep health factor above 100.
-            </li>
+            <li>4. Mint BTCUSD and keep health factor above 100.</li>
             <li>
               5. Bridge endpoint:{" "}
               <code className="text-neutral-800">

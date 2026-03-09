@@ -172,7 +172,12 @@ async function getMinerAddress(): Promise<string> {
 
 async function getBitcoinCliPath() {
   const { standardVaultDir } = await getPaths();
-  const cli = path.join(standardVaultDir, "bitcoin-core-cat", "src", "bitcoin-cli");
+  const cli = path.join(
+    standardVaultDir,
+    "bitcoin-core-cat",
+    "src",
+    "bitcoin-cli",
+  );
   return { standardVaultDir, cli };
 }
 
@@ -374,7 +379,10 @@ export async function createRegtestAddress(
   try {
     await ensureWalletLoaded(wallet);
 
-    const addressRes = await runBitcoinCli(["-rpcwallet=" + wallet, "getnewaddress"]);
+    const addressRes = await runBitcoinCli([
+      "-rpcwallet=" + wallet,
+      "getnewaddress",
+    ]);
     if (addressRes.code !== 0) {
       return {
         ok: false,
@@ -385,7 +393,11 @@ export async function createRegtestAddress(
     }
 
     const address = addressRes.stdout.trim();
-    const keyRes = await runBitcoinCli(["-rpcwallet=" + wallet, "dumpprivkey", address]);
+    const keyRes = await runBitcoinCli([
+      "-rpcwallet=" + wallet,
+      "dumpprivkey",
+      address,
+    ]);
     if (keyRes.code !== 0) {
       return {
         ok: false,

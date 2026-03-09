@@ -162,3 +162,18 @@ cd packages/nextjs && yarn dev
 ## Known Environment Issue
 
 - [ ] Fix frontend test runner environment mismatch: `yarn test:nextjs` fails with esbuild host/binary version mismatch (`0.25.9` vs `0.27.3`).
+
+---
+
+## Phase 4: UX + Storytelling Polish (POST-CORE) 🧭
+
+Reference plan: `UX_STORY_PLAN.md`
+
+- [ ] Unify one-line promise across homepage, README, and demo script
+- [ ] Implement 3-step narrative everywhere: Lock BTC → Mint BTCUSD → Repay/Liquidate
+- [ ] Add lifecycle status rail with chain labels + proof links
+- [ ] Replace abstract flow with fixed numeric demo scenarios
+- [ ] Add quick action defaults (safe max mint, repay 25/50/100)
+- [ ] Move advanced controls behind an `Advanced` toggle
+- [ ] Add README comparison table vs wrapped-BTC CDPs and payment-relay models
+- [ ] Purge remaining legacy messaging (wBTC/bridge-first phrasing)

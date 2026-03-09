@@ -18,6 +18,27 @@
 
 ![Debug Contracts tab](./packages/nextjs/public/debug-image.png)
 
+## Next Phase (Post-MVP)
+
+The current MVP focuses on single-vault borrow/mint/repay flow. The next phase extends this to a production bridge architecture:
+
+1. **Merkle-batched bridge requests (Bitcoin side)**
+- Batch deposits and withdrawals using aggregator covenants (DepositAggregator / WithdrawalAggregator).
+- Process batches via a Bridge covenant state root update.
+- Expand withdrawal batches to user payouts via WithdrawalExpander.
+
+2. **Oracle service as coordinator (not just price feed)**
+- Continue pushing BTC price and volatility on Starknet.
+- Monitor health factors and trigger liquidation workflow when required.
+- Produce signed attestations for liquidation/repayment events.
+- Reconcile Starknet vault state with Bitcoin outpoint state.
+
+3. **Operator/backend responsibility**
+- Keep Merkle tree construction, proof generation, and covenant transaction assembly in backend/operator services.
+- Keep frontend focused on user intents and status, not covenant internals.
+
+This phase is optional for demo scope, but required for higher throughput and stronger bridge automation.
+
 ## 0. Requirements
 
 Before you begin, you need to install the following tools:
