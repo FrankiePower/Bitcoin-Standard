@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useXverseStore } from "~~/services/store/xverseStore";
 import { TestSignFlow } from "~~/components/TestSignFlow";
@@ -17,10 +17,22 @@ const ConnectModal = () => {
   } = useXverseStore();
   const isConnected = status === "connected";
   const isConnecting = status === "connecting";
+  const [btcBalance, setBtcBalance] = useState<number | null>(null);
 
   useEffect(() => {
     hydrate();
   }, []);
+
+  useEffect(() => {
+    if (!btcAddress || !isConnected) {
+      setBtcBalance(null);
+      return;
+    }
+    fetch(`/api/bitcoin/balance?address=${btcAddress}`)
+      .then((r) => r.json())
+      .then((d) => d.ok && setBtcBalance(d.balance))
+      .catch(() => {});
+  }, [btcAddress, isConnected]);
 
   const handleCloseModal = () => {
     if (modalRef.current) modalRef.current.checked = false;
@@ -45,6 +57,11 @@ const ConnectModal = () => {
             : "linear-gradient(135deg, #f97316 0%, #fb923c 100%)",
         }}
       >
+        {isConnected && btcBalance !== null && (
+          <span className="text-white/90 text-[13px] font-mono">
+            {btcBalance.toFixed(4)} BTC
+          </span>
+        )}
         {isConnected && (
           <div className="w-2 h-2 rounded-full bg-white/80 animate-pulse" />
         )}

@@ -269,7 +269,7 @@ function RegisterVaultModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
       <div className="w-full max-w-xl rounded-2xl border border-zinc-700 bg-zinc-900 p-5 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-white">Register Vault</h3>
+          <h3 className="text-base font-semibold text-white">Deposit BTC</h3>
           <button
             onClick={onClose}
             className="rounded-md border border-zinc-700 px-2.5 py-1 text-xs text-zinc-300 hover:border-zinc-500 hover:text-white"
@@ -362,7 +362,7 @@ function RegisterVaultModal({
             ) : (
               <Zap size={16} />
             )}
-            {isRegistering ? "Registering..." : "Register Vault"}
+            {isRegistering ? "Registering..." : "Confirm Deposit"}
           </button>
         </div>
       </div>
@@ -752,7 +752,7 @@ export default function BorrowPage() {
         <div className="flex gap-1 rounded-xl border border-neutral-200 bg-neutral-100 p-1">
           {(
             [
-              { id: "register", label: "1. Register Vault" },
+              { id: "register", label: "1. Deposit BTC" },
               { id: "mint", label: "2. Mint BTCUSD" },
               { id: "repay", label: "3. Repay Debt" },
             ] as { id: Tab; label: string }[]
@@ -791,7 +791,7 @@ export default function BorrowPage() {
               </div>
               <div>
                 <h2 className="font-semibold text-neutral-900">
-                  Register Bitcoin Vault
+                  Deposit Bitcoin
                 </h2>
                 <p className="mt-0.5 text-xs text-neutral-600">
                   First, deposit BTC into an OP_CAT Taproot vault on Bitcoin (
