@@ -67,12 +67,18 @@ export async function POST(request: Request) {
       );
     }
 
-    // Build outputs: destination + change back to sender (prevents massive implied fee)
-    const changeAmount = parseFloat((utxo.amount - sendAmount - fee).toFixed(8));
-    const outputs: Record<string, number>[] = [{ [destination]: sendAmount }];
-    if (changeAmount > 0.00001) {
-      outputs.push({ [fromAddress]: changeAmount });
-    }
+    // Build outputs: if sending to self, merge into single output (Bitcoin Core rejects
+    // duplicate addresses in createpsbt). Otherwise send + change back to fromAddress.
+    const changeAmount = parseFloat(
+      (utxo.amount - sendAmount - fee).toFixed(8),
+    );
+    const isSelfSend = destination === fromAddress;
+    const outputs: Record<string, number>[] = isSelfSend
+      ? [{ [fromAddress]: parseFloat((utxo.amount - fee).toFixed(8)) }]
+      : [
+          { [destination]: sendAmount },
+          ...(changeAmount > 0.00001 ? [{ [fromAddress]: changeAmount }] : []),
+        ];
 
     // 3. Create raw PSBT
     const rawPsbt: string = await rpc("createpsbt", [
