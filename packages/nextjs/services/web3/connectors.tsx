@@ -1,15 +1,9 @@
-import { braavos, InjectedConnector, ready } from "@starknet-react/core";
-import { getTargetNetworks } from "~~/utils/scaffold-stark";
-import { BurnerConnector } from "@scaffold-stark/stark-burner";
-import scaffoldConfig from "~~/scaffold.config";
+import { InjectedConnector } from "@starknet-react/core";
 import { LAST_CONNECTED_TIME_LOCALSTORAGE_KEY } from "~~/utils/Constants";
-import { KeplrConnector } from "./keplr";
-
-const targetNetworks = getTargetNetworks();
+import { getTargetNetworks } from "~~/utils/scaffold-stark";
 
 export const connectors = getConnectors();
 
-// workaround helper function to properly disconnect with removing local storage (prevent autoconnect infinite loop)
 function withDisconnectWrapper(connector: InjectedConnector) {
   const connectorDisconnect = connector.disconnect;
   const _disconnect = (): Promise<void> => {
@@ -22,23 +16,8 @@ function withDisconnectWrapper(connector: InjectedConnector) {
 }
 
 function getConnectors() {
-  const { targetNetworks } = scaffoldConfig;
-
-  const connectors: InjectedConnector[] = [ready(), braavos()];
-  const isDevnet = targetNetworks.some(
-    (network) => (network.network as string) === "devnet",
-  );
-
-  if (!isDevnet) {
-    connectors.push(new KeplrConnector());
-  } else {
-    const burnerConnector = new BurnerConnector();
-    // burnerConnector's should be initialized with dynamic network instead of hardcoded devnet to support mainnetFork
-    burnerConnector.chain = targetNetworks[0];
-    connectors.push(burnerConnector as unknown as InjectedConnector);
-  }
-
-  return connectors.sort(() => Math.random() - 0.5).map(withDisconnectWrapper);
+  const xverse = new InjectedConnector({ options: { id: "xverse" } });
+  return [withDisconnectWrapper(xverse)];
 }
 
-export const appChains = targetNetworks;
+export const appChains = getTargetNetworks();
