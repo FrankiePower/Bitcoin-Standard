@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useXverseStore } from "~~/services/store/xverseStore";
 import { TestSignFlow } from "~~/components/TestSignFlow";
@@ -10,6 +10,9 @@ const ConnectModal = () => {
     starknetAddress,
     bitcoinNetwork,
     status,
+    btcBalance,
+    vaultBtcBalance,
+    vaultState,
     connect,
     connectToLocalRegtest,
     disconnect,
@@ -17,22 +20,10 @@ const ConnectModal = () => {
   } = useXverseStore();
   const isConnected = status === "connected";
   const isConnecting = status === "connecting";
-  const [btcBalance, setBtcBalance] = useState<number | null>(null);
 
   useEffect(() => {
     hydrate();
   }, []);
-
-  useEffect(() => {
-    if (!btcAddress || !isConnected) {
-      setBtcBalance(null);
-      return;
-    }
-    fetch(`/api/bitcoin/balance?address=${btcAddress}`)
-      .then((r) => r.json())
-      .then((d) => d.ok && setBtcBalance(d.balance))
-      .catch(() => {});
-  }, [btcAddress, isConnected]);
 
   const handleCloseModal = () => {
     if (modalRef.current) modalRef.current.checked = false;
@@ -103,18 +94,38 @@ const ConnectModal = () => {
                   {isConnected ? (
                     <div className="flex flex-col gap-4">
                       {btcAddress && (
-                        <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5">
-                          <div className="flex items-center justify-between mb-1">
-                            <p className="text-neutral-400 text-xs">Bitcoin</p>
-                            {bitcoinNetwork && (
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400">
-                                {bitcoinNetwork}
-                              </span>
-                            )}
+                        <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <p className="text-neutral-400 text-xs">Bitcoin Wallet</p>
+                            <div className="flex items-center gap-2">
+                              {btcBalance !== null && (
+                                <span className="text-xs font-mono text-orange-400">{btcBalance.toFixed(4)} BTC</span>
+                              )}
+                              {bitcoinNetwork && (
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400">
+                                  {bitcoinNetwork}
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <p className="text-white text-xs font-mono break-all">
                             {btcAddress}
                           </p>
+                        </div>
+                      )}
+                      {vaultBtcBalance !== null && (
+                        <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5">
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-neutral-400 text-xs">Vault (OP_CAT)</p>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-mono text-emerald-400">{vaultBtcBalance.toFixed(4)} BTC</span>
+                              {vaultState && (
+                                <span className={`text-xs px-2 py-0.5 rounded-full ${vaultState === "Active" ? "bg-emerald-500/10 text-emerald-400" : "bg-zinc-500/10 text-zinc-400"}`}>
+                                  {vaultState}
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       )}
                       {starknetAddress && (

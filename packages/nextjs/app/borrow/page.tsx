@@ -501,7 +501,7 @@ export default function BorrowPage() {
   }, [repayAmount]);
 
   // Deposit BTC via Xverse PSBT
-  const { btcAddress } = useXverseStore();
+  const { btcAddress, vaultBtcBalance, vaultState } = useXverseStore();
   const [depositAmount, setDepositAmount] = useState("1");
   const [depositStep, setDepositStep] = useState<
     "idle" | "preparing" | "signing" | "broadcasting" | "done" | "error"
@@ -784,8 +784,10 @@ export default function BorrowPage() {
             },
             {
               label: "Total Vaults",
-              value: cdp.totalVaults.toString(),
-              sub: `${formatBTCUSD(cdp.totalSupply)} BTCUSD issued`,
+              value: vaultState === "Active" ? "1" : "0",
+              sub: vaultBtcBalance !== null
+                ? `${parseFloat(vaultBtcBalance.toFixed(8))} BTC locked`
+                : "No active vault",
             },
           ].map((s) => (
             <div

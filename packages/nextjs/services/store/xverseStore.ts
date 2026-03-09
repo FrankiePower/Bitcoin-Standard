@@ -15,24 +15,85 @@ type XverseWalletState = {
   starknetAddress: string | null;
   bitcoinNetwork: string | null;
   status: XverseStatus;
+  // Live balances & vault state — updated by useBitcoinMonitor
+  btcBalance: number | null;
+  vaultBtcBalance: number | null;
+  vaultState: string | null;
+  vaultTaprootAddress: string | null;
   connect: () => Promise<void>;
   connectToLocalRegtest: () => Promise<void>;
   disconnect: () => Promise<void>;
   hydrate: () => void;
+  refreshBalances: () => Promise<void>;
+  setVaultTaprootAddress: (addr: string | null) => void;
 };
 
-export const useXverseStore = create<XverseWalletState>((set) => ({
+export const useXverseStore = create<XverseWalletState>((set, get) => ({
   btcAddress: null,
   starknetAddress: null,
   bitcoinNetwork: null,
   status: "disconnected",
+  btcBalance: null,
+  vaultBtcBalance: null,
+  vaultState: null,
+  vaultTaprootAddress: null,
+
+  setVaultTaprootAddress: (addr) => set({ vaultTaprootAddress: addr }),
+
+  refreshBalances: async () => {
+    const { btcAddress, vaultTaprootAddress: storedVaultAddr } = get();
+    // Also check localStorage for vault address set by the borrow page.
+    const vaultAddr =
+      storedVaultAddr ||
+      (typeof window !== "undefined"
+        ? window.localStorage.getItem("btcstd:taproot_address")
+        : null);
+
+    const fetchBalance = (address: string) =>
+      fetch(`/api/bitcoin/balance?address=${address}`)
+        .then((r) => r.json())
+        .then((d) => (d.ok ? (d.balance as number) : null))
+        .catch(() => null);
+
+    const [walletBal, vaultBal] = await Promise.all([
+      btcAddress ? fetchBalance(btcAddress) : Promise.resolve(null),
+      vaultAddr ? fetchBalance(vaultAddr) : Promise.resolve(null),
+    ]);
+
+    // Fetch vault covenant state from the local file via status API.
+    const vaultState = await fetch("/api/standard-vault/status")
+      .then((r) => r.json())
+      .then((d) => (d.vaultState as string | undefined) ?? null)
+      .catch(() => null);
+
+    if (vaultBal !== null) localStorage.setItem("btcstd:vault_btc_balance", String(vaultBal));
+    if (vaultState !== null) localStorage.setItem("btcstd:vault_state", vaultState);
+
+    set({
+      btcBalance: walletBal,
+      vaultBtcBalance: vaultBal,
+      vaultState,
+      ...(vaultAddr && !storedVaultAddr ? { vaultTaprootAddress: vaultAddr } : {}),
+    });
+  },
 
   hydrate: () => {
     const btcAddress = localStorage.getItem("xverse_payment_address");
     const starknetAddress = localStorage.getItem("xverse_starknet_address");
     const bitcoinNetwork = localStorage.getItem("xverse_bitcoin_network");
+    const vaultTaprootAddress = localStorage.getItem("btcstd:taproot_address");
+    const cachedVaultBalance = localStorage.getItem("btcstd:vault_btc_balance");
+    const cachedVaultState = localStorage.getItem("btcstd:vault_state");
     if (btcAddress) {
-      set({ btcAddress, starknetAddress, bitcoinNetwork, status: "connected" });
+      set({
+        btcAddress,
+        starknetAddress,
+        bitcoinNetwork,
+        status: "connected",
+        vaultTaprootAddress,
+        vaultBtcBalance: cachedVaultBalance !== null ? Number(cachedVaultBalance) : null,
+        vaultState: cachedVaultState,
+      });
     }
   },
 
@@ -84,6 +145,7 @@ export const useXverseStore = create<XverseWalletState>((set) => ({
       toast.success(
         `Xverse connected${bitcoinNetwork ? ` (${bitcoinNetwork})` : ""}`,
       );
+      void get().refreshBalances();
     } catch (err: any) {
       toast.error(err?.message || "Failed to connect Xverse wallet");
       set({ status: "disconnected" });

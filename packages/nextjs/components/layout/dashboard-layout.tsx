@@ -5,6 +5,8 @@ import { Navbar } from "./navbar";
 import { useAccount } from "@starknet-react/core";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useBitcoinMonitor } from "~~/hooks/useBitcoinMonitor";
+import { useXverseStore } from "~~/services/store/xverseStore";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -14,8 +16,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { status } = useAccount();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const hydrate = useXverseStore((s) => s.hydrate);
+  useBitcoinMonitor();
 
   useEffect(() => {
+    hydrate();
     setMounted(true);
   }, []);
 
