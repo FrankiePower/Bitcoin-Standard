@@ -1,94 +1,45 @@
-import {
-  Connector,
-  useConnect,
-  useAccount,
-  useDisconnect,
-} from "@starknet-react/core";
-import { useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { useLocalStorage } from "usehooks-ts";
-import { LAST_CONNECTED_TIME_LOCALSTORAGE_KEY } from "~~/utils/Constants";
-import Image from "next/image";
-
-const isXverseConnector = (connector: Connector) => {
-  const id = (connector.id || "").toLowerCase();
-  const name = (connector.name || "").toLowerCase();
-  return id.includes("xverse") || name.includes("xverse");
-};
+import { useXverseStore } from "~~/services/store/xverseStore";
 
 const ConnectModal = () => {
   const modalRef = useRef<HTMLInputElement>(null);
+  const { btcAddress, starknetAddress, status, connect, disconnect, hydrate } =
+    useXverseStore();
+  const isConnected = status === "connected";
+  const isConnecting = status === "connecting";
 
-  // Starknet
-  const { connectors, connect } = useConnect();
-  const { address: starknetAddress, status: starknetStatus } = useAccount();
-  const { disconnect: disconnectStarknet } = useDisconnect();
-  const isStarknetConnected = starknetStatus === "connected";
-
-  const [, setLastConnector] = useLocalStorage<{ id: string; ix?: number }>(
-    "lastUsedConnector",
-    { id: "" },
-  );
-  const [, setLastConnectionTime] = useLocalStorage<number>(
-    LAST_CONNECTED_TIME_LOCALSTORAGE_KEY,
-    0,
-  );
-
-  const [showStarknetWallets, setShowStarknetWallets] = useState(false);
-
-  const handleConnectStarknetWallet = (
-    e: React.MouseEvent<HTMLButtonElement>,
-    connector: Connector,
-  ) => {
-    connect({ connector });
-    setLastConnector({ id: connector.id });
-    setLastConnectionTime(Date.now());
-    setShowStarknetWallets(false);
-    handleCloseModal();
-  };
+  useEffect(() => {
+    hydrate();
+  }, []);
 
   const handleCloseModal = () => {
-    if (modalRef.current) {
-      modalRef.current.checked = false;
-    }
+    if (modalRef.current) modalRef.current.checked = false;
   };
 
-  const disconnectAll = () => {
-    if (isStarknetConnected) disconnectStarknet();
-  };
-
-  // Xverse-first connector filtering for single-wallet UX.
-  const nonBurnerConnectors = connectors.filter(
-    (c) => c.id !== "burner-wallet",
-  );
-  const xverseConnectors = nonBurnerConnectors.filter(isXverseConnector);
-  const mainConnectors =
-    xverseConnectors.length > 0 ? xverseConnectors : nonBurnerConnectors;
-
-  const anyConnected = isStarknetConnected;
-
-  const buttonLabel = () => {
-    if (isStarknetConnected) {
-      return `${starknetAddress?.slice(0, 4)}...${starknetAddress?.slice(-4)}`;
-    }
-    return "Connect Wallet";
-  };
+  const displayAddress = starknetAddress ?? btcAddress;
+  const buttonLabel =
+    isConnected && displayAddress
+      ? `${displayAddress.slice(0, 4)}...${displayAddress.slice(-4)}`
+      : isConnecting
+        ? "Connecting..."
+        : "Connect Wallet";
 
   return (
     <div>
       <label
         htmlFor="connect-modal"
-        className={`flex items-center justify-center gap-2 px-5 py-2.5 text-[15px] font-semibold text-white rounded-full transition-all hover:opacity-90 active:scale-95 shadow-sm cursor-pointer ${anyConnected ? "" : ""}`}
+        className="flex items-center justify-center gap-2 px-5 py-2.5 text-[15px] font-semibold text-white rounded-full transition-all hover:opacity-90 active:scale-95 shadow-sm cursor-pointer"
         style={{
-          background: anyConnected
+          background: isConnected
             ? "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)"
             : "linear-gradient(135deg, #f97316 0%, #fb923c 100%)",
         }}
       >
-        {anyConnected && (
+        {isConnected && (
           <div className="w-2 h-2 rounded-full bg-white/80 animate-pulse" />
         )}
-        <span>{buttonLabel()}</span>
+        <span>{buttonLabel}</span>
       </label>
 
       {typeof document !== "undefined" &&
@@ -99,21 +50,14 @@ const ConnectModal = () => {
               type="checkbox"
               id="connect-modal"
               className="modal-toggle"
-              onChange={(e) => {
-                if (!e.target.checked) setShowStarknetWallets(false);
-              }}
             />
             <div className="modal backdrop-blur-sm z-[9999]">
-              <div
-                className="modal-box bg-[#111111] rounded-2xl border border-white/10 flex flex-col relative w-full max-w-[420px] p-0 overflow-hidden shadow-2xl"
-                style={{ minHeight: "auto" }}
-              >
+              <div className="modal-box bg-[#111111] rounded-2xl border border-white/10 flex flex-col relative w-full max-w-[420px] p-0 overflow-hidden shadow-2xl">
                 <label
                   htmlFor="connect-modal"
                   className="absolute inset-0 z-[-1] cursor-pointer"
                 />
 
-                {/* Header */}
                 <div className="p-6 border-b border-white/5 flex flex-col items-center">
                   <label
                     htmlFor="connect-modal"
@@ -130,116 +74,61 @@ const ConnectModal = () => {
                 </div>
 
                 <div className="p-6">
-                  {/* Info Section */}
-                  <div className="bg-[#1a1a1a] rounded-xl p-4 mb-6 border border-white/5">
-                    <h3 className="text-white text-[15px] font-bold mb-1.5">
-                      Xverse Wallet
-                    </h3>
-                    <p className="text-neutral-400 text-[13px] leading-relaxed">
-                      Use Xverse to connect and sign the protocol flow across
-                      Bitcoin and Starknet.
-                    </p>
-                  </div>
-
-                  {!showStarknetWallets ? (
+                  {isConnected ? (
                     <div className="flex flex-col gap-4">
-                      {/* Starknet Wallet Card */}
-                      <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5 transition-all hover:border-white/10">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-10 h-10 rounded-full bg-[#333333] flex items-center justify-center font-bold text-white text-sm">
-                            SN
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="text-white font-semibold text-[15px] mb-0.5">
-                              Xverse (Starknet)
-                            </h4>
-                            <p className="text-neutral-400 text-xs">
-                              {isStarknetConnected
-                                ? `Connected: ${starknetAddress?.slice(0, 6)}...${starknetAddress?.slice(-4)}`
-                                : xverseConnectors.length > 0
-                                  ? "Connect your Xverse Starknet account"
-                                  : "Xverse connector not detected. Showing available wallets."}
-                            </p>
-                          </div>
+                      {btcAddress && (
+                        <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5">
+                          <p className="text-neutral-400 text-xs mb-1">
+                            Bitcoin
+                          </p>
+                          <p className="text-white text-xs font-mono break-all">
+                            {btcAddress}
+                          </p>
                         </div>
-                        <button
-                          onClick={() => {
-                            if (!isStarknetConnected)
-                              setShowStarknetWallets(true);
-                          }}
-                          disabled={isStarknetConnected}
-                          className={`w-full py-3 rounded-lg text-[15px] font-semibold transition-all ${
-                            isStarknetConnected
-                              ? "bg-green-500/10 text-green-500 cursor-default"
-                              : "bg-[#222222] text-white hover:bg-[#333333]"
-                          }`}
-                        >
-                          {isStarknetConnected ? "Connected" : "Connect"}
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    /* Native Starknet Connectors List */
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <button
-                          onClick={() => setShowStarknetWallets(false)}
-                          className="text-neutral-400 hover:text-white pb-1 flex items-center gap-1 text-sm"
-                        >
-                          ← Back
-                        </button>
-                      </div>
-                      {mainConnectors.map((connector, index) => {
-                        const icon =
-                          typeof connector.icon === "object"
-                            ? connector.icon.dark || connector.icon.light
-                            : connector.icon;
-                        return (
-                          <button
-                            key={connector.id || index}
-                            onClick={(e) =>
-                              handleConnectStarknetWallet(e, connector)
-                            }
-                            className="bg-[#222222] hover:bg-[#333333] border border-white/5 rounded-xl p-3 flex items-center gap-4 transition-all"
-                          >
-                            <div className="w-8 h-8 rounded-lg overflow-hidden bg-white/10">
-                              {icon && (
-                                <Image
-                                  src={icon as string}
-                                  alt={connector.name}
-                                  width={32}
-                                  height={32}
-                                  className="w-full h-full object-cover"
-                                />
-                              )}
-                            </div>
-                            <span className="text-white font-medium">
-                              {connector.name}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Footer / Disconnect All */}
-                  {isStarknetConnected && (
-                    <div className="mt-6 pt-6 border-t border-white/5 flex justify-center">
+                      )}
+                      {starknetAddress && (
+                        <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5">
+                          <p className="text-neutral-400 text-xs mb-1">
+                            Starknet
+                          </p>
+                          <p className="text-white text-xs font-mono break-all">
+                            {starknetAddress}
+                          </p>
+                        </div>
+                      )}
                       <button
                         onClick={() => {
-                          disconnectAll();
-                          setShowStarknetWallets(false);
+                          disconnect();
+                          handleCloseModal();
                         }}
-                        className="text-red-400 text-sm hover:text-red-300 transition-colors font-medium border border-red-500/20 bg-red-500/10 px-6 py-2 rounded-full"
+                        className="w-full py-3 rounded-lg text-[15px] font-semibold text-red-400 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all"
                       >
-                        Disconnect All Wallets
+                        Disconnect
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5">
+                        <p className="text-neutral-400 text-[13px] leading-relaxed">
+                          Connect your Xverse wallet to use the Bitcoin Standard
+                          protocol.
+                        </p>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          await connect();
+                          handleCloseModal();
+                        }}
+                        disabled={isConnecting}
+                        className="w-full py-3 rounded-lg text-[15px] font-semibold text-white bg-orange-500 hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      >
+                        {isConnecting ? "Connecting..." : "Connect Xverse"}
                       </button>
                     </div>
                   )}
-
                   <div className="mt-6 text-center">
                     <p className="text-neutral-500 text-xs">
-                      Your keys, your coins. We never store your private keys.
+                      Your keys, your coins.
                     </p>
                   </div>
                 </div>
