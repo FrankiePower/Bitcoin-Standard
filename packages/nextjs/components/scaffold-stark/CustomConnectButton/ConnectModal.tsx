@@ -1,11 +1,20 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useXverseStore } from "~~/services/store/xverseStore";
+import { TestSignFlow } from "~~/components/TestSignFlow";
 
 const ConnectModal = () => {
   const modalRef = useRef<HTMLInputElement>(null);
-  const { btcAddress, starknetAddress, status, connect, disconnect, hydrate } =
-    useXverseStore();
+  const {
+    btcAddress,
+    starknetAddress,
+    bitcoinNetwork,
+    status,
+    connect,
+    connectToLocalRegtest,
+    disconnect,
+    hydrate,
+  } = useXverseStore();
   const isConnected = status === "connected";
   const isConnecting = status === "connecting";
 
@@ -78,9 +87,14 @@ const ConnectModal = () => {
                     <div className="flex flex-col gap-4">
                       {btcAddress && (
                         <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5">
-                          <p className="text-neutral-400 text-xs mb-1">
-                            Bitcoin
-                          </p>
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-neutral-400 text-xs">Bitcoin</p>
+                            {bitcoinNetwork && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400">
+                                {bitcoinNetwork}
+                              </span>
+                            )}
+                          </div>
                           <p className="text-white text-xs font-mono break-all">
                             {btcAddress}
                           </p>
@@ -96,6 +110,13 @@ const ConnectModal = () => {
                           </p>
                         </div>
                       )}
+                      <button
+                        onClick={connectToLocalRegtest}
+                        className="w-full py-2.5 rounded-lg text-[13px] font-semibold text-orange-400 bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/20 transition-all"
+                      >
+                        Switch to Local Regtest
+                      </button>
+                      <TestSignFlow />
                       <button
                         onClick={() => {
                           disconnect();
