@@ -29,17 +29,27 @@ async function rpc(method: string, params: unknown[], wallet?: string) {
 
 export async function POST(request: Request) {
   try {
-    const { fromAddress, toAddress, amount = 1 } = await request.json().catch(() => ({}));
+    const {
+      fromAddress,
+      toAddress,
+      amount = 1,
+    } = await request.json().catch(() => ({}));
 
     if (!fromAddress) {
-      return Response.json({ ok: false, error: "fromAddress required" }, { status: 400 });
+      return Response.json(
+        { ok: false, error: "fromAddress required" },
+        { status: 400 },
+      );
     }
 
     // 1. Find UTXOs for fromAddress
     const scan = await rpc("scantxoutset", ["start", [`addr(${fromAddress})`]]);
     const unspents: any[] = scan.unspents ?? [];
     if (!unspents.length) {
-      return Response.json({ ok: false, error: `No UTXOs found for ${fromAddress}` }, { status: 400 });
+      return Response.json(
+        { ok: false, error: `No UTXOs found for ${fromAddress}` },
+        { status: 400 },
+      );
     }
     const utxo = unspents[0];
 
@@ -47,15 +57,27 @@ export async function POST(request: Request) {
     const destination = toAddress ?? fromAddress;
 
     const fee = 0.0001;
-    const sendAmount = parseFloat((Math.min(amount, utxo.amount - fee)).toFixed(8));
+    const sendAmount = parseFloat(
+      Math.min(amount, utxo.amount - fee).toFixed(8),
+    );
     if (sendAmount <= 0) {
-      return Response.json({ ok: false, error: "Insufficient UTXO balance" }, { status: 400 });
+      return Response.json(
+        { ok: false, error: "Insufficient UTXO balance" },
+        { status: 400 },
+      );
+    }
+
+    // Build outputs: destination + change back to sender (prevents massive implied fee)
+    const changeAmount = parseFloat((utxo.amount - sendAmount - fee).toFixed(8));
+    const outputs: Record<string, number>[] = [{ [destination]: sendAmount }];
+    if (changeAmount > 0.00001) {
+      outputs.push({ [fromAddress]: changeAmount });
     }
 
     // 3. Create raw PSBT
     const rawPsbt: string = await rpc("createpsbt", [
       [{ txid: utxo.txid, vout: utxo.vout }],
-      [{ [destination]: sendAmount }],
+      outputs,
     ]);
 
     // 4. Attach witness UTXO data (required for Taproot / SegWit signing in Xverse)
@@ -69,6 +91,9 @@ export async function POST(request: Request) {
       sendAmount,
     });
   } catch (e: any) {
-    return Response.json({ ok: false, error: e?.message ?? "test-sign failed" }, { status: 500 });
+    return Response.json(
+      { ok: false, error: e?.message ?? "test-sign failed" },
+      { status: 500 },
+    );
   }
 }
