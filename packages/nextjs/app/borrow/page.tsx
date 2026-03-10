@@ -449,10 +449,7 @@ function LifecycleRail({
     },
   ];
 
-  const completedLinks = Math.max(
-    0,
-    steps.filter((s) => s.done).length - 1,
-  );
+  const completedLinks = Math.max(0, steps.filter((s) => s.done).length - 1);
 
   return (
     <div className="rounded-xl border border-neutral-200 bg-white px-4 pt-4 pb-5 shadow-sm">
@@ -1340,10 +1337,9 @@ export default function BorrowPage() {
                       onClick={() =>
                         setMintAmount(
                           cdp.maxMintable > BigInt(0)
-                            ? (
-                                (Number(cdp.maxMintable) / 1e18) *
-                                0.75
-                              ).toFixed(2)
+                            ? ((Number(cdp.maxMintable) / 1e18) * 0.75).toFixed(
+                                2,
+                              )
                             : "",
                         )
                       }
@@ -1503,10 +1499,7 @@ export default function BorrowPage() {
                               : cdp.btsusdBalance;
                           setRepayAmount(
                             maxRepay > BigInt(0)
-                              ? (
-                                  (Number(maxRepay) / 1e18) *
-                                  pct
-                                ).toFixed(2)
+                              ? ((Number(maxRepay) / 1e18) * pct).toFixed(2)
                               : "",
                           );
                         }}
