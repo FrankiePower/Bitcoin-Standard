@@ -9,14 +9,14 @@ Match top competitor polish in UX and narrative clarity while preserving BTCStan
 
 Core message to repeat everywhere:
 
-`Lock real BTC on Bitcoin. Mint BTCUSD on Starknet. Collateral enforced by Bitcoin consensus.`
+`Lock real BTC on Bitcoin. Mint BTSUSD on Starknet. Collateral enforced by Bitcoin consensus.`
 
 ## Narrative Framework
 
 Use one consistent 3-step story across homepage, README, demo script, and presenter voiceover:
 
 1. `Lock BTC on Bitcoin` (Taproot OP_CAT vault)
-2. `Mint BTCUSD on Starknet` (debt ledger only)
+2. `Mint BTSUSD on Starknet` (debt ledger only)
 3. `Repay or Liquidate via Bitcoin-enforced vault paths`
 
 ## UX Execution Checklist

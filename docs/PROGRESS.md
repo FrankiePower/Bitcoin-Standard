@@ -1,13 +1,13 @@
 # Bitcoin Standard Protocol - Progress Report
 
-Last updated: 2026-03-04
+Last updated: 2026-03-10
 
 ## Project Overview
 
 Bitcoin Standard is a native Bitcoin-backed CDP protocol on Starknet:
 
 1. Native BTC collateral locked in Bitcoin OP_CAT vaults (`standard_vault`)
-2. Debt engine and stablecoin accounting on Starknet (`VaultRegistry`, `CDPCore`, `BTCUSDToken`)
+2. Debt engine and stablecoin accounting on Starknet (`VaultRegistry`, `CDPCore`, `BTSUSDToken`)
 3. Savings vault module on Starknet (`BTSSavingsVault`)
 
 The prior wBTC-first CDP stack is now considered legacy/replaced.
@@ -20,7 +20,7 @@ The prior wBTC-first CDP stack is now considered legacy/replaced.
 Bitcoin L1 (OP_CAT Vault UTXO)
   -> deposit txid + sats
   -> registered on Starknet (VaultRegistry)
-  -> debt minted on Starknet (CDPCore -> BTCUSDToken)
+  -> debt minted on Starknet (CDPCore -> BTSUSDToken)
   -> health factor driven by oracle price + volatility
   -> repay path: close vault
   -> liquidation path: mark liquidated + trigger covenant flow on Bitcoin
@@ -48,7 +48,7 @@ Savings (separate module):
 
 - `VaultRegistry.cairo` implemented and deployed
 - `CDPCore.cairo` implemented and deployed
-- `BTCUSDToken.cairo` implemented and deployed
+- `BTSUSDToken.cairo` implemented and deployed
 - `MockOracle.cairo` deployed and wired as active oracle
 - Access wiring complete:
   - registry `set_cdp_core`
@@ -69,11 +69,13 @@ Savings (separate module):
   - complete native vault UX polish (registration guidance, risk messaging, lifecycle clarity)
   - expand component-level tests for key flows
 
-### 4) Oracle Service (`packages/oracle-service`) - Partial
+### 4) Oracle Service (`packages/oracle-service`) - Done
 
-- Service can fetch BTC price/volatility from CoinGecko and push to MockOracle on Starknet
-- Scheduling/cron flow implemented
-- Not yet a full Bitcoin vault watcher/attestation signer
+- Fetches BTC price/volatility from CoinGecko and pushes to MockOracle on Starknet
+- Scheduling/cron flow implemented (price: 5 min, volatility: 60 min, health: 2 min)
+- Monitors vault health factors on CDPCore; signs LIQUIDATION and REPAYMENT_CLEARED attestations
+- Monitors Bitcoin UTXOs via configured outpoints
+- Auto-liquidate mode available (disabled by default)
 
 ---
 
@@ -83,7 +85,7 @@ Savings (separate module):
   `0x0147864dd4a1c9849cbdaea58c22cdc36fe42a66c1102bc02ec4668932937bae`
 - `CDPCore`:
   `0x070985a3cf9817e50a90bc2d3550f77d64f8a9bebc71577172295682f9580879`
-- `BTCUSDToken`:
+- `BTSUSDToken`:
   `0x075690645b6e49811b87ec11bbffb3f25aa6b00cb8070a9459983135e39cb2cd`
 - `MockOracle`:
   `0x04ed3d329fffa670f2a728444a9b53d0cae859a4397adfbde1622e0303041f14`
@@ -107,6 +109,6 @@ Keep them for historical traceability only.
 
 ## Next Priorities
 
-1. Complete oracle watcher/attestation behavior for native vault lifecycle events
-2. Finalize frontend UX around txid registration and liquidation risk communication
-3. Add/repair frontend automated tests to cover borrow/register/repay critical path
+1. Finalize frontend UX polish (lifecycle status rail, quick action defaults, advanced toggle)
+2. Add/repair frontend automated tests to cover borrow/register/repay critical path
+3. Switch from MockOracle to Pragma oracle for production

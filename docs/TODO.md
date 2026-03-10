@@ -1,6 +1,6 @@
 # BTCStandard Protocol — TODO
 
-Last updated: 2026-03-04
+Last updated: 2026-03-10
 
 > **Architecture pivot:** migrated from wBTC-on-Starknet to native Bitcoin OP_CAT vaults.
 > Real BTC locked on Bitcoin via OP_CAT covenant | debt tracked on Starknet | oracle bridge via Chainlink CRE.
@@ -29,7 +29,7 @@ Last updated: 2026-03-04
 
 ---
 
-## Phase 2: Native Bitcoin Vault (OP_CAT) 🔥 IN PROGRESS
+## Phase 2: Native Bitcoin Vault (OP_CAT) ✅ COMPLETE
 
 ### 2a. Rust Vault — standard_vault ✅ DONE
 
@@ -52,7 +52,7 @@ Last updated: 2026-03-04
 
 - [x] Write VaultRegistry.cairo (maps btc_txid → position owner + amount) ✅
 - [x] Write CDPCore.cairo (debt tracking, health factor, liquidation trigger) ✅
-- [x] Write BTCUSDToken.cairo (replaces btsusd_token; mint/burn gated to CDPCore) ✅
+- [x] Write BTSUSDToken.cairo (replaces btsusd_token; mint/burn gated to CDPCore) ✅
 - [x] Rewrite interfaces.cairo — purged 467 lines of wBTC CDP cruft, 0 external trust assumptions ✅
 - [x] Purge Phase 1 wBTC contracts — 8 contracts + 5 test files deleted (~3,100 LOC removed) ✅
 - [x] `scarb build` → 0 errors ✅
@@ -61,9 +61,9 @@ Last updated: 2026-03-04
 - [x] `snforge test` → 59 passed, 0 failed ✅
 - [x] Deploy PragmaOracle to Sepolia ✅ `0x013e2be818f9fd0d0747159bf0e1201b6e698cc1c0744f2dd4d375eca29b5a69`
 - [x] Deploy VaultRegistry to Sepolia ✅ `0x0147864dd4a1c9849cbdaea58c22cdc36fe42a66c1102bc02ec4668932937bae`
-- [x] Deploy BTCUSDToken to Sepolia ✅ `0x075690645b6e49811b87ec11bbffb3f25aa6b00cb8070a9459983135e39cb2cd`
+- [x] Deploy BTSUSDToken to Sepolia ✅ `0x075690645b6e49811b87ec11bbffb3f25aa6b00cb8070a9459983135e39cb2cd`
 - [x] Deploy CDPCore to Sepolia ✅ `0x070985a3cf9817e50a90bc2d3550f77d64f8a9bebc71577172295682f9580879`
-- [x] Configure CDPCore → BTCUSDToken mint authority ✅ (set_vault)
+- [x] Configure CDPCore → BTSUSDToken mint authority ✅ (set_vault)
 - [x] Configure VaultRegistry → CDPCore ✅ (set_cdp_core)
 - [x] Verify PragmaOracle live price ✅ BTC/USD = $112,165.39 (stale — Sepolia testnet)
 - [x] Deploy MockOracle to Sepolia ✅ `0x04ed3d329fffa670f2a728444a9b53d0cae859a4397adfbde1622e0303041f14`
@@ -84,7 +84,7 @@ Last updated: 2026-03-04
 - [x] Rewrite useCDP hook (register vault by btc_txid, not deposit collateral)
 - [x] Build RegisterVaultModal (user pastes btc_txid after on-chain deposit)
 - [x] Update Borrow page: show vault status, debt, health factor
-- [x] Add mint/repay BTCUSD flow
+- [x] Add mint/repay BTSUSD flow
 - [x] Remove wBTC collateral deposit UI
 - [x] Show oracle public key + vault Taproot address during deposit flow
 - [x] Health factor warnings + liquidation risk display
@@ -95,7 +95,7 @@ Last updated: 2026-03-04
 ## Phase 3: Multi-Vault Savings (DEFERRED)
 
 - [ ] Deploy BTSSavingsFactory to Sepolia
-- [ ] Deploy sBTCUSD vault
+- [ ] Deploy sBTSUSD vault
 - [ ] Deploy sSTRK vault
 - [ ] Update dashboard to show all vaults
 - [ ] SavingsVaultIntents + ALM Planner relayer
@@ -107,7 +107,7 @@ Last updated: 2026-03-04
 ```
 1. run: just deposit          → creates Taproot UTXO on Bitcoin regtest, prints txid
 2. UI:  Register Vault        → paste txid into Starknet frontend
-3. UI:  Mint BTCUSD           → CDPCore mints stablecoin against BTC collateral
+3. UI:  Mint BTSUSD           → CDPCore mints stablecoin against BTC collateral
 4. CRE: price drop simulation → health factor < 1.0 → CRE signs liquidate_tx
 5. run: just liquidate        → OP_CAT covenant sends BTC to liquidation pool
 6. UI:  Show solvency         → protocol TVL, total debt, health factors
@@ -124,7 +124,7 @@ Last updated: 2026-03-04
 | MockWBTC | `0x0455bfec3f128001fd0fc6c7c243a5a446d93aa813a6d76d1a26002f27093fa0` | Live (legacy) |
 | BTSSavingsVault | `0x01286e3af345995555c0248f6ab32c3a10ac1a882343730de9400ea07f1714c0` | Live ✅ |
 | MockOracle | `0x03d86bc966d124fce2c7fdec8ccbb5af4e429ecafa7e97b84b14b98812d5ab6e` | Legacy |
-| BTSUSDToken | `0x065b99291375dd031316a50f44718ba6f7582802cbae093f9327e1dd1ddc94ce` | Legacy → rename BTCUSDToken |
+| BTSUSDToken | `0x065b99291375dd031316a50f44718ba6f7582802cbae093f9327e1dd1ddc94ce` | Legacy |
 | MockYieldManager | `0x0478fbd0abaa32a8fe551ef1699dea2c64e61e837ad7092ebee383ce58d2dbdf` | Replaced |
 | BTSUSDVault | `0x071d1fb34337cb55478cc2784bbc9aa905eae7d670f4267f60dc0c9ee2ac0040` | Replaced |
 | Liquidator | `0x02fc386dc1b2642510048dc42428aef88a3c4a5b8660ce6c41f98263eb07670f` | Replaced |
@@ -132,7 +132,7 @@ Last updated: 2026-03-04
 | MockOracle | `0x04ed3d329fffa670f2a728444a9b53d0cae859a4397adfbde1622e0303041f14` | Live ✅ $69,407 |
 | VaultRegistry | `0x0147864dd4a1c9849cbdaea58c22cdc36fe42a66c1102bc02ec4668932937bae` | Live ✅ |
 | CDPCore | `0x070985a3cf9817e50a90bc2d3550f77d64f8a9bebc71577172295682f9580879` | Live ✅ |
-| BTCUSDToken | `0x075690645b6e49811b87ec11bbffb3f25aa6b00cb8070a9459983135e39cb2cd` | Live ✅ |
+| BTSUSDToken (active) | `0x075690645b6e49811b87ec11bbffb3f25aa6b00cb8070a9459983135e39cb2cd` | Live ✅ |
 
 ---
 
@@ -170,7 +170,7 @@ cd packages/nextjs && yarn dev
 Reference plan: `UX_STORY_PLAN.md`
 
 - [ ] Unify one-line promise across homepage, README, and demo script
-- [ ] Implement 3-step narrative everywhere: Lock BTC → Mint BTCUSD → Repay/Liquidate
+- [ ] Implement 3-step narrative everywhere: Lock BTC → Mint BTSUSD → Repay/Liquidate
 - [ ] Add lifecycle status rail with chain labels + proof links
 - [ ] Replace abstract flow with fixed numeric demo scenarios
 - [ ] Add quick action defaults (safe max mint, repay 25/50/100)
