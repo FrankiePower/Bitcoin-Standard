@@ -652,7 +652,10 @@ export default function BorrowPage() {
       const braavos = (window as any).starknet_braavos;
       if (braavos) {
         const accounts = await braavos.enable();
-        if (accounts?.[0]) { setBraavosAddress(accounts[0]); return false; }
+        if (accounts?.[0]) {
+          setBraavosAddress(accounts[0]);
+          return false;
+        }
       }
       await connectToStarknetSepolia();
       return false;
@@ -678,7 +681,14 @@ export default function BorrowPage() {
       setError(e?.message ?? "Registration failed");
       return false;
     }
-  }, [isConnected, connectToStarknetSepolia, regTxid, regBTCSats, cdp, address]);
+  }, [
+    isConnected,
+    connectToStarknetSepolia,
+    regTxid,
+    regBTCSats,
+    cdp,
+    address,
+  ]);
 
   const handleMint = useCallback(async () => {
     setError("");
@@ -911,19 +921,21 @@ export default function BorrowPage() {
               </div>
             </div>
           </div>
-          {isConnected && chain?.id && BigInt(chain.id) !== targetNetwork.id && (
-            <div className="mt-2 flex items-center justify-between rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2">
-              <p className="text-xs text-amber-700">
-                Connected to the wrong Starknet network.
-              </p>
-              <button
-                onClick={() => void connectToStarknetSepolia()}
-                className="rounded-md border border-amber-600/40 bg-amber-500/20 px-2.5 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-500/30"
-              >
-                Switch to {targetNetwork.name}
-              </button>
-            </div>
-          )}
+          {isConnected &&
+            chain?.id &&
+            BigInt(chain.id) !== targetNetwork.id && (
+              <div className="mt-2 flex items-center justify-between rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2">
+                <p className="text-xs text-amber-700">
+                  Connected to the wrong Starknet network.
+                </p>
+                <button
+                  onClick={() => void connectToStarknetSepolia()}
+                  className="rounded-md border border-amber-600/40 bg-amber-500/20 px-2.5 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-500/30"
+                >
+                  Switch to {targetNetwork.name}
+                </button>
+              </div>
+            )}
           {operatorMessage && (
             <p className="mt-2 text-xs text-emerald-600">{operatorMessage}</p>
           )}

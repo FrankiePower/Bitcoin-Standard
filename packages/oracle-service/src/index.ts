@@ -134,8 +134,13 @@ async function updateVolatility() {
 
     const txHash = await pushBTCVolatility(volatility);
     console.log(`[${ts}] ✅ set_btc_volatility → ${txHash}`);
-  } catch (err) {
-    console.error(`[${ts}] ❌ Volatility update failed:`, err);
+  } catch (err: any) {
+    const msg = err?.message ?? String(err);
+    if (msg.includes("DuplicateNonce")) {
+      console.log(`[${ts}] ℹ Volatility tx already pending — skipping duplicate`);
+    } else {
+      console.error(`[${ts}] ❌ Volatility update failed:`, err);
+    }
   }
 }
 

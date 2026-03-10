@@ -56,11 +56,13 @@ export interface UseNativeCDPOptions {
 
 /** Get the active Starknet wallet account — supports Braavos, Xverse, or any SNIP-6 wallet. */
 async function getStarknetAccount() {
-  const w = (window as any);
+  const w = window as any;
   const wallet = w.starknet_braavos ?? w.starknet_xverse ?? w.starknet;
-  if (!wallet) throw new Error("No Starknet wallet found. Install Braavos or Xverse.");
+  if (!wallet)
+    throw new Error("No Starknet wallet found. Install Braavos or Xverse.");
   await wallet.enable();
-  if (!wallet.account) throw new Error("Wallet account unavailable after enable().");
+  if (!wallet.account)
+    throw new Error("Wallet account unavailable after enable().");
   return wallet.account;
 }
 
@@ -191,11 +193,10 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
   const protocolStats = useMemo(() => {
     if (!protocolStatsRaw) return { totalBTC: BigInt(0), totalDebt: BigInt(0) };
     const raw = protocolStatsRaw as any;
-    if (Array.isArray(raw)) {
-      return {
-        totalBTC: parseU256(raw[0]),
-        totalDebt: parseU256(raw[1]),
-      };
+    const el0 = Array.isArray(raw) ? raw[0] : (raw[0] ?? raw["0"]);
+    const el1 = Array.isArray(raw) ? raw[1] : (raw[1] ?? raw["1"]);
+    if (el0 !== undefined) {
+      return { totalBTC: parseU256(el0), totalDebt: parseU256(el1 ?? 0) };
     }
     return { totalBTC: BigInt(0), totalDebt: BigInt(0) };
   }, [protocolStatsRaw]);
@@ -227,8 +228,10 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
   const position = useMemo(() => {
     if (!positionRaw) return { btcSats: BigInt(0), debtBTSUSD: BigInt(0) };
     const raw = positionRaw as any;
-    if (Array.isArray(raw)) {
-      return { btcSats: parseU256(raw[0]), debtBTSUSD: parseU256(raw[1]) };
+    const el0 = Array.isArray(raw) ? raw[0] : (raw[0] ?? raw["0"]);
+    const el1 = Array.isArray(raw) ? raw[1] : (raw[1] ?? raw["1"]);
+    if (el0 !== undefined) {
+      return { btcSats: parseU256(el0), debtBTSUSD: parseU256(el1 ?? 0) };
     }
     return { btcSats: BigInt(0), debtBTSUSD: BigInt(0) };
   }, [positionRaw]);
@@ -298,7 +301,9 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
         const account = await getStarknetAccount();
         const { transaction_hash } = await account.execute([call]);
         notification.remove(notifId);
-        notification.success(`Vault registered! Tx: ${transaction_hash.slice(0, 10)}…`);
+        notification.success(
+          `Vault registered! Tx: ${transaction_hash.slice(0, 10)}…`,
+        );
       } finally {
         setIsRegistering(false);
         setIsPending(false);
@@ -331,7 +336,9 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
         const account = await getStarknetAccount();
         const { transaction_hash } = await account.execute([call]);
         notification.remove(notifId);
-        notification.success(`BTSUSD minted! Tx: ${transaction_hash.slice(0, 10)}…`);
+        notification.success(
+          `BTSUSD minted! Tx: ${transaction_hash.slice(0, 10)}…`,
+        );
       } finally {
         setIsMinting(false);
         setIsPending(false);
@@ -364,7 +371,9 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
         const account = await getStarknetAccount();
         const { transaction_hash } = await account.execute([call]);
         notification.remove(notifId);
-        notification.success(`Debt repaid! Tx: ${transaction_hash.slice(0, 10)}…`);
+        notification.success(
+          `Debt repaid! Tx: ${transaction_hash.slice(0, 10)}…`,
+        );
       } finally {
         setIsRepaying(false);
         setIsPending(false);
