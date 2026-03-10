@@ -1,6 +1,6 @@
 "use client";
 
-import { useAccount } from "@starknet-react/core";
+import { useAccount } from "~~/hooks/useAccount";
 import { DashboardLayout } from "~~/components/layout/dashboard-layout";
 import { Info, ExternalLink, Loader2 } from "lucide-react";
 import React, { useState } from "react";

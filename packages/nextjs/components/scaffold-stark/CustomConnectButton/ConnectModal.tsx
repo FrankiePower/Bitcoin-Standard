@@ -1,23 +1,37 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useConnect, useDisconnect } from "@starknet-react/core";
 import { useXverseStore } from "~~/services/store/xverseStore";
+import { useAccount } from "~~/hooks/useAccount";
 
 const ConnectModal = () => {
   const modalRef = useRef<HTMLInputElement>(null);
+
+  // Xverse (Bitcoin + Starknet)
   const {
     btcAddress,
-    starknetAddress,
+    starknetAddress: xverseStarknetAddress,
     bitcoinNetwork,
-    status,
+    status: xverseStatus,
     btcBalance,
-    connect,
+    connect: connectXverse,
     connectToLocalRegtest,
     connectToStarknetSepolia,
-    disconnect,
+    disconnect: disconnectXverse,
     hydrate,
   } = useXverseStore();
-  const isConnected = status === "connected";
-  const isConnecting = status === "connecting";
+
+  // Braavos / starknet-react
+  const { connectors, connect: connectStarknet } = useConnect();
+  const { disconnect: disconnectStarknet } = useDisconnect();
+  const { status, address } = useAccount();
+
+  const braavosConnector = connectors.find((c) => c.id === "braavos");
+
+  const isXverseConnected = xverseStatus === "connected";
+  const isXverseConnecting = xverseStatus === "connecting";
+  const isBraavosConnected = status === "connected" && !isXverseConnected;
+  const isConnected = isXverseConnected || isBraavosConnected;
 
   useEffect(() => {
     hydrate();
@@ -27,13 +41,19 @@ const ConnectModal = () => {
     if (modalRef.current) modalRef.current.checked = false;
   };
 
-  const displayAddress = starknetAddress ?? btcAddress;
-  const buttonLabel =
-    isConnected && displayAddress
-      ? `${displayAddress.slice(0, 4)}...${displayAddress.slice(-4)}`
-      : isConnecting
-        ? "Connecting..."
-        : "Connect Wallet";
+  const handleDisconnect = async () => {
+    if (isXverseConnected) await disconnectXverse();
+    else disconnectStarknet();
+    handleCloseModal();
+  };
+
+  // Button label: prefer starknet address, fall back to btc address
+  const displayAddress = xverseStarknetAddress ?? address ?? btcAddress;
+  const buttonLabel = isConnected && displayAddress
+    ? `${displayAddress.slice(0, 4)}...${displayAddress.slice(-4)}`
+    : isXverseConnecting
+      ? "Connecting..."
+      : "Connect Wallet";
 
   return (
     <div>
@@ -46,7 +66,7 @@ const ConnectModal = () => {
             : "linear-gradient(135deg, #f97316 0%, #fb923c 100%)",
         }}
       >
-        {isConnected && btcBalance !== null && (
+        {isXverseConnected && btcBalance !== null && (
           <span className="text-white/90 text-[13px] font-mono">
             {btcBalance.toFixed(4)} BTC
           </span>
@@ -81,7 +101,7 @@ const ConnectModal = () => {
                     ✕
                   </label>
                   <h2 className="text-2xl font-black text-orange-500 mb-1">
-                    BTSUSD
+                    Bitcoin Standard
                   </h2>
                   <p className="text-neutral-400 text-sm">
                     Connect Your Wallet
@@ -91,80 +111,118 @@ const ConnectModal = () => {
                 <div className="p-6">
                   {isConnected ? (
                     <div className="flex flex-col gap-4">
-                      {btcAddress && (
-                        <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <p className="text-neutral-400 text-xs">
-                              Bitcoin Wallet
-                            </p>
-                            <div className="flex items-center gap-2">
-                              {btcBalance !== null && (
-                                <span className="text-xs font-mono text-orange-400">
-                                  {btcBalance.toFixed(4)} BTC
-                                </span>
-                              )}
-                              {bitcoinNetwork && (
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400">
-                                  {bitcoinNetwork}
-                                </span>
-                              )}
+                      {/* Xverse connected state */}
+                      {isXverseConnected && (
+                        <>
+                          {btcAddress && (
+                            <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <p className="text-neutral-400 text-xs">
+                                  Bitcoin · Xverse
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  {btcBalance !== null && (
+                                    <span className="text-xs font-mono text-orange-400">
+                                      {btcBalance.toFixed(4)} BTC
+                                    </span>
+                                  )}
+                                  {bitcoinNetwork && (
+                                    <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400">
+                                      {bitcoinNetwork}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <p className="text-white text-xs font-mono break-all">
+                                {btcAddress}
+                              </p>
                             </div>
-                          </div>
-                          <p className="text-white text-xs font-mono break-all">
-                            {btcAddress}
-                          </p>
-                        </div>
+                          )}
+                          {xverseStarknetAddress && (
+                            <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5">
+                              <p className="text-neutral-400 text-xs mb-1">
+                                Starknet · Xverse
+                              </p>
+                              <p className="text-white text-xs font-mono break-all">
+                                {xverseStarknetAddress}
+                              </p>
+                            </div>
+                          )}
+                          <button
+                            onClick={connectToLocalRegtest}
+                            className="w-full py-2.5 rounded-lg text-[13px] font-semibold text-orange-400 bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/20 transition-all"
+                          >
+                            Switch to Local Regtest
+                          </button>
+                          <button
+                            onClick={connectToStarknetSepolia}
+                            className="w-full py-2.5 rounded-lg text-[13px] font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition-all"
+                          >
+                            Switch to Starknet Sepolia
+                          </button>
+                        </>
                       )}
-                      {starknetAddress && (
+
+                      {/* Braavos connected state */}
+                      {isBraavosConnected && address && (
                         <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5">
                           <p className="text-neutral-400 text-xs mb-1">
-                            Starknet
+                            Starknet · Braavos
                           </p>
                           <p className="text-white text-xs font-mono break-all">
-                            {starknetAddress}
+                            {address}
                           </p>
                         </div>
                       )}
+
                       <button
-                        onClick={connectToLocalRegtest}
-                        className="w-full py-2.5 rounded-lg text-[13px] font-semibold text-orange-400 bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/20 transition-all"
-                      >
-                        Switch to Local Regtest
-                      </button>
-                      <button
-                        onClick={connectToStarknetSepolia}
-                        className="w-full py-2.5 rounded-lg text-[13px] font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition-all"
-                      >
-                        Switch to Starknet Sepolia
-                      </button>
-                      <button
-                        onClick={() => {
-                          disconnect();
-                          handleCloseModal();
-                        }}
+                        onClick={handleDisconnect}
                         className="w-full py-3 rounded-lg text-[15px] font-semibold text-red-400 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all"
                       >
                         Disconnect
                       </button>
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3">
                       <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5">
                         <p className="text-neutral-400 text-[13px] leading-relaxed">
-                          Connect your Xverse wallet to use the Bitcoin Standard
-                          protocol.
+                          Connect Xverse for full access (Bitcoin + Starknet),
+                          or Braavos for Starknet only.
                         </p>
                       </div>
+
+                      {/* Xverse — Bitcoin + Starknet */}
                       <button
                         onClick={async () => {
-                          await connect();
+                          await connectXverse();
                           handleCloseModal();
                         }}
-                        disabled={isConnecting}
-                        className="w-full py-3 rounded-lg text-[15px] font-semibold text-white bg-orange-500 hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        disabled={isXverseConnecting}
+                        className="w-full py-3 rounded-lg text-[15px] font-semibold text-white bg-orange-500 hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                       >
-                        {isConnecting ? "Connecting..." : "Connect Xverse"}
+                        <span className="text-[13px] opacity-70">₿</span>
+                        {isXverseConnecting ? "Connecting..." : "Connect Xverse"}
+                        <span className="ml-auto text-[11px] opacity-60">
+                          BTC + Starknet
+                        </span>
                       </button>
+
+                      {/* Braavos — Starknet only */}
+                      {braavosConnector && (
+                        <button
+                          onClick={() => {
+                            connectStarknet({ connector: braavosConnector });
+                            handleCloseModal();
+                          }}
+                          className="w-full py-3 rounded-lg text-[15px] font-semibold text-white bg-[#7c3aed] hover:bg-[#6d28d9] transition-all flex items-center justify-center gap-2"
+                        >
+                          <span className="text-[13px] opacity-70">⬡</span>
+                          Connect Braavos
+                          <span className="ml-auto text-[11px] opacity-60">
+                            Starknet only
+                          </span>
+                        </button>
+                      )}
                     </div>
                   )}
                   <div className="mt-6 text-center">

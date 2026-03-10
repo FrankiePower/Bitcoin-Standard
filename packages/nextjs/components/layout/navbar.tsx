@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useAccount, useDisconnect } from "@starknet-react/core";
+import { useDisconnect } from "@starknet-react/core";
+import { useAccount } from "~~/hooks/useAccount";
 import { LogOut, Menu, TrendingUp, Sparkles } from "lucide-react";
 import { CustomConnectButton } from "~~/components/scaffold-stark/CustomConnectButton";
 

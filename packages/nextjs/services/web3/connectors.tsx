@@ -17,7 +17,8 @@ function withDisconnectWrapper(connector: InjectedConnector) {
 
 function getConnectors() {
   const xverse = new InjectedConnector({ options: { id: "xverse" } });
-  return [withDisconnectWrapper(xverse)];
+  const braavos = new InjectedConnector({ options: { id: "braavos" } });
+  return [withDisconnectWrapper(xverse), withDisconnectWrapper(braavos)];
 }
 
 export const appChains = getTargetNetworks();
