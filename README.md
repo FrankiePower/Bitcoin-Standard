@@ -141,7 +141,7 @@ All script logic is in [`standard_vault/src/vault/script.rs`](standard_vault/src
 | **CDPCore** | `0x070985a3cf9817e50a90bc2d3550f77d64f8a9bebc71577172295682f9580879` | [View](https://sepolia.starkscan.co/contract/0x070985a3cf9817e50a90bc2d3550f77d64f8a9bebc71577172295682f9580879) |
 | **BTSUSDToken** | `0x075690645b6e49811b87ec11bbffb3f25aa6b00cb8070a9459983135e39cb2cd` | [View](https://sepolia.starkscan.co/contract/0x075690645b6e49811b87ec11bbffb3f25aa6b00cb8070a9459983135e39cb2cd) |
 | **MockOracle** | `0x04ed3d329fffa670f2a728444a9b53d0cae859a4397adfbde1622e0303041f14` | [View](https://sepolia.starkscan.co/contract/0x04ed3d329fffa670f2a728444a9b53d0cae859a4397adfbde1622e0303041f14) |
-| **BTSSavingsVault** | `0x01286e3af345995555c0248f6ab32c3a10ac1a882343730de9400ea07f1714c0` | [View](https://sepolia.starkscan.co/contract/0x01286e3af345995555c0248f6ab32c3a10ac1a882343730de9400ea07f1714c0) |
+| **BTSSavingsVault** | `0x4784a0040cabef8d70a84fd32ebd65d78f96077997af7204fbc103c9ae9b2cd` | [View](https://sepolia.starkscan.co/contract/0x4784a0040cabef8d70a84fd32ebd65d78f96077997af7204fbc103c9ae9b2cd) |
 
 ---
 
@@ -192,7 +192,6 @@ Bitcoin-Standard/
 ├── docs/
 │   ├── ARCHITECTURE.md          # Deep-dive protocol architecture
 │   ├── TODO.md                  # Feature tracker + deployed addresses
-│   ├── PROGRESS.md              # Build status by component
 │   └── UX_STORY_PLAN.md         # UX narrative and polish plan
 └── README.md                    # This file
 ```
@@ -297,14 +296,19 @@ yarn next:lint        → pass (0 warnings)
 
 ## Comparison
 
-| | Bitcoin Standard | Wrapped-BTC CDPs | Payment-Relay / Oracle Systems |
+> "If the bridge is exploited or the contract is hacked, users lose their BTC. Their 'BTC-backed' claim is only as strong as the bridge."
+
+| | **Bitcoin Standard** | **Wrapped-BTC CDPs** (Uncap, Opus, etc.) | **Cross-chain relay models** |
 |---|---|---|---|
-| BTC collateral location | Bitcoin L1 (OP_CAT vault) | Bridge / multisig custody | N/A — no real BTC locking |
-| Bridge custody risk | None | High | N/A |
-| Liquidation enforcement | Bitcoin consensus (OP_CAT) | Smart contract only | N/A |
-| Stablecoin chain | Starknet | Ethereum / L2 | Various |
-| Oracle trust | Keypair in Tapscript | External price feed | Central relay |
-| Emergency recovery | CSV timelock (Leaf C) | Contract-only | Varies |
+| Where BTC lives | Bitcoin L1 — OP_CAT covenant vault | Bridge multisig or custodian | Off-chain / payment channel |
+| Bridge custody risk | **None** | High — bridge exploit = total loss | Medium |
+| Who can steal collateral | Nobody — script is immutable at deposit | Bridge operators / contract admins | Relay operators |
+| Liquidation enforcement | **Bitcoin consensus** via OP_CAT | Smart contract call on EVM/L2 | Off-chain agreement |
+| Oracle compromise impact | Can trigger liquidation, **cannot redirect funds** | Can trigger liquidation + redirect | Full fund loss |
+| Emergency recovery | **CSV timelock** (Leaf C) — no oracle needed | Contract admin function | Provider-dependent |
+| Stablecoin chain | Starknet | Ethereum / Starknet | Various |
+| Trust assumption | Bitcoin script + Starknet contracts | Bridge multisig **+** contracts | Relay operator |
+| Proof of solvency | On-chain public view functions | Varies | Rarely available |
 
 ---
 
@@ -326,8 +330,7 @@ yarn next:lint        → pass (0 warnings)
 - [x] Frontend — register, mint, repay, health factor display
 - [x] BTSSavingsVault — ERC-4626 savings module
 - [x] End-to-end regtest demo (deposit → repay, deposit → liquidate, deposit → timeout)
-- [ ] Switch MockOracle → Pragma live price feed
-- [ ] Signet / mainnet deployment (requires OP_CAT activation)
+- [ ] Signet / mainnet deployment (requires OP_CAT network activation, BIP-347)
 - [ ] Merkle-batched bridge for higher throughput
 - [ ] Multi-vault aggregation
 

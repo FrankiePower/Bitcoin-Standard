@@ -381,6 +381,146 @@ function RegisterVaultModal({
   );
 }
 
+// ─── Lifecycle Status Rail ─────────────────────────────────────────────────────
+
+function LifecycleRail({
+  activeTxid,
+  vaultInfo,
+  debtBTSUSD,
+  healthFactor,
+  hfStatus,
+}: {
+  activeTxid: string;
+  vaultInfo: ReturnType<typeof useNativeCDP>["vaultInfo"];
+  debtBTSUSD: bigint;
+  healthFactor: bigint;
+  hfStatus: string;
+}) {
+  const btcDeposited = !!activeTxid;
+  const registered = !!vaultInfo;
+  const hasMinted = debtBTSUSD > BigInt(0);
+  const isClosed =
+    vaultInfo?.state === "Repaid" || vaultInfo?.state === "Liquidated";
+
+  const steps = [
+    {
+      label: "BTC Deposited",
+      chain: "Bitcoin" as const,
+      done: btcDeposited,
+      active: !btcDeposited,
+      detail: activeTxid
+        ? `${activeTxid.slice(0, 6)}…${activeTxid.slice(-4)}`
+        : undefined,
+    },
+    {
+      label: "Vault Registered",
+      chain: "Starknet" as const,
+      done: registered,
+      active: btcDeposited && !registered,
+      detail: undefined,
+    },
+    {
+      label: "Debt Minted",
+      chain: "Starknet" as const,
+      done: hasMinted,
+      active: registered && !hasMinted && !isClosed,
+      detail: undefined,
+    },
+    {
+      label:
+        hasMinted && !isClosed
+          ? hfStatus === "safe"
+            ? "Healthy"
+            : hfStatus === "warn"
+              ? "At Risk"
+              : "Liquidatable"
+          : "Health",
+      chain: "Starknet" as const,
+      done: hasMinted && hfStatus === "safe" && !isClosed,
+      active: hasMinted && !isClosed && hfStatus !== "safe",
+      detail: hasMinted ? `HF: ${formatHealthFactor(healthFactor)}` : undefined,
+    },
+    {
+      label: isClosed ? (vaultInfo?.state ?? "Closed") : "Repaid",
+      chain: "Bitcoin" as const,
+      done: isClosed,
+      active: false,
+      detail: undefined,
+    },
+  ];
+
+  const completedLinks = Math.max(
+    0,
+    steps.filter((s) => s.done).length - 1,
+  );
+
+  return (
+    <div className="rounded-xl border border-neutral-200 bg-white px-4 pt-4 pb-5 shadow-sm">
+      <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-400 mb-4">
+        Vault Lifecycle
+      </div>
+      <div className="relative">
+        {/* Background track */}
+        <div className="absolute left-[10%] right-[10%] top-3.5 h-0.5 bg-neutral-200" />
+        {/* Progress fill */}
+        <div
+          className="absolute left-[10%] top-3.5 h-0.5 bg-emerald-400 transition-all duration-500"
+          style={{ width: `${completedLinks * 20}%` }}
+        />
+        {/* Steps */}
+        <div className="relative flex justify-between">
+          {steps.map((step, i) => (
+            <div
+              key={i}
+              className="flex flex-col items-center"
+              style={{ width: "20%" }}
+            >
+              <div
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-[11px] font-bold transition-colors ${
+                  step.done
+                    ? "border-emerald-500 bg-emerald-500 text-white"
+                    : step.active
+                      ? "border-orange-500 bg-orange-50 text-orange-500"
+                      : "border-neutral-300 bg-white text-neutral-400"
+                }`}
+              >
+                {step.done ? "✓" : i + 1}
+              </div>
+              <div className="mt-2 text-center px-0.5">
+                <div
+                  className={`text-[11px] font-semibold leading-tight ${
+                    step.done
+                      ? "text-emerald-600"
+                      : step.active
+                        ? "text-orange-600"
+                        : "text-neutral-400"
+                  }`}
+                >
+                  {step.label}
+                </div>
+                <span
+                  className={`mt-0.5 inline-block rounded-full px-1.5 py-0.5 text-[9px] font-medium ${
+                    step.chain === "Bitcoin"
+                      ? "bg-orange-100 text-orange-600"
+                      : "bg-purple-100 text-purple-600"
+                  }`}
+                >
+                  {step.chain}
+                </span>
+                {step.detail && (
+                  <div className="mt-0.5 font-mono text-[10px] text-neutral-400 truncate max-w-[64px] mx-auto">
+                    {step.detail}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 type Tab = "register" | "mint" | "repay";
@@ -796,6 +936,15 @@ export default function BorrowPage() {
         {/* BTC market strip */}
         <BTCMarketBanner />
 
+        {/* Lifecycle rail */}
+        <LifecycleRail
+          activeTxid={activeTxid}
+          vaultInfo={cdp.vaultInfo}
+          debtBTSUSD={cdp.position.debtBTSUSD}
+          healthFactor={cdp.healthFactor}
+          hfStatus={cdp.hfStatus}
+        />
+
         {/* Protocol stats */}
         <div className="grid grid-cols-3 gap-3">
           {[
@@ -1186,21 +1335,38 @@ export default function BorrowPage() {
                       </span>
                     )}
                   </label>
-                  <button
-                    onClick={() =>
-                      setMintAmount(
-                        cdp.maxMintable > BigInt(0)
-                          ? (Number(cdp.maxMintable) / 1e18).toFixed(2)
-                          : "",
-                      )
-                    }
-                    className="text-xs text-orange-600 hover:text-orange-500"
-                  >
-                    Max:{" "}
-                    {cdp.maxMintable > BigInt(0)
-                      ? `${(Number(cdp.maxMintable) / 1e18).toLocaleString(undefined, { maximumFractionDigits: 2 })} BTSUSD`
-                      : "—"}
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() =>
+                        setMintAmount(
+                          cdp.maxMintable > BigInt(0)
+                            ? (
+                                (Number(cdp.maxMintable) / 1e18) *
+                                0.75
+                              ).toFixed(2)
+                            : "",
+                        )
+                      }
+                      className="rounded px-1.5 py-0.5 text-[11px] font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
+                    >
+                      Safe 75%
+                    </button>
+                    <button
+                      onClick={() =>
+                        setMintAmount(
+                          cdp.maxMintable > BigInt(0)
+                            ? (Number(cdp.maxMintable) / 1e18).toFixed(2)
+                            : "",
+                        )
+                      }
+                      className="text-xs text-orange-600 hover:text-orange-500"
+                    >
+                      Max:{" "}
+                      {cdp.maxMintable > BigInt(0)
+                        ? `${(Number(cdp.maxMintable) / 1e18).toLocaleString(undefined, { maximumFractionDigits: 2 })} BTSUSD`
+                        : "—"}
+                    </button>
+                  </div>
                 </div>
                 <div className="relative">
                   <input
@@ -1322,22 +1488,34 @@ export default function BorrowPage() {
                   <label className="text-xs font-medium text-neutral-700">
                     Amount
                   </label>
-                  <button
-                    onClick={() => {
-                      const maxRepay =
-                        cdp.position.debtBTSUSD < cdp.btsusdBalance
-                          ? cdp.position.debtBTSUSD
-                          : cdp.btsusdBalance;
-                      setRepayAmount(
-                        maxRepay > BigInt(0)
-                          ? (Number(maxRepay) / 1e18).toFixed(2)
-                          : "",
-                      );
-                    }}
-                    className="text-xs text-orange-600 hover:text-orange-500"
-                  >
-                    Max
-                  </button>
+                  <div className="flex items-center gap-1">
+                    {[
+                      { label: "25%", pct: 0.25 },
+                      { label: "50%", pct: 0.5 },
+                      { label: "Full", pct: 1 },
+                    ].map(({ label, pct }) => (
+                      <button
+                        key={label}
+                        onClick={() => {
+                          const maxRepay =
+                            cdp.position.debtBTSUSD < cdp.btsusdBalance
+                              ? cdp.position.debtBTSUSD
+                              : cdp.btsusdBalance;
+                          setRepayAmount(
+                            maxRepay > BigInt(0)
+                              ? (
+                                  (Number(maxRepay) / 1e18) *
+                                  pct
+                                ).toFixed(2)
+                              : "",
+                          );
+                        }}
+                        className="rounded px-1.5 py-0.5 text-[11px] font-medium bg-neutral-100 text-neutral-600 hover:bg-neutral-200 border border-neutral-200"
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div className="relative">
                   <input
