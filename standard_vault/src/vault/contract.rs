@@ -284,8 +284,8 @@ impl VaultCovenant {
     /// script cryptographically enforces the single output goes to the liquidation pool —
     /// even a compromised oracle cannot redirect funds elsewhere.
     ///
-    /// This uses the same CAT+Schnorr sighash introspection trick as vault_cancel_withdrawal
-    /// in purrfect_vault. The witness encoding mirrors create_cancel_tx exactly, with:
+    /// This uses the same CAT+Schnorr sighash introspection trick for output enforcement.
+    /// The witness encoding mirrors the cancel-withdrawal pattern exactly, with:
     ///   - output to liquidation_pool_address (not vault itself)
     ///   - oracle_keypair for signing (not vault keypair)
     pub(crate) fn create_liquidate_tx(
