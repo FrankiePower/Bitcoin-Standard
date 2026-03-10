@@ -882,19 +882,21 @@ export default function BorrowPage() {
           </div>
           <ul className="space-y-1 text-xs text-neutral-600">
             <li>
-              1. Create a regtest BTC signer in the panel below and fund it on
-              your local node.
+              1. Run{" "}
+              <code className="text-neutral-800">make start-bitcoind</code> in{" "}
+              <code className="text-neutral-800">standard_vault/</code> and start the oracle service.
             </li>
             <li>
-              2. Run <code className="text-neutral-800">just deposit</code> in{" "}
-              <code className="text-neutral-800">standard_vault/</code>.
+              2. Connect your Xverse wallet (top-right), then enter a BTC amount
+              in the Deposit tab and sign with Xverse.
             </li>
             <li>
-              3. Register txid + BTC amount with your connected Starknet wallet.
+              3. The deposit txid auto-populates — click Register Vault on
+              Starknet to link it to your account.
             </li>
             <li>4. Mint BTSUSD and keep health factor above 100.</li>
             <li>
-              5. Bridge endpoint:{" "}
+              5. BTC proxy:{" "}
               <code className="text-neutral-800">
                 {bridgeStatus?.bridgeUrl || "http://127.0.0.1:4040"}
               </code>
@@ -1435,13 +1437,13 @@ export default function BorrowPage() {
           <ol className="space-y-1 text-xs text-neutral-600">
             <li>
               <span className="text-neutral-800">1.</span>{" "}
-              <code className="text-orange-300">just deposit</code> in{" "}
+              <code className="text-orange-600">make deposit</code> in{" "}
               <code className="text-neutral-800">standard_vault/</code> →
-              creates OP_CAT UTXO, prints txid
+              locks BTC in OP_CAT vault, prints txid
             </li>
             <li>
               <span className="text-neutral-800">2.</span> Paste txid + amount
-              above → Register Vault on Starknet
+              → Register Vault on Starknet (CDPCore)
             </li>
             <li>
               <span className="text-neutral-800">3.</span> Mint BTSUSD
@@ -1449,13 +1451,13 @@ export default function BorrowPage() {
             </li>
             <li>
               <span className="text-neutral-800">4.</span> To repay:{" "}
-              <code className="text-orange-300">just repay &lt;addr&gt;</code>{" "}
-              on Bitcoin + Repay Debt here
+              <code className="text-orange-600">make repay &lt;addr&gt;</code>{" "}
+              in terminal + Repay Debt here
             </li>
             <li>
               <span className="text-neutral-800">5.</span> Liquidation: oracle
               detects HF &lt; 100 →{" "}
-              <code className="text-orange-300">just liquidate</code> triggers
+              <code className="text-orange-600">make liquidate</code> triggers
               OP_CAT covenant
             </li>
           </ol>

@@ -244,8 +244,12 @@ export const useXverseStore = create<XverseWalletState>((set, get) => ({
 
       const result = response.result as any;
       const addresses: any[] = result.addresses ?? result.addressses ?? [];
-      const paymentAccount = addresses.find((a: any) => a.purpose === "payment");
-      const starknetAccount = addresses.find((a: any) => a.purpose === "starknet");
+      const paymentAccount = addresses.find(
+        (a: any) => a.purpose === "payment",
+      );
+      const starknetAccount = addresses.find(
+        (a: any) => a.purpose === "starknet",
+      );
 
       if (!paymentAccount) {
         toast.error("Xverse did not return a payment address");
@@ -262,7 +266,9 @@ export const useXverseStore = create<XverseWalletState>((set, get) => ({
       localStorage.setItem("xverse_bitcoin_network", bitcoinNetwork);
 
       set({ btcAddress, starknetAddress, bitcoinNetwork, status: "connected" });
-      toast.success(`Starknet Sepolia connected${starknetAddress ? ` — ${starknetAddress.slice(0, 10)}...` : ""}`);
+      toast.success(
+        `Starknet Sepolia connected${starknetAddress ? ` — ${starknetAddress.slice(0, 10)}...` : ""}`,
+      );
       void get().refreshBalances();
     } catch (err: any) {
       toast.error(err?.message || "Failed to switch to Starknet Sepolia");
