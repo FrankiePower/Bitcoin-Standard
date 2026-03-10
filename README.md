@@ -2,11 +2,6 @@
 
 **Lock real BTC on Bitcoin. Mint BTSUSD on Starknet. Collateral enforced by Bitcoin consensus.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Cairo](https://img.shields.io/badge/Cairo-2.12-orange.svg)](https://docs.starknet.io/documentation/architecture_and_concepts/Cairo_on_Starknet/)
-[![Rust](https://img.shields.io/badge/Rust-1.75-red.svg)](https://www.rust-lang.org/)
-[![Tests](https://img.shields.io/badge/snforge-60%20passed-brightgreen.svg)](packages/snfoundry/contracts)
-
 ## Overview
 
 Bitcoin Standard is a **native Bitcoin-backed CDP (Collateralized Debt Position) protocol** built on Starknet. Unlike wrapped-BTC approaches, collateral never leaves Bitcoin — it is locked in **OP_CAT covenant Taproot vaults** directly on Bitcoin L1, while debt accounting and the stablecoin live on Starknet.
