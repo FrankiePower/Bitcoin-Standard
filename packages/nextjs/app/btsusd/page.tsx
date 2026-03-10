@@ -30,17 +30,17 @@ export default function SavingsPage() {
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [depositAmount, setDepositAmount] = useState("");
 
-  // Format TVL for display (assuming 8 decimals for wBTC)
-  const formattedTVL = formatTokenAmount(totalAssets, 8, 4);
-  const formattedUserBalance = formatTokenAmount(userAssets, 8, 4);
+  // Format TVL for display (18 decimals for BTSUSD)
+  const formattedTVL = formatTokenAmount(totalAssets, 18, 2);
+  const formattedUserBalance = formatTokenAmount(userAssets, 18, 2);
   const formattedDepositCap =
-    depositCap > 0 ? formatTokenAmount(depositCap, 8, 2) : "Unlimited";
+    depositCap > 0 ? formatTokenAmount(depositCap, 18, 2) : "Unlimited";
 
   // Handle deposit
   const handleDeposit = async () => {
     if (!depositAmount || isDepositing) return;
     try {
-      const amount = BigInt(Math.floor(parseFloat(depositAmount) * 1e8)); // Convert to 8 decimals
+      const amount = BigInt(Math.floor(parseFloat(depositAmount) * 1e18)); // Convert to 18 decimals
       await deposit(amount);
       setDepositAmount("");
       setShowDepositModal(false);
@@ -60,7 +60,7 @@ export default function SavingsPage() {
         <div className="flex items-center gap-4 text-[13px] font-medium text-neutral-600 bg-white/50 backdrop-blur px-5 py-2.5 rounded-full border border-black/5 shadow-sm">
           <span>
             TVL:{" "}
-            <strong className="text-black ml-1">{formattedTVL} wBTC</strong>
+            <strong className="text-black ml-1">{formattedTVL} BTSUSD</strong>
           </span>
           <span className="w-[1px] h-3 bg-neutral-300"></span>
           <span>
@@ -92,22 +92,16 @@ export default function SavingsPage() {
 
           {[
             {
-              symbol: "sWBTC",
-              name: "Savings wBTC",
+              id: "sbtsusd-live",
+              symbol: "sBTSUSD",
+              name: "Savings BTSUSD",
               apy: `${apy.toFixed(2)}%`,
               icon: "/bitcoin-btc-logo.svg",
               active: true,
               deployed: true,
             },
             {
-              symbol: "sBTSUSD",
-              name: "Savings BTSUSD",
-              apy: "4.00%",
-              icon: "/bitcoin-btc-logo.svg",
-              active: false,
-              deployed: false,
-            },
-            {
+              id: "sstrk-soon",
               symbol: "sSTRK",
               name: "Savings STRK",
               apy: "3.20%",
@@ -117,7 +111,7 @@ export default function SavingsPage() {
             },
           ].map((asset) => (
             <div
-              key={asset.symbol}
+              key={asset.id}
               className={`flex items-center justify-between p-4 rounded-[16px] cursor-pointer transition-all ${
                 asset.active
                   ? "bg-white border-[1.5px] border-emerald-500 shadow-sm"
@@ -165,7 +159,7 @@ export default function SavingsPage() {
                 Your Position
               </div>
               <div className="text-[24px] font-bold text-emerald-800">
-                {formattedUserBalance} wBTC
+                {formattedUserBalance} BTSUSD
               </div>
               <div className="text-[12px] text-emerald-600 mt-1">
                 {formatTokenAmount(userShares, 18, 4)} shares
@@ -243,7 +237,7 @@ export default function SavingsPage() {
               </div>
 
               <p className="text-neutral-400 text-[15px] leading-relaxed mb-10 max-w-[440px]">
-                Deposit wBTC, BTSUSD, or STRK into the Savings Vault to earn
+                Deposit BTSUSD, or STRK into the Savings Vault to earn
                 yield. Your shares automatically appreciate as the vault
                 accumulates returns through the VSR (Vault Savings Rate)
                 mechanism.{" "}
@@ -263,7 +257,7 @@ export default function SavingsPage() {
                   }}
                 >
                   {isDepositing && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {isConnected ? "Deposit wBTC" : "Connect Wallet"}
+                  {isConnected ? "Deposit BTSUSD" : "Connect Wallet"}
                 </button>
                 <button className="px-6 py-3.5 rounded-full text-[15px] font-semibold text-white bg-white/10 hover:bg-white/15 border border-white/10 transition-colors">
                   View Contract
@@ -287,7 +281,7 @@ export default function SavingsPage() {
                 Total Value Locked
               </div>
               <div className="text-[28px] font-bold text-black">
-                {formattedTVL} wBTC
+                {formattedTVL} BTSUSD
               </div>
             </div>
             <div className="bg-white border border-neutral-100 rounded-[16px] p-5 shadow-sm">
@@ -330,20 +324,20 @@ export default function SavingsPage() {
                           <div className="w-8 h-8 rounded-full bg-[#f97316] flex items-center justify-center p-1.5 shrink-0">
                             <Image
                               src="/bitcoin-btc-logo.svg"
-                              alt="sWBTC"
+                              alt="sBTSUSD"
                               width={20}
                               height={20}
                               className="w-full h-full object-contain"
                             />
                           </div>
                           <span className="font-bold text-[15px] text-black">
-                            sWBTC
+                            sBTSUSD
                           </span>
                         </div>
                       </td>
                       <td className="py-4 pr-4 text-right align-middle">
                         <span className="font-medium text-[15px] text-black">
-                          {formattedUserBalance} wBTC
+                          {formattedUserBalance} BTSUSD
                         </span>
                       </td>
                       <td className="py-4 pr-4 text-right align-middle">
@@ -382,7 +376,7 @@ export default function SavingsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-[24px] p-8 w-full max-w-md shadow-2xl">
             <h3 className="text-[24px] font-bold text-black mb-6">
-              Deposit wBTC
+              Deposit BTSUSD
             </h3>
 
             <div className="mb-6">
@@ -398,7 +392,7 @@ export default function SavingsPage() {
                   className="w-full px-4 py-3 pr-20 border border-neutral-200 rounded-[12px] text-[18px] font-medium focus:outline-none focus:border-emerald-500"
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[14px] font-medium text-neutral-500">
-                  wBTC
+                  BTSUSD
                 </span>
               </div>
             </div>

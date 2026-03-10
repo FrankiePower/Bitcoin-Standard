@@ -704,16 +704,6 @@ export default function BorrowPage() {
       setError("Amount exceeds maximum mintable at current MCR");
       return;
     }
-    if (
-      cdp.vaultInfo?.owner &&
-      address &&
-      cdp.vaultInfo.owner.toLowerCase() !== address.toLowerCase()
-    ) {
-      setError(
-        "Connected Starknet wallet is not the registered owner of this vault.",
-      );
-      return;
-    }
     try {
       await cdp.mintDebt(activeTxid, mintAmountBigInt);
       setMintAmount("");
@@ -734,16 +724,6 @@ export default function BorrowPage() {
     }
     if (repayAmountBigInt > cdp.position.debtBTSUSD) {
       setError("Amount exceeds outstanding debt");
-      return;
-    }
-    if (
-      cdp.vaultInfo?.owner &&
-      address &&
-      cdp.vaultInfo.owner.toLowerCase() !== address.toLowerCase()
-    ) {
-      setError(
-        "Connected Starknet wallet is not the registered owner of this vault.",
-      );
       return;
     }
     try {

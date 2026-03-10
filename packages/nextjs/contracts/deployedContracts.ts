@@ -4,33 +4,15 @@
  */
 
 const deployedContracts = {
-  devnet: {
-    YourContract: {
+  sepolia: {
+    BTSSavingsVault: {
       address:
-        "0x1923d7a1a6c39c69ad8da2359053d9d2afe92fe476af97963387f36471c4d9b",
+        "0x4784a0040cabef8d70a84fd32ebd65d78f96077997af7204fbc103c9ae9b2cd",
       abi: [
         {
           type: "impl",
-          name: "YourContractImpl",
-          interface_name: "contracts::your_contract::IYourContract",
-        },
-        {
-          type: "struct",
-          name: "core::byte_array::ByteArray",
-          members: [
-            {
-              name: "data",
-              type: "core::array::Array::<core::bytes_31::bytes31>",
-            },
-            {
-              name: "pending_word",
-              type: "core::felt252",
-            },
-            {
-              name: "pending_word_len",
-              type: "core::integer::u32",
-            },
-          ],
+          name: "BTSSavingsVaultImpl",
+          interface_name: "contracts::savings::interfaces::IBTSSavingsVault",
         },
         {
           type: "struct",
@@ -47,676 +29,41 @@ const deployedContracts = {
           ],
         },
         {
-          type: "enum",
-          name: "core::option::Option::<core::integer::u256>",
-          variants: [
-            {
-              name: "Some",
-              type: "core::integer::u256",
-            },
-            {
-              name: "None",
-              type: "()",
-            },
-          ],
-        },
-        {
-          type: "enum",
-          name: "core::bool",
-          variants: [
-            {
-              name: "False",
-              type: "()",
-            },
-            {
-              name: "True",
-              type: "()",
-            },
-          ],
-        },
-        {
-          type: "interface",
-          name: "contracts::your_contract::IYourContract",
-          items: [
-            {
-              type: "function",
-              name: "greeting",
-              inputs: [],
-              outputs: [
-                {
-                  type: "core::byte_array::ByteArray",
-                },
-              ],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "set_greeting",
-              inputs: [
-                {
-                  name: "new_greeting",
-                  type: "core::byte_array::ByteArray",
-                },
-                {
-                  name: "amount_strk",
-                  type: "core::option::Option::<core::integer::u256>",
-                },
-              ],
-              outputs: [],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "withdraw",
-              inputs: [],
-              outputs: [],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "premium",
-              inputs: [],
-              outputs: [
-                {
-                  type: "core::bool",
-                },
-              ],
-              state_mutability: "view",
-            },
-          ],
-        },
-        {
-          type: "impl",
-          name: "OwnableImpl",
-          interface_name: "openzeppelin_access::ownable::interface::IOwnable",
-        },
-        {
-          type: "interface",
-          name: "openzeppelin_access::ownable::interface::IOwnable",
-          items: [
-            {
-              type: "function",
-              name: "owner",
-              inputs: [],
-              outputs: [
-                {
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-              ],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "transfer_ownership",
-              inputs: [
-                {
-                  name: "new_owner",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-              ],
-              outputs: [],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "renounce_ownership",
-              inputs: [],
-              outputs: [],
-              state_mutability: "external",
-            },
-          ],
-        },
-        {
-          type: "constructor",
-          name: "constructor",
-          inputs: [
-            {
-              name: "owner",
-              type: "core::starknet::contract_address::ContractAddress",
-            },
-          ],
-        },
-        {
-          type: "event",
-          name: "openzeppelin_access::ownable::ownable::OwnableComponent::OwnershipTransferred",
-          kind: "struct",
-          members: [
-            {
-              name: "previous_owner",
-              type: "core::starknet::contract_address::ContractAddress",
-              kind: "key",
-            },
-            {
-              name: "new_owner",
-              type: "core::starknet::contract_address::ContractAddress",
-              kind: "key",
-            },
-          ],
-        },
-        {
-          type: "event",
-          name: "openzeppelin_access::ownable::ownable::OwnableComponent::OwnershipTransferStarted",
-          kind: "struct",
-          members: [
-            {
-              name: "previous_owner",
-              type: "core::starknet::contract_address::ContractAddress",
-              kind: "key",
-            },
-            {
-              name: "new_owner",
-              type: "core::starknet::contract_address::ContractAddress",
-              kind: "key",
-            },
-          ],
-        },
-        {
-          type: "event",
-          name: "openzeppelin_access::ownable::ownable::OwnableComponent::Event",
-          kind: "enum",
-          variants: [
-            {
-              name: "OwnershipTransferred",
-              type: "openzeppelin_access::ownable::ownable::OwnableComponent::OwnershipTransferred",
-              kind: "nested",
-            },
-            {
-              name: "OwnershipTransferStarted",
-              type: "openzeppelin_access::ownable::ownable::OwnableComponent::OwnershipTransferStarted",
-              kind: "nested",
-            },
-          ],
-        },
-        {
-          type: "event",
-          name: "contracts::your_contract::YourContract::GreetingChanged",
-          kind: "struct",
-          members: [
-            {
-              name: "greeting_setter",
-              type: "core::starknet::contract_address::ContractAddress",
-              kind: "key",
-            },
-            {
-              name: "new_greeting",
-              type: "core::byte_array::ByteArray",
-              kind: "key",
-            },
-            {
-              name: "premium",
-              type: "core::bool",
-              kind: "data",
-            },
-            {
-              name: "value",
-              type: "core::option::Option::<core::integer::u256>",
-              kind: "data",
-            },
-          ],
-        },
-        {
-          type: "event",
-          name: "contracts::your_contract::YourContract::Event",
-          kind: "enum",
-          variants: [
-            {
-              name: "OwnableEvent",
-              type: "openzeppelin_access::ownable::ownable::OwnableComponent::Event",
-              kind: "flat",
-            },
-            {
-              name: "GreetingChanged",
-              type: "contracts::your_contract::YourContract::GreetingChanged",
-              kind: "nested",
-            },
-          ],
-        },
-      ],
-      classHash:
-        "0x73e64394744804c476eb7a4ad56902d49e77565ad413e6a34726b4914cc4d1b",
-    },
-  },
-  sepolia: {
-    MockWBTC: {
-      address:
-        "0x0455bfec3f128001fd0fc6c7c243a5a446d93aa813a6d76d1a26002f27093fa0",
-      abi: [
-        {
-          type: "impl",
-          name: "MockWBTCImpl",
-          interface_name: "contracts::mock_wbtc::IMockWBTC",
-        },
-        {
-          type: "struct",
-          name: "core::integer::u256",
-          members: [
-            { name: "low", type: "core::integer::u128" },
-            { name: "high", type: "core::integer::u128" },
-          ],
-        },
-        {
-          type: "interface",
-          name: "contracts::mock_wbtc::IMockWBTC",
-          items: [
-            {
-              type: "function",
-              name: "mint",
-              inputs: [
-                {
-                  name: "to",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-                { name: "amount", type: "core::integer::u256" },
-              ],
-              outputs: [],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "burn",
-              inputs: [
-                {
-                  name: "from",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-                { name: "amount", type: "core::integer::u256" },
-              ],
-              outputs: [],
-              state_mutability: "external",
-            },
-          ],
-        },
-        {
-          type: "impl",
-          name: "ERC20MixinImpl",
-          interface_name: "openzeppelin_token::erc20::interface::IERC20Mixin",
-        },
-        {
-          type: "enum",
-          name: "core::bool",
-          variants: [
-            { name: "False", type: "()" },
-            { name: "True", type: "()" },
-          ],
-        },
-        {
-          type: "struct",
-          name: "core::byte_array::ByteArray",
-          members: [
-            {
-              name: "data",
-              type: "core::array::Array::<core::bytes_31::bytes31>",
-            },
-            { name: "pending_word", type: "core::felt252" },
-            {
-              name: "pending_word_len",
-              type: "core::internal::bounded_int::BoundedInt::<0, 30>",
-            },
-          ],
-        },
-        {
-          type: "interface",
-          name: "openzeppelin_token::erc20::interface::IERC20Mixin",
-          items: [
-            {
-              type: "function",
-              name: "total_supply",
-              inputs: [],
-              outputs: [{ type: "core::integer::u256" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "balance_of",
-              inputs: [
-                {
-                  name: "account",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-              ],
-              outputs: [{ type: "core::integer::u256" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "allowance",
-              inputs: [
-                {
-                  name: "owner",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-                {
-                  name: "spender",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-              ],
-              outputs: [{ type: "core::integer::u256" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "transfer",
-              inputs: [
-                {
-                  name: "recipient",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-                { name: "amount", type: "core::integer::u256" },
-              ],
-              outputs: [{ type: "core::bool" }],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "transfer_from",
-              inputs: [
-                {
-                  name: "sender",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-                {
-                  name: "recipient",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-                { name: "amount", type: "core::integer::u256" },
-              ],
-              outputs: [{ type: "core::bool" }],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "approve",
-              inputs: [
-                {
-                  name: "spender",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-                { name: "amount", type: "core::integer::u256" },
-              ],
-              outputs: [{ type: "core::bool" }],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "name",
-              inputs: [],
-              outputs: [{ type: "core::byte_array::ByteArray" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "symbol",
-              inputs: [],
-              outputs: [{ type: "core::byte_array::ByteArray" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "decimals",
-              inputs: [],
-              outputs: [{ type: "core::integer::u8" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "totalSupply",
-              inputs: [],
-              outputs: [{ type: "core::integer::u256" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "balanceOf",
-              inputs: [
-                {
-                  name: "account",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-              ],
-              outputs: [{ type: "core::integer::u256" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "transferFrom",
-              inputs: [
-                {
-                  name: "sender",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-                {
-                  name: "recipient",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-                { name: "amount", type: "core::integer::u256" },
-              ],
-              outputs: [{ type: "core::bool" }],
-              state_mutability: "external",
-            },
-          ],
-        },
-        {
-          type: "impl",
-          name: "OwnableMixinImpl",
-          interface_name: "openzeppelin_access::ownable::interface::OwnableABI",
-        },
-        {
-          type: "interface",
-          name: "openzeppelin_access::ownable::interface::OwnableABI",
-          items: [
-            {
-              type: "function",
-              name: "owner",
-              inputs: [],
-              outputs: [
-                { type: "core::starknet::contract_address::ContractAddress" },
-              ],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "transfer_ownership",
-              inputs: [
-                {
-                  name: "new_owner",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-              ],
-              outputs: [],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "renounce_ownership",
-              inputs: [],
-              outputs: [],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "transferOwnership",
-              inputs: [
-                {
-                  name: "newOwner",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-              ],
-              outputs: [],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "renounceOwnership",
-              inputs: [],
-              outputs: [],
-              state_mutability: "external",
-            },
-          ],
-        },
-        {
-          type: "constructor",
-          name: "constructor",
-          inputs: [
-            {
-              name: "owner",
-              type: "core::starknet::contract_address::ContractAddress",
-            },
-          ],
-        },
-        {
-          type: "event",
-          name: "openzeppelin_token::erc20::erc20::ERC20Component::Transfer",
-          kind: "struct",
-          members: [
-            {
-              name: "from",
-              type: "core::starknet::contract_address::ContractAddress",
-              kind: "key",
-            },
-            {
-              name: "to",
-              type: "core::starknet::contract_address::ContractAddress",
-              kind: "key",
-            },
-            { name: "value", type: "core::integer::u256", kind: "data" },
-          ],
-        },
-        {
-          type: "event",
-          name: "openzeppelin_token::erc20::erc20::ERC20Component::Approval",
-          kind: "struct",
-          members: [
-            {
-              name: "owner",
-              type: "core::starknet::contract_address::ContractAddress",
-              kind: "key",
-            },
-            {
-              name: "spender",
-              type: "core::starknet::contract_address::ContractAddress",
-              kind: "key",
-            },
-            { name: "value", type: "core::integer::u256", kind: "data" },
-          ],
-        },
-        {
-          type: "event",
-          name: "openzeppelin_token::erc20::erc20::ERC20Component::Event",
-          kind: "enum",
-          variants: [
-            {
-              name: "Transfer",
-              type: "openzeppelin_token::erc20::erc20::ERC20Component::Transfer",
-              kind: "nested",
-            },
-            {
-              name: "Approval",
-              type: "openzeppelin_token::erc20::erc20::ERC20Component::Approval",
-              kind: "nested",
-            },
-          ],
-        },
-        {
-          type: "event",
-          name: "openzeppelin_access::ownable::ownable::OwnableComponent::OwnershipTransferred",
-          kind: "struct",
-          members: [
-            {
-              name: "previous_owner",
-              type: "core::starknet::contract_address::ContractAddress",
-              kind: "key",
-            },
-            {
-              name: "new_owner",
-              type: "core::starknet::contract_address::ContractAddress",
-              kind: "key",
-            },
-          ],
-        },
-        {
-          type: "event",
-          name: "openzeppelin_access::ownable::ownable::OwnableComponent::OwnershipTransferStarted",
-          kind: "struct",
-          members: [
-            {
-              name: "previous_owner",
-              type: "core::starknet::contract_address::ContractAddress",
-              kind: "key",
-            },
-            {
-              name: "new_owner",
-              type: "core::starknet::contract_address::ContractAddress",
-              kind: "key",
-            },
-          ],
-        },
-        {
-          type: "event",
-          name: "openzeppelin_access::ownable::ownable::OwnableComponent::Event",
-          kind: "enum",
-          variants: [
-            {
-              name: "OwnershipTransferred",
-              type: "openzeppelin_access::ownable::ownable::OwnableComponent::OwnershipTransferred",
-              kind: "nested",
-            },
-            {
-              name: "OwnershipTransferStarted",
-              type: "openzeppelin_access::ownable::ownable::OwnableComponent::OwnershipTransferStarted",
-              kind: "nested",
-            },
-          ],
-        },
-        {
-          type: "event",
-          name: "contracts::mock_wbtc::MockWBTC::Event",
-          kind: "enum",
-          variants: [
-            {
-              name: "ERC20Event",
-              type: "openzeppelin_token::erc20::erc20::ERC20Component::Event",
-              kind: "flat",
-            },
-            {
-              name: "OwnableEvent",
-              type: "openzeppelin_access::ownable::ownable::OwnableComponent::Event",
-              kind: "flat",
-            },
-          ],
-        },
-      ],
-      classHash:
-        "0x467ff1f2e6c0af8b5b5c50322b951d36f5751201b8052f89a475d824520db29",
-    },
-    BTSSavingsVault: {
-      address:
-        "0x01286e3af345995555c0248f6ab32c3a10ac1a882343730de9400ea07f1714c0",
-      abi: [
-        {
-          type: "impl",
-          name: "BTSSavingsVaultImpl",
-          interface_name: "contracts::savings::interfaces::IBTSSavingsVault",
-        },
-        {
-          type: "struct",
-          name: "core::integer::u256",
-          members: [
-            { name: "low", type: "core::integer::u128" },
-            { name: "high", type: "core::integer::u128" },
-          ],
-        },
-        {
           type: "struct",
           name: "contracts::savings::interfaces::VaultStats",
           members: [
-            { name: "total_assets", type: "core::integer::u256" },
-            { name: "total_shares", type: "core::integer::u256" },
-            { name: "chi", type: "core::integer::u256" },
-            { name: "vsr", type: "core::integer::u256" },
-            { name: "idle_assets", type: "core::integer::u256" },
-            { name: "assets_outstanding", type: "core::integer::u256" },
-            { name: "depositor_count", type: "core::integer::u256" },
-            { name: "deposit_cap", type: "core::integer::u256" },
+            {
+              name: "total_assets",
+              type: "core::integer::u256",
+            },
+            {
+              name: "total_shares",
+              type: "core::integer::u256",
+            },
+            {
+              name: "chi",
+              type: "core::integer::u256",
+            },
+            {
+              name: "vsr",
+              type: "core::integer::u256",
+            },
+            {
+              name: "idle_assets",
+              type: "core::integer::u256",
+            },
+            {
+              name: "assets_outstanding",
+              type: "core::integer::u256",
+            },
+            {
+              name: "depositor_count",
+              type: "core::integer::u256",
+            },
+            {
+              name: "deposit_cap",
+              type: "core::integer::u256",
+            },
           ],
         },
         {
@@ -728,7 +75,9 @@ const deployedContracts = {
               name: "asset",
               inputs: [],
               outputs: [
-                { type: "core::starknet::contract_address::ContractAddress" },
+                {
+                  type: "core::starknet::contract_address::ContractAddress",
+                },
               ],
               state_mutability: "view",
             },
@@ -736,27 +85,41 @@ const deployedContracts = {
               type: "function",
               name: "total_assets",
               inputs: [],
-              outputs: [{ type: "core::integer::u256" }],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
               type: "function",
               name: "deposit",
               inputs: [
-                { name: "assets", type: "core::integer::u256" },
+                {
+                  name: "assets",
+                  type: "core::integer::u256",
+                },
                 {
                   name: "receiver",
                   type: "core::starknet::contract_address::ContractAddress",
                 },
               ],
-              outputs: [{ type: "core::integer::u256" }],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "external",
             },
             {
               type: "function",
               name: "withdraw",
               inputs: [
-                { name: "assets", type: "core::integer::u256" },
+                {
+                  name: "assets",
+                  type: "core::integer::u256",
+                },
                 {
                   name: "receiver",
                   type: "core::starknet::contract_address::ContractAddress",
@@ -766,27 +129,41 @@ const deployedContracts = {
                   type: "core::starknet::contract_address::ContractAddress",
                 },
               ],
-              outputs: [{ type: "core::integer::u256" }],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "external",
             },
             {
               type: "function",
               name: "mint_shares",
               inputs: [
-                { name: "shares", type: "core::integer::u256" },
+                {
+                  name: "shares",
+                  type: "core::integer::u256",
+                },
                 {
                   name: "receiver",
                   type: "core::starknet::contract_address::ContractAddress",
                 },
               ],
-              outputs: [{ type: "core::integer::u256" }],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "external",
             },
             {
               type: "function",
               name: "redeem",
               inputs: [
-                { name: "shares", type: "core::integer::u256" },
+                {
+                  name: "shares",
+                  type: "core::integer::u256",
+                },
                 {
                   name: "receiver",
                   type: "core::starknet::contract_address::ContractAddress",
@@ -796,21 +173,43 @@ const deployedContracts = {
                   type: "core::starknet::contract_address::ContractAddress",
                 },
               ],
-              outputs: [{ type: "core::integer::u256" }],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "external",
             },
             {
               type: "function",
               name: "convert_to_shares",
-              inputs: [{ name: "assets", type: "core::integer::u256" }],
-              outputs: [{ type: "core::integer::u256" }],
+              inputs: [
+                {
+                  name: "assets",
+                  type: "core::integer::u256",
+                },
+              ],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
               type: "function",
               name: "convert_to_assets",
-              inputs: [{ name: "shares", type: "core::integer::u256" }],
-              outputs: [{ type: "core::integer::u256" }],
+              inputs: [
+                {
+                  name: "shares",
+                  type: "core::integer::u256",
+                },
+              ],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
@@ -822,7 +221,11 @@ const deployedContracts = {
                   type: "core::starknet::contract_address::ContractAddress",
                 },
               ],
-              outputs: [{ type: "core::integer::u256" }],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
@@ -834,7 +237,11 @@ const deployedContracts = {
                   type: "core::starknet::contract_address::ContractAddress",
                 },
               ],
-              outputs: [{ type: "core::integer::u256" }],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
@@ -846,7 +253,11 @@ const deployedContracts = {
                   type: "core::starknet::contract_address::ContractAddress",
                 },
               ],
-              outputs: [{ type: "core::integer::u256" }],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
@@ -858,42 +269,86 @@ const deployedContracts = {
                   type: "core::starknet::contract_address::ContractAddress",
                 },
               ],
-              outputs: [{ type: "core::integer::u256" }],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
               type: "function",
               name: "preview_deposit",
-              inputs: [{ name: "assets", type: "core::integer::u256" }],
-              outputs: [{ type: "core::integer::u256" }],
+              inputs: [
+                {
+                  name: "assets",
+                  type: "core::integer::u256",
+                },
+              ],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
               type: "function",
               name: "preview_mint",
-              inputs: [{ name: "shares", type: "core::integer::u256" }],
-              outputs: [{ type: "core::integer::u256" }],
+              inputs: [
+                {
+                  name: "shares",
+                  type: "core::integer::u256",
+                },
+              ],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
               type: "function",
               name: "preview_withdraw",
-              inputs: [{ name: "assets", type: "core::integer::u256" }],
-              outputs: [{ type: "core::integer::u256" }],
+              inputs: [
+                {
+                  name: "assets",
+                  type: "core::integer::u256",
+                },
+              ],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
               type: "function",
               name: "preview_redeem",
-              inputs: [{ name: "shares", type: "core::integer::u256" }],
-              outputs: [{ type: "core::integer::u256" }],
+              inputs: [
+                {
+                  name: "shares",
+                  type: "core::integer::u256",
+                },
+              ],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
               type: "function",
               name: "now_chi",
               inputs: [],
-              outputs: [{ type: "core::integer::u256" }],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
@@ -905,55 +360,89 @@ const deployedContracts = {
                   type: "core::starknet::contract_address::ContractAddress",
                 },
               ],
-              outputs: [{ type: "core::integer::u256" }],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
               type: "function",
               name: "assets_outstanding",
               inputs: [],
-              outputs: [{ type: "core::integer::u256" }],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
               type: "function",
               name: "get_vault_stats",
               inputs: [],
-              outputs: [{ type: "contracts::savings::interfaces::VaultStats" }],
+              outputs: [
+                {
+                  type: "contracts::savings::interfaces::VaultStats",
+                },
+              ],
               state_mutability: "view",
             },
             {
               type: "function",
               name: "get_vsr",
               inputs: [],
-              outputs: [{ type: "core::integer::u256" }],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
               type: "function",
               name: "get_rho",
               inputs: [],
-              outputs: [{ type: "core::integer::u64" }],
+              outputs: [
+                {
+                  type: "core::integer::u64",
+                },
+              ],
               state_mutability: "view",
             },
             {
               type: "function",
               name: "get_depositor_count",
               inputs: [],
-              outputs: [{ type: "core::integer::u256" }],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
               type: "function",
               name: "set_vsr",
-              inputs: [{ name: "new_vsr", type: "core::integer::u256" }],
+              inputs: [
+                {
+                  name: "new_vsr",
+                  type: "core::integer::u256",
+                },
+              ],
               outputs: [],
               state_mutability: "external",
             },
             {
               type: "function",
               name: "set_deposit_cap",
-              inputs: [{ name: "cap", type: "core::integer::u256" }],
+              inputs: [
+                {
+                  name: "cap",
+                  type: "core::integer::u256",
+                },
+              ],
               outputs: [],
               state_mutability: "external",
             },
@@ -982,8 +471,14 @@ const deployedContracts = {
           type: "enum",
           name: "core::bool",
           variants: [
-            { name: "False", type: "()" },
-            { name: "True", type: "()" },
+            {
+              name: "False",
+              type: "()",
+            },
+            {
+              name: "True",
+              type: "()",
+            },
           ],
         },
         {
@@ -994,7 +489,10 @@ const deployedContracts = {
               name: "data",
               type: "core::array::Array::<core::bytes_31::bytes31>",
             },
-            { name: "pending_word", type: "core::felt252" },
+            {
+              name: "pending_word",
+              type: "core::felt252",
+            },
             {
               name: "pending_word_len",
               type: "core::internal::bounded_int::BoundedInt::<0, 30>",
@@ -1009,7 +507,11 @@ const deployedContracts = {
               type: "function",
               name: "total_supply",
               inputs: [],
-              outputs: [{ type: "core::integer::u256" }],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
@@ -1021,7 +523,11 @@ const deployedContracts = {
                   type: "core::starknet::contract_address::ContractAddress",
                 },
               ],
-              outputs: [{ type: "core::integer::u256" }],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
@@ -1037,7 +543,11 @@ const deployedContracts = {
                   type: "core::starknet::contract_address::ContractAddress",
                 },
               ],
-              outputs: [{ type: "core::integer::u256" }],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
@@ -1048,9 +558,16 @@ const deployedContracts = {
                   name: "recipient",
                   type: "core::starknet::contract_address::ContractAddress",
                 },
-                { name: "amount", type: "core::integer::u256" },
+                {
+                  name: "amount",
+                  type: "core::integer::u256",
+                },
               ],
-              outputs: [{ type: "core::bool" }],
+              outputs: [
+                {
+                  type: "core::bool",
+                },
+              ],
               state_mutability: "external",
             },
             {
@@ -1065,9 +582,16 @@ const deployedContracts = {
                   name: "recipient",
                   type: "core::starknet::contract_address::ContractAddress",
                 },
-                { name: "amount", type: "core::integer::u256" },
+                {
+                  name: "amount",
+                  type: "core::integer::u256",
+                },
               ],
-              outputs: [{ type: "core::bool" }],
+              outputs: [
+                {
+                  type: "core::bool",
+                },
+              ],
               state_mutability: "external",
             },
             {
@@ -1078,37 +602,60 @@ const deployedContracts = {
                   name: "spender",
                   type: "core::starknet::contract_address::ContractAddress",
                 },
-                { name: "amount", type: "core::integer::u256" },
+                {
+                  name: "amount",
+                  type: "core::integer::u256",
+                },
               ],
-              outputs: [{ type: "core::bool" }],
+              outputs: [
+                {
+                  type: "core::bool",
+                },
+              ],
               state_mutability: "external",
             },
             {
               type: "function",
               name: "name",
               inputs: [],
-              outputs: [{ type: "core::byte_array::ByteArray" }],
+              outputs: [
+                {
+                  type: "core::byte_array::ByteArray",
+                },
+              ],
               state_mutability: "view",
             },
             {
               type: "function",
               name: "symbol",
               inputs: [],
-              outputs: [{ type: "core::byte_array::ByteArray" }],
+              outputs: [
+                {
+                  type: "core::byte_array::ByteArray",
+                },
+              ],
               state_mutability: "view",
             },
             {
               type: "function",
               name: "decimals",
               inputs: [],
-              outputs: [{ type: "core::integer::u8" }],
+              outputs: [
+                {
+                  type: "core::integer::u8",
+                },
+              ],
               state_mutability: "view",
             },
             {
               type: "function",
               name: "totalSupply",
               inputs: [],
-              outputs: [{ type: "core::integer::u256" }],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
@@ -1120,7 +667,11 @@ const deployedContracts = {
                   type: "core::starknet::contract_address::ContractAddress",
                 },
               ],
-              outputs: [{ type: "core::integer::u256" }],
+              outputs: [
+                {
+                  type: "core::integer::u256",
+                },
+              ],
               state_mutability: "view",
             },
             {
@@ -1135,9 +686,16 @@ const deployedContracts = {
                   name: "recipient",
                   type: "core::starknet::contract_address::ContractAddress",
                 },
-                { name: "amount", type: "core::integer::u256" },
+                {
+                  name: "amount",
+                  type: "core::integer::u256",
+                },
               ],
-              outputs: [{ type: "core::bool" }],
+              outputs: [
+                {
+                  type: "core::bool",
+                },
+              ],
               state_mutability: "external",
             },
           ],
@@ -1156,7 +714,9 @@ const deployedContracts = {
               name: "owner",
               inputs: [],
               outputs: [
-                { type: "core::starknet::contract_address::ContractAddress" },
+                {
+                  type: "core::starknet::contract_address::ContractAddress",
+                },
               ],
               state_mutability: "view",
             },
@@ -1212,9 +772,18 @@ const deployedContracts = {
               name: "asset",
               type: "core::starknet::contract_address::ContractAddress",
             },
-            { name: "name", type: "core::byte_array::ByteArray" },
-            { name: "symbol", type: "core::byte_array::ByteArray" },
-            { name: "initial_vsr", type: "core::integer::u256" },
+            {
+              name: "name",
+              type: "core::byte_array::ByteArray",
+            },
+            {
+              name: "symbol",
+              type: "core::byte_array::ByteArray",
+            },
+            {
+              name: "initial_vsr",
+              type: "core::integer::u256",
+            },
           ],
         },
         {
@@ -1232,7 +801,11 @@ const deployedContracts = {
               type: "core::starknet::contract_address::ContractAddress",
               kind: "key",
             },
-            { name: "value", type: "core::integer::u256", kind: "data" },
+            {
+              name: "value",
+              type: "core::integer::u256",
+              kind: "data",
+            },
           ],
         },
         {
@@ -1250,7 +823,11 @@ const deployedContracts = {
               type: "core::starknet::contract_address::ContractAddress",
               kind: "key",
             },
-            { name: "value", type: "core::integer::u256", kind: "data" },
+            {
+              name: "value",
+              type: "core::integer::u256",
+              kind: "data",
+            },
           ],
         },
         {
@@ -1383,8 +960,16 @@ const deployedContracts = {
               type: "core::starknet::contract_address::ContractAddress",
               kind: "key",
             },
-            { name: "assets", type: "core::integer::u256", kind: "data" },
-            { name: "shares", type: "core::integer::u256", kind: "data" },
+            {
+              name: "assets",
+              type: "core::integer::u256",
+              kind: "data",
+            },
+            {
+              name: "shares",
+              type: "core::integer::u256",
+              kind: "data",
+            },
           ],
         },
         {
@@ -1407,8 +992,16 @@ const deployedContracts = {
               type: "core::starknet::contract_address::ContractAddress",
               kind: "key",
             },
-            { name: "assets", type: "core::integer::u256", kind: "data" },
-            { name: "shares", type: "core::integer::u256", kind: "data" },
+            {
+              name: "assets",
+              type: "core::integer::u256",
+              kind: "data",
+            },
+            {
+              name: "shares",
+              type: "core::integer::u256",
+              kind: "data",
+            },
           ],
         },
         {
@@ -1416,8 +1009,16 @@ const deployedContracts = {
           name: "contracts::savings::savings_vault::BTSSavingsVault::VSRUpdated",
           kind: "struct",
           members: [
-            { name: "old_vsr", type: "core::integer::u256", kind: "data" },
-            { name: "new_vsr", type: "core::integer::u256", kind: "data" },
+            {
+              name: "old_vsr",
+              type: "core::integer::u256",
+              kind: "data",
+            },
+            {
+              name: "new_vsr",
+              type: "core::integer::u256",
+              kind: "data",
+            },
           ],
         },
         {
@@ -1425,8 +1026,16 @@ const deployedContracts = {
           name: "contracts::savings::savings_vault::BTSSavingsVault::DepositCapUpdated",
           kind: "struct",
           members: [
-            { name: "old_cap", type: "core::integer::u256", kind: "data" },
-            { name: "new_cap", type: "core::integer::u256", kind: "data" },
+            {
+              name: "old_cap",
+              type: "core::integer::u256",
+              kind: "data",
+            },
+            {
+              name: "new_cap",
+              type: "core::integer::u256",
+              kind: "data",
+            },
           ],
         },
         {
@@ -1479,744 +1088,6 @@ const deployedContracts = {
       ],
       classHash:
         "0x37727037538e6463f66c14eac97a03fde9ded944bc009cf0e8c4fa32eb2ccc2",
-    },
-    BTSUSDVault: {
-      address:
-        "0x071d1fb34337cb55478cc2784bbc9aa905eae7d670f4267f60dc0c9ee2ac0040",
-      abi: [
-        {
-          type: "impl",
-          name: "BTSUSDVaultImpl",
-          interface_name: "contracts::interfaces::IBTSUSDVault",
-        },
-        {
-          type: "struct",
-          name: "core::integer::u256",
-          members: [
-            { name: "low", type: "core::integer::u128" },
-            { name: "high", type: "core::integer::u128" },
-          ],
-        },
-        {
-          type: "struct",
-          name: "contracts::interfaces::Position",
-          members: [
-            { name: "collateral", type: "core::integer::u256" },
-            { name: "debt", type: "core::integer::u256" },
-            { name: "last_update", type: "core::integer::u64" },
-          ],
-        },
-        {
-          type: "enum",
-          name: "core::bool",
-          variants: [
-            { name: "False", type: "()" },
-            { name: "True", type: "()" },
-          ],
-        },
-        {
-          type: "interface",
-          name: "contracts::interfaces::IBTSUSDVault",
-          items: [
-            {
-              type: "function",
-              name: "deposit_collateral",
-              inputs: [{ name: "amount", type: "core::integer::u256" }],
-              outputs: [],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "withdraw_collateral",
-              inputs: [{ name: "amount", type: "core::integer::u256" }],
-              outputs: [],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "mint_BTSUSD",
-              inputs: [{ name: "amount", type: "core::integer::u256" }],
-              outputs: [],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "burn_BTSUSD",
-              inputs: [{ name: "amount", type: "core::integer::u256" }],
-              outputs: [],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "deposit_and_mint",
-              inputs: [
-                { name: "collateral_amount", type: "core::integer::u256" },
-              ],
-              outputs: [{ type: "core::integer::u256" }],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "repay_and_withdraw",
-              inputs: [{ name: "BTSUSD_amount", type: "core::integer::u256" }],
-              outputs: [{ type: "core::integer::u256" }],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "get_position",
-              inputs: [
-                {
-                  name: "user",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-              ],
-              outputs: [{ type: "contracts::interfaces::Position" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "get_collateral_ratio",
-              inputs: [
-                {
-                  name: "user",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-              ],
-              outputs: [{ type: "core::integer::u256" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "get_health_factor",
-              inputs: [
-                {
-                  name: "user",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-              ],
-              outputs: [{ type: "core::integer::u256" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "is_liquidatable",
-              inputs: [
-                {
-                  name: "user",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-              ],
-              outputs: [{ type: "core::bool" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "get_max_mintable",
-              inputs: [
-                {
-                  name: "user",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-              ],
-              outputs: [{ type: "core::integer::u256" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "get_max_withdrawable",
-              inputs: [
-                {
-                  name: "user",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-              ],
-              outputs: [{ type: "core::integer::u256" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "get_protocol_stats",
-              inputs: [],
-              outputs: [{ type: "(core::integer::u256, core::integer::u256)" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "get_btc_price",
-              inputs: [],
-              outputs: [{ type: "core::integer::u256" }],
-              state_mutability: "view",
-            },
-          ],
-        },
-        {
-          type: "impl",
-          name: "OwnableMixinImpl",
-          interface_name: "openzeppelin_access::ownable::interface::OwnableABI",
-        },
-        {
-          type: "interface",
-          name: "openzeppelin_access::ownable::interface::OwnableABI",
-          items: [
-            {
-              type: "function",
-              name: "owner",
-              inputs: [],
-              outputs: [
-                { type: "core::starknet::contract_address::ContractAddress" },
-              ],
-              state_mutability: "view",
-            },
-          ],
-        },
-        {
-          type: "constructor",
-          name: "constructor",
-          inputs: [
-            {
-              name: "owner",
-              type: "core::starknet::contract_address::ContractAddress",
-            },
-            {
-              name: "wbtc_token",
-              type: "core::starknet::contract_address::ContractAddress",
-            },
-            {
-              name: "btsusd_token",
-              type: "core::starknet::contract_address::ContractAddress",
-            },
-            {
-              name: "price_oracle",
-              type: "core::starknet::contract_address::ContractAddress",
-            },
-            {
-              name: "secondary_oracle",
-              type: "core::starknet::contract_address::ContractAddress",
-            },
-            {
-              name: "yield_manager",
-              type: "core::starknet::contract_address::ContractAddress",
-            },
-          ],
-        },
-      ],
-      classHash:
-        "0x4c22a8dd4051b0a62a2e0fa32f2283a1d20d9c6c5cfa27d89ce491f171476c7",
-    },
-    BTSUSDToken: {
-      address:
-        "0x065b99291375dd031316a50f44718ba6f7582802cbae093f9327e1dd1ddc94ce",
-      abi: [
-        {
-          type: "impl",
-          name: "BTSUSDTokenImpl",
-          interface_name: "contracts::interfaces::IBTSUSDToken",
-        },
-        {
-          type: "struct",
-          name: "core::integer::u256",
-          members: [
-            { name: "low", type: "core::integer::u128" },
-            { name: "high", type: "core::integer::u128" },
-          ],
-        },
-        {
-          type: "enum",
-          name: "core::bool",
-          variants: [
-            { name: "False", type: "()" },
-            { name: "True", type: "()" },
-          ],
-        },
-        {
-          type: "struct",
-          name: "core::byte_array::ByteArray",
-          members: [
-            {
-              name: "data",
-              type: "core::array::Array::<core::bytes_31::bytes31>",
-            },
-            { name: "pending_word", type: "core::felt252" },
-            {
-              name: "pending_word_len",
-              type: "core::internal::bounded_int::BoundedInt::<0, 30>",
-            },
-          ],
-        },
-        {
-          type: "interface",
-          name: "contracts::interfaces::IBTSUSDToken",
-          items: [
-            {
-              type: "function",
-              name: "get_vault",
-              inputs: [],
-              outputs: [
-                { type: "core::starknet::contract_address::ContractAddress" },
-              ],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "get_paused_status",
-              inputs: [],
-              outputs: [{ type: "core::bool" }],
-              state_mutability: "view",
-            },
-          ],
-        },
-        {
-          type: "impl",
-          name: "ERC20MixinImpl",
-          interface_name: "openzeppelin_token::erc20::interface::IERC20Mixin",
-        },
-        {
-          type: "interface",
-          name: "openzeppelin_token::erc20::interface::IERC20Mixin",
-          items: [
-            {
-              type: "function",
-              name: "total_supply",
-              inputs: [],
-              outputs: [{ type: "core::integer::u256" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "balance_of",
-              inputs: [
-                {
-                  name: "account",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-              ],
-              outputs: [{ type: "core::integer::u256" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "allowance",
-              inputs: [
-                {
-                  name: "owner",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-                {
-                  name: "spender",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-              ],
-              outputs: [{ type: "core::integer::u256" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "transfer",
-              inputs: [
-                {
-                  name: "recipient",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-                { name: "amount", type: "core::integer::u256" },
-              ],
-              outputs: [{ type: "core::bool" }],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "transfer_from",
-              inputs: [
-                {
-                  name: "sender",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-                {
-                  name: "recipient",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-                { name: "amount", type: "core::integer::u256" },
-              ],
-              outputs: [{ type: "core::bool" }],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "approve",
-              inputs: [
-                {
-                  name: "spender",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-                { name: "amount", type: "core::integer::u256" },
-              ],
-              outputs: [{ type: "core::bool" }],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "name",
-              inputs: [],
-              outputs: [{ type: "core::byte_array::ByteArray" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "symbol",
-              inputs: [],
-              outputs: [{ type: "core::byte_array::ByteArray" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "decimals",
-              inputs: [],
-              outputs: [{ type: "core::integer::u8" }],
-              state_mutability: "view",
-            },
-          ],
-        },
-        {
-          type: "constructor",
-          name: "constructor",
-          inputs: [
-            {
-              name: "owner",
-              type: "core::starknet::contract_address::ContractAddress",
-            },
-            {
-              name: "vault",
-              type: "core::starknet::contract_address::ContractAddress",
-            },
-          ],
-        },
-      ],
-      classHash:
-        "0x2f582e626547cce8cb2149123b69ce222a432c16d90c60fcaab9ea451526d9d",
-    },
-    MockOracle: {
-      address:
-        "0x03d86bc966d124fce2c7fdec8ccbb5af4e429ecafa7e97b84b14b98812d5ab6e",
-      abi: [
-        {
-          type: "struct",
-          name: "core::integer::u256",
-          members: [
-            { name: "low", type: "core::integer::u128" },
-            { name: "high", type: "core::integer::u128" },
-          ],
-        },
-        {
-          type: "enum",
-          name: "core::bool",
-          variants: [
-            { name: "False", type: "()" },
-            { name: "True", type: "()" },
-          ],
-        },
-        {
-          type: "interface",
-          name: "contracts::interfaces::IPriceOracle",
-          items: [
-            {
-              type: "function",
-              name: "get_btc_price",
-              inputs: [],
-              outputs: [{ type: "(core::integer::u256, core::integer::u64)" }],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "is_price_stale",
-              inputs: [],
-              outputs: [{ type: "core::bool" }],
-              state_mutability: "view",
-            },
-          ],
-        },
-        {
-          type: "constructor",
-          name: "constructor",
-          inputs: [
-            {
-              name: "owner",
-              type: "core::starknet::contract_address::ContractAddress",
-            },
-          ],
-        },
-      ],
-      classHash:
-        "0x194b5fe8b4dccb5192ee4b471454654ca2a607cc97a3e444cc3665fdda69d40",
-    },
-    YourContract: {
-      address:
-        "0x13fb0e8e1e3a8473422d70620ab9bba6fb1b33c643881fa08e0fae2c2efa54a",
-      abi: [
-        {
-          type: "impl",
-          name: "YourContractImpl",
-          interface_name: "contracts::your_contract::IYourContract",
-        },
-        {
-          type: "struct",
-          name: "core::byte_array::ByteArray",
-          members: [
-            {
-              name: "data",
-              type: "core::array::Array::<core::bytes_31::bytes31>",
-            },
-            {
-              name: "pending_word",
-              type: "core::felt252",
-            },
-            {
-              name: "pending_word_len",
-              type: "core::integer::u32",
-            },
-          ],
-        },
-        {
-          type: "struct",
-          name: "core::integer::u256",
-          members: [
-            {
-              name: "low",
-              type: "core::integer::u128",
-            },
-            {
-              name: "high",
-              type: "core::integer::u128",
-            },
-          ],
-        },
-        {
-          type: "enum",
-          name: "core::option::Option::<core::integer::u256>",
-          variants: [
-            {
-              name: "Some",
-              type: "core::integer::u256",
-            },
-            {
-              name: "None",
-              type: "()",
-            },
-          ],
-        },
-        {
-          type: "enum",
-          name: "core::bool",
-          variants: [
-            {
-              name: "False",
-              type: "()",
-            },
-            {
-              name: "True",
-              type: "()",
-            },
-          ],
-        },
-        {
-          type: "interface",
-          name: "contracts::your_contract::IYourContract",
-          items: [
-            {
-              type: "function",
-              name: "greeting",
-              inputs: [],
-              outputs: [
-                {
-                  type: "core::byte_array::ByteArray",
-                },
-              ],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "set_greeting",
-              inputs: [
-                {
-                  name: "new_greeting",
-                  type: "core::byte_array::ByteArray",
-                },
-                {
-                  name: "amount_strk",
-                  type: "core::option::Option::<core::integer::u256>",
-                },
-              ],
-              outputs: [],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "withdraw",
-              inputs: [],
-              outputs: [],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "premium",
-              inputs: [],
-              outputs: [
-                {
-                  type: "core::bool",
-                },
-              ],
-              state_mutability: "view",
-            },
-          ],
-        },
-        {
-          type: "impl",
-          name: "OwnableImpl",
-          interface_name: "openzeppelin_access::ownable::interface::IOwnable",
-        },
-        {
-          type: "interface",
-          name: "openzeppelin_access::ownable::interface::IOwnable",
-          items: [
-            {
-              type: "function",
-              name: "owner",
-              inputs: [],
-              outputs: [
-                {
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-              ],
-              state_mutability: "view",
-            },
-            {
-              type: "function",
-              name: "transfer_ownership",
-              inputs: [
-                {
-                  name: "new_owner",
-                  type: "core::starknet::contract_address::ContractAddress",
-                },
-              ],
-              outputs: [],
-              state_mutability: "external",
-            },
-            {
-              type: "function",
-              name: "renounce_ownership",
-              inputs: [],
-              outputs: [],
-              state_mutability: "external",
-            },
-          ],
-        },
-        {
-          type: "constructor",
-          name: "constructor",
-          inputs: [
-            {
-              name: "owner",
-              type: "core::starknet::contract_address::ContractAddress",
-            },
-          ],
-        },
-        {
-          type: "event",
-          name: "openzeppelin_access::ownable::ownable::OwnableComponent::OwnershipTransferred",
-          kind: "struct",
-          members: [
-            {
-              name: "previous_owner",
-              type: "core::starknet::contract_address::ContractAddress",
-              kind: "key",
-            },
-            {
-              name: "new_owner",
-              type: "core::starknet::contract_address::ContractAddress",
-              kind: "key",
-            },
-          ],
-        },
-        {
-          type: "event",
-          name: "openzeppelin_access::ownable::ownable::OwnableComponent::OwnershipTransferStarted",
-          kind: "struct",
-          members: [
-            {
-              name: "previous_owner",
-              type: "core::starknet::contract_address::ContractAddress",
-              kind: "key",
-            },
-            {
-              name: "new_owner",
-              type: "core::starknet::contract_address::ContractAddress",
-              kind: "key",
-            },
-          ],
-        },
-        {
-          type: "event",
-          name: "openzeppelin_access::ownable::ownable::OwnableComponent::Event",
-          kind: "enum",
-          variants: [
-            {
-              name: "OwnershipTransferred",
-              type: "openzeppelin_access::ownable::ownable::OwnableComponent::OwnershipTransferred",
-              kind: "nested",
-            },
-            {
-              name: "OwnershipTransferStarted",
-              type: "openzeppelin_access::ownable::ownable::OwnableComponent::OwnershipTransferStarted",
-              kind: "nested",
-            },
-          ],
-        },
-        {
-          type: "event",
-          name: "contracts::your_contract::YourContract::GreetingChanged",
-          kind: "struct",
-          members: [
-            {
-              name: "greeting_setter",
-              type: "core::starknet::contract_address::ContractAddress",
-              kind: "key",
-            },
-            {
-              name: "new_greeting",
-              type: "core::byte_array::ByteArray",
-              kind: "key",
-            },
-            {
-              name: "premium",
-              type: "core::bool",
-              kind: "data",
-            },
-            {
-              name: "value",
-              type: "core::option::Option::<core::integer::u256>",
-              kind: "data",
-            },
-          ],
-        },
-        {
-          type: "event",
-          name: "contracts::your_contract::YourContract::Event",
-          kind: "enum",
-          variants: [
-            {
-              name: "OwnableEvent",
-              type: "openzeppelin_access::ownable::ownable::OwnableComponent::Event",
-              kind: "flat",
-            },
-            {
-              name: "GreetingChanged",
-              type: "contracts::your_contract::YourContract::GreetingChanged",
-              kind: "nested",
-            },
-          ],
-        },
-      ],
-      classHash:
-        "0x48982488d0c174566ce66c575b8ab07211f22689acba2abd1a97c83a0f824a4",
     },
   },
 } as const;

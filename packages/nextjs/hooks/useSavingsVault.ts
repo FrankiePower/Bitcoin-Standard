@@ -58,10 +58,9 @@ export function useSavingsVault() {
 
   // Get deployed contract info
   const { data: vaultData } = useDeployedContractInfo("BTSSavingsVault" as any);
-  const { data: wbtcData } = useDeployedContractInfo("MockWBTC" as any);
 
   const isContractDeployed = !!vaultData?.address;
-  const isWbtcDeployed = !!wbtcData?.address;
+  const BTSUSD_ADDRESS = "0x075690645b6e49811b87ec11bbffb3f25aa6b00cb8070a9459983135e39cb2cd";
 
   // Use transactor for sending transactions
   const { writeTransaction, sendTransactionInstance } = useTransactor();
@@ -162,18 +161,6 @@ export function useSavingsVault() {
     },
   );
 
-  // Read user wBTC balance
-  const { data: wbtcBalanceRaw, refetch: refetchWbtcBalance } = useReadContract(
-    {
-      functionName: "balance_of",
-      address: wbtcData?.address,
-      abi: wbtcData?.abi,
-      args: address ? [address] : [],
-      enabled: isWbtcDeployed && isConnected,
-      watch: true,
-    },
-  );
-
   // Parse values
   const totalAssets = useMemo(() => {
     return totalAssetsRaw
@@ -225,12 +212,6 @@ export function useSavingsVault() {
       : BigInt(0);
   }, [maxWithdrawRaw]);
 
-  const wbtcBalance = useMemo(() => {
-    return wbtcBalanceRaw
-      ? BigInt((wbtcBalanceRaw as any).toString())
-      : BigInt(0);
-  }, [wbtcBalanceRaw]);
-
   // Calculate APY from VSR
   const apy = useMemo(() => {
     return vsrToApy(vsr);
@@ -242,9 +223,7 @@ export function useSavingsVault() {
       if (
         !address ||
         !vaultData?.address ||
-        !vaultData?.abi ||
-        !wbtcData?.address ||
-        !wbtcData?.abi
+        !vaultData?.abi
       ) {
         throw new Error("Contracts not deployed or wallet not connected");
       }
@@ -253,15 +232,21 @@ export function useSavingsVault() {
       try {
         const receiverAddr = receiver || address;
 
-        // First approve wBTC spending
-        const wbtcContract = new Contract({
-          abi: wbtcData.abi,
-          address: wbtcData.address,
-        });
-        const approveCall = wbtcContract.populate("approve", [
-          vaultData.address,
-          assets,
-        ]);
+        // First approve BTSUSD spending
+        const BTSUSD_ERC20_ABI = [
+          {
+            type: "function",
+            name: "approve",
+            inputs: [
+              { name: "spender", type: "core::starknet::contract_address::ContractAddress" },
+              { name: "amount", type: "core::integer::u256" },
+            ],
+            outputs: [{ type: "core::bool" }],
+            state_mutability: "external",
+          },
+        ] as const;
+        const btsusdContract = new Contract({ abi: BTSUSD_ERC20_ABI as any, address: BTSUSD_ADDRESS });
+        const approveCall = btsusdContract.populate("approve", [vaultData.address, assets]);
 
         // Then deposit
         const vaultContract = new Contract({
@@ -279,7 +264,7 @@ export function useSavingsVault() {
         setIsDepositing(false);
       }
     },
-    [address, vaultData, wbtcData, writeTransaction],
+    [address, vaultData, writeTransaction],
   );
 
   // Withdraw action
@@ -353,7 +338,6 @@ export function useSavingsVault() {
     refetchUserAssets();
     refetchMaxDeposit();
     refetchMaxWithdraw();
-    refetchWbtcBalance();
   }, [
     refetchTotalAssets,
     refetchTotalShares,
@@ -364,7 +348,6 @@ export function useSavingsVault() {
     refetchUserAssets,
     refetchMaxDeposit,
     refetchMaxWithdraw,
-    refetchWbtcBalance,
   ]);
 
   return {
@@ -387,11 +370,9 @@ export function useSavingsVault() {
     userShares,
     maxDeposit,
     maxWithdraw,
-    wbtcBalance,
 
     // Contract addresses
     vaultAddress: vaultData?.address,
-    wbtcAddress: wbtcData?.address,
 
     // Actions
     deposit,

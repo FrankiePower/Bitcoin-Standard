@@ -217,8 +217,15 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
           ? "Repaid"
           : "Liquidated";
 
+    // starknet.js v8 may return ContractAddress as bigint — normalize to hex string
+    const ownerRaw = raw.owner;
+    const owner =
+      typeof ownerRaw === "bigint"
+        ? "0x" + ownerRaw.toString(16)
+        : String(ownerRaw ?? "");
+
     return {
-      owner: raw.owner as string,
+      owner,
       btcAmount: parseU256(raw.btc_amount),
       state,
       registeredAt: Number(raw.registered_at ?? 0),

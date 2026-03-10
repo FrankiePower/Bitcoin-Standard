@@ -50,34 +50,27 @@ const VSR_4_PERCENT = BigInt("1000000001243680656318820312");
  *
  * @returns {Promise<void>}
  */
-const deployScript = async (): Promise<void> => {
-  // Deploy mock WBTC token for testing
-  console.log(yellow("\n=== Deploying Mock wBTC ==="));
-  const { address: wbtcAddress } = await deployContract({
-    contract: "MockWBTC",
-    contractName: "MockWBTC",
-    constructorArgs: {
-      owner: deployer.address,
-    },
-  });
+// BTSUSD token deployed on Sepolia (minted/burned by CDPCore)
+const BTSUSD_ADDRESS =
+  "0x075690645b6e49811b87ec11bbffb3f25aa6b00cb8070a9459983135e39cb2cd";
 
-  // Deploy BTSSavingsVault for WBTC
-  console.log(yellow("\n=== Deploying BTS Savings Vault (sWBTC) ==="));
+const deployScript = async (): Promise<void> => {
+  // Deploy BTSSavingsVault with BTSUSD as the underlying asset
+  console.log(yellow("\n=== Deploying BTS Savings Vault (sBTSUSD) ==="));
   const { address: savingsVaultAddress } = await deployContract({
     contract: "BTSSavingsVault",
     contractName: "BTSSavingsVault",
     constructorArgs: {
       owner: deployer.address,
-      asset: wbtcAddress,
-      name: "Savings WBTC",
-      symbol: "sWBTC",
+      asset: BTSUSD_ADDRESS,
+      name: "Savings BTSUSD",
+      symbol: "sBTSUSD",
       initial_vsr: VSR_4_PERCENT,
     },
   });
 
   console.log(green("\n=== Deployment Summary ==="));
-  console.log(green(`MockWBTC: ${wbtcAddress}`));
-  console.log(green(`BTSSavingsVault: ${savingsVaultAddress}`));
+  console.log(green(`BTSSavingsVault (sBTSUSD): ${savingsVaultAddress}`));
 };
 
 const main = async (): Promise<void> => {
