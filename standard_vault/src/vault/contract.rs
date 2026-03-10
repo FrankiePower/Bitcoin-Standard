@@ -1,17 +1,17 @@
 use anyhow::{anyhow, Result};
 use bitcoin::absolute::LockTime;
 use bitcoin::consensus::Encodable;
-use bitcoin::hex::{Case, DisplayHex};
 use bitcoin::hashes::{sha256, Hash};
+use bitcoin::hex::{Case, DisplayHex};
 use bitcoin::key::{Keypair, Secp256k1};
 use bitcoin::secp256k1::{rand, Message, SecretKey, ThirtyTwoByteHash};
+use bitcoin::sighash::{Prevouts, SighashCache};
 use bitcoin::taproot::{LeafVersion, Signature, TaprootBuilder, TaprootSpendInfo};
 use bitcoin::transaction::Version;
 use bitcoin::{
     Address, Amount, Network, OutPoint, Sequence, TapLeafHash, TapSighashType, Transaction, TxIn,
     TxOut, XOnlyPublicKey,
 };
-use bitcoin::sighash::{Prevouts, SighashCache};
 use bitcoincore_rpc::jsonrpc::serde_json;
 use log::{debug, info};
 use secp256kfun::marker::{EvenY, NonZero, Public};
@@ -171,11 +171,26 @@ impl VaultCovenant {
         let secp = Secp256k1::new();
         Ok(TaprootBuilder::new()
             // Leaf A: Repay — at depth 1 (most-used path, smallest Merkle proof)
-            .add_leaf(1, vault_repay(self.user_x_only_public_key(), self.oracle_x_only_public_key()))?
+            .add_leaf(
+                1,
+                vault_repay(
+                    self.user_x_only_public_key(),
+                    self.oracle_x_only_public_key(),
+                ),
+            )?
             // Leaf B: Liquidate — at depth 2 (OP_CAT covenant, oracle-triggered)
-            .add_leaf(2, vault_liquidate(self.oracle_x_only_public_key(), &liq_pool_addr.script_pubkey()))?
+            .add_leaf(
+                2,
+                vault_liquidate(
+                    self.oracle_x_only_public_key(),
+                    &liq_pool_addr.script_pubkey(),
+                ),
+            )?
             // Leaf C: Emergency timeout — at depth 2 (user unilateral after timelock)
-            .add_leaf(2, vault_emergency_timeout(self.user_x_only_public_key(), self.timelock_in_blocks))?
+            .add_leaf(
+                2,
+                vault_emergency_timeout(self.user_x_only_public_key(), self.timelock_in_blocks),
+            )?
             .finalize(&secp, nums_key)
             .expect("finalizing taproot spend info with a NUMS point should always work"))
     }
@@ -221,7 +236,9 @@ impl VaultCovenant {
         user_destination: &Address,
     ) -> Result<Transaction> {
         let mut vault_txin = TxIn {
-            previous_output: self.current_outpoint.ok_or(anyhow!("no current outpoint"))?,
+            previous_output: self
+                .current_outpoint
+                .ok_or(anyhow!("no current outpoint"))?,
             ..Default::default()
         };
         let fee_txin = TxIn {
@@ -247,7 +264,10 @@ impl VaultCovenant {
             value: self.amount,
         };
         let leaf_hash = TapLeafHash::from_script(
-            &vault_repay(self.user_x_only_public_key(), self.oracle_x_only_public_key()),
+            &vault_repay(
+                self.user_x_only_public_key(),
+                self.oracle_x_only_public_key(),
+            ),
             LeafVersion::TapScript,
         );
         // prevouts must match the actual UTXOs being spent (input values, not output values)
@@ -261,10 +281,13 @@ impl VaultCovenant {
         // Script: <oracle_key> OP_CHECKSIGVERIFY <user_key> OP_CHECKSIG
         // OP_CHECKSIGVERIFY pops the top of stack → oracle_sig must be on top (index 1).
         // OP_CHECKSIG then pops the new top → user_sig must be at bottom (index 0).
-        vault_txin.witness.push(user_sig);   // index 0 (bottom): consumed by CHECKSIG
+        vault_txin.witness.push(user_sig); // index 0 (bottom): consumed by CHECKSIG
         vault_txin.witness.push(oracle_sig); // index 1 (top): consumed by CHECKSIGVERIFY
 
-        let repay_script = vault_repay(self.user_x_only_public_key(), self.oracle_x_only_public_key());
+        let repay_script = vault_repay(
+            self.user_x_only_public_key(),
+            self.oracle_x_only_public_key(),
+        );
         vault_txin.witness.push(repay_script.to_bytes());
         vault_txin.witness.push(
             self.taproot_spend_info()?
@@ -296,7 +319,9 @@ impl VaultCovenant {
         let liq_pool_address = self.get_liquidation_pool_address()?;
 
         let mut vault_txin = TxIn {
-            previous_output: self.current_outpoint.ok_or(anyhow!("no current outpoint"))?,
+            previous_output: self
+                .current_outpoint
+                .ok_or(anyhow!("no current outpoint"))?,
             ..Default::default()
         };
         let fee_txin = TxIn {
@@ -401,12 +426,7 @@ impl VaultCovenant {
         vault_txin.witness.push([computed_signature[63] + 1]); // last byte + 1
 
         // Oracle's real Schnorr signature (checked by OP_CHECKSIGVERIFY in script)
-        let oracle_sig = self.sign_with_keypair(
-            &self.oracle_keypair,
-            &txn,
-            &prevouts,
-            leaf_hash,
-        );
+        let oracle_sig = self.sign_with_keypair(&self.oracle_keypair, &txn, &prevouts, leaf_hash);
         vault_txin.witness.push(oracle_sig);
 
         vault_txin.witness.push(liquidate_script.to_bytes());
@@ -432,7 +452,9 @@ impl VaultCovenant {
         user_destination: &Address,
     ) -> Result<Transaction> {
         let mut vault_txin = TxIn {
-            previous_output: self.current_outpoint.ok_or(anyhow!("no current outpoint"))?,
+            previous_output: self
+                .current_outpoint
+                .ok_or(anyhow!("no current outpoint"))?,
             // CSV requires the input sequence to signal the relative timelock
             sequence: Sequence::from_height(self.timelock_in_blocks),
             ..Default::default()
@@ -459,10 +481,8 @@ impl VaultCovenant {
             script_pubkey: self.address()?.script_pubkey(),
             value: self.amount,
         };
-        let timeout_script = vault_emergency_timeout(
-            self.user_x_only_public_key(),
-            self.timelock_in_blocks,
-        );
+        let timeout_script =
+            vault_emergency_timeout(self.user_x_only_public_key(), self.timelock_in_blocks);
         let leaf_hash = TapLeafHash::from_script(&timeout_script, LeafVersion::TapScript);
         let prevouts = [vault_txout.clone(), fee_paying_output.clone()];
 
@@ -489,9 +509,7 @@ mod tests {
     use bitcoin::secp256k1::schnorr;
     use bitcoin::{ScriptBuf, Txid};
 
-    fn setup_covenant(
-        vault_amount_sat: u64,
-    ) -> (VaultCovenant, Address, OutPoint, TxOut) {
+    fn setup_covenant(vault_amount_sat: u64) -> (VaultCovenant, Address, OutPoint, TxOut) {
         let secp = Secp256k1::new();
 
         let liquidation_pool_keypair = Keypair::new(&secp, &mut rand::thread_rng());
@@ -522,7 +540,12 @@ mod tests {
             script_pubkey: fee_script_pubkey,
         };
 
-        (covenant, liquidation_pool_address, fee_paying_utxo, fee_paying_output)
+        (
+            covenant,
+            liquidation_pool_address,
+            fee_paying_utxo,
+            fee_paying_output,
+        )
     }
 
     fn extract_oracle_sig(tx: &Transaction) -> Vec<u8> {
@@ -589,8 +612,12 @@ mod tests {
         let original_msg = Message::from_digest_slice(original_sighash.as_byte_array()).unwrap();
 
         assert!(
-            secp.verify_schnorr(&oracle_sig, &original_msg, &covenant.oracle_x_only_public_key())
-                .is_ok(),
+            secp.verify_schnorr(
+                &oracle_sig,
+                &original_msg,
+                &covenant.oracle_x_only_public_key()
+            )
+            .is_ok(),
             "original liquidation tx must satisfy oracle signature"
         );
 
@@ -617,8 +644,12 @@ mod tests {
         let tampered_msg = Message::from_digest_slice(tampered_sighash.as_byte_array()).unwrap();
 
         assert!(
-            secp.verify_schnorr(&oracle_sig, &tampered_msg, &covenant.oracle_x_only_public_key())
-                .is_err(),
+            secp.verify_schnorr(
+                &oracle_sig,
+                &tampered_msg,
+                &covenant.oracle_x_only_public_key()
+            )
+            .is_err(),
             "redirecting liquidation output must invalidate the witness signature"
         );
     }

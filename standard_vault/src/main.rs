@@ -3,14 +3,14 @@ use std::str::FromStr;
 
 use anyhow::Result;
 use bitcoin::consensus::Encodable;
-use bitcoin::{Address, Amount, OutPoint, Txid, TxOut};
+use bitcoin::{Address, Amount, OutPoint, TxOut, Txid};
 use bitcoincore_rpc::RawTx;
 use clap::Parser;
 use log::{debug, error, info};
 
 use crate::settings::Settings;
-use crate::vault::contract::VaultState;
 use crate::vault::contract::VaultCovenant;
+use crate::vault::contract::VaultState;
 use crate::wallet::Wallet;
 
 mod settings;
@@ -78,7 +78,11 @@ fn main() -> Result<()> {
     match args.action {
         Action::Deposit => deposit(&settings)?,
         Action::Prepare => prepare(&settings)?,
-        Action::Activate { txid, vout, amount_sats } => activate(&txid, vout, amount_sats, &settings)?,
+        Action::Activate {
+            txid,
+            vout,
+            amount_sats,
+        } => activate(&txid, vout, amount_sats, &settings)?,
         Action::Repay { destination } => repay(&destination, &settings)?,
         Action::Liquidate => liquidate(&settings)?,
         Action::Timeout { destination } => timeout(&destination, &settings)?,
