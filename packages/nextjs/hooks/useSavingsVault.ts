@@ -60,7 +60,8 @@ export function useSavingsVault() {
   const { data: vaultData } = useDeployedContractInfo("BTSSavingsVault" as any);
 
   const isContractDeployed = !!vaultData?.address;
-  const BTSUSD_ADDRESS = "0x075690645b6e49811b87ec11bbffb3f25aa6b00cb8070a9459983135e39cb2cd";
+  const BTSUSD_ADDRESS =
+    "0x075690645b6e49811b87ec11bbffb3f25aa6b00cb8070a9459983135e39cb2cd";
 
   // Use transactor for sending transactions
   const { writeTransaction, sendTransactionInstance } = useTransactor();
@@ -220,11 +221,7 @@ export function useSavingsVault() {
   // Deposit action
   const deposit = useCallback(
     async (assets: bigint, receiver?: string) => {
-      if (
-        !address ||
-        !vaultData?.address ||
-        !vaultData?.abi
-      ) {
+      if (!address || !vaultData?.address || !vaultData?.abi) {
         throw new Error("Contracts not deployed or wallet not connected");
       }
 
@@ -238,15 +235,24 @@ export function useSavingsVault() {
             type: "function",
             name: "approve",
             inputs: [
-              { name: "spender", type: "core::starknet::contract_address::ContractAddress" },
+              {
+                name: "spender",
+                type: "core::starknet::contract_address::ContractAddress",
+              },
               { name: "amount", type: "core::integer::u256" },
             ],
             outputs: [{ type: "core::bool" }],
             state_mutability: "external",
           },
         ] as const;
-        const btsusdContract = new Contract({ abi: BTSUSD_ERC20_ABI as any, address: BTSUSD_ADDRESS });
-        const approveCall = btsusdContract.populate("approve", [vaultData.address, assets]);
+        const btsusdContract = new Contract({
+          abi: BTSUSD_ERC20_ABI as any,
+          address: BTSUSD_ADDRESS,
+        });
+        const approveCall = btsusdContract.populate("approve", [
+          vaultData.address,
+          assets,
+        ]);
 
         // Then deposit
         const vaultContract = new Contract({

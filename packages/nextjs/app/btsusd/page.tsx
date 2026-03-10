@@ -237,10 +237,9 @@ export default function SavingsPage() {
               </div>
 
               <p className="text-neutral-400 text-[15px] leading-relaxed mb-10 max-w-[440px]">
-                Deposit BTSUSD, or STRK into the Savings Vault to earn
-                yield. Your shares automatically appreciate as the vault
-                accumulates returns through the VSR (Vault Savings Rate)
-                mechanism.{" "}
+                Deposit BTSUSD, or STRK into the Savings Vault to earn yield.
+                Your shares automatically appreciate as the vault accumulates
+                returns through the VSR (Vault Savings Rate) mechanism.{" "}
                 <span className="text-[#34d399] hover:underline cursor-pointer transition-all">
                   Learn more ↗
                 </span>
