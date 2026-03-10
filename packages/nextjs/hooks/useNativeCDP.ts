@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useAccount, useReadContract } from "@starknet-react/core";
-import { Contract, Call, cairo } from "starknet";
-import { useTransactor } from "./scaffold-stark/useTransactor";
+import { useReadContract } from "@starknet-react/core";
+import { useAccount } from "~~/hooks/useAccount";
+import { Contract, cairo } from "starknet";
+import { notification } from "~~/utils/scaffold-stark";
 import {
   NATIVE_ADDRESSES,
   CDP_CORE_ABI,
@@ -53,11 +54,20 @@ export interface UseNativeCDPOptions {
   txid?: string;
 }
 
+/** Get the active Starknet wallet account — supports Braavos, Xverse, or any SNIP-6 wallet. */
+async function getStarknetAccount() {
+  const w = (window as any);
+  const wallet = w.starknet_braavos ?? w.starknet_xverse ?? w.starknet;
+  if (!wallet) throw new Error("No Starknet wallet found. Install Braavos or Xverse.");
+  await wallet.enable();
+  if (!wallet.account) throw new Error("Wallet account unavailable after enable().");
+  return wallet.account;
+}
+
 export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
   const { address, status } = useAccount();
   const isConnected = status === "connected";
-  const { writeTransaction, sendTransactionInstance } = useTransactor();
-  const { isPending } = sendTransactionInstance;
+  const [isPending, setIsPending] = useState(false);
 
   // Convert txid to felt252 for on-chain calls
   const txidFelt = useMemo(() => (txid ? txidToFelt(txid) : undefined), [txid]);
@@ -269,7 +279,7 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
    */
   const registerVault = useCallback(
     async (depositTxid: string, btcAmountSats: bigint) => {
-      if (!address) throw new Error("Wallet not connected");
+      // wallet check is handled by getStarknetAccount()
 
       const felt = txidToFelt(depositTxid);
       const cdp = new Contract({
@@ -282,13 +292,20 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
       ]);
 
       setIsRegistering(true);
+      setIsPending(true);
+      const notifId = notification.loading("Awaiting wallet confirmation…");
       try {
-        await writeTransaction([call as Call]);
+        const account = await getStarknetAccount();
+        const { transaction_hash } = await account.execute([call]);
+        notification.remove(notifId);
+        notification.success(`Vault registered! Tx: ${transaction_hash.slice(0, 10)}…`);
       } finally {
         setIsRegistering(false);
+        setIsPending(false);
+        notification.remove(notifId);
       }
     },
-    [address, writeTransaction],
+    [address],
   );
 
   /**
@@ -298,7 +315,7 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
    */
   const mintDebt = useCallback(
     async (depositTxid: string, amount: bigint) => {
-      if (!address) throw new Error("Wallet not connected");
+      // wallet check is handled by getStarknetAccount()
 
       const felt = txidToFelt(depositTxid);
       const cdp = new Contract({
@@ -308,13 +325,20 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
       const call = cdp.populate("mint_debt", [felt, cairo.uint256(amount)]);
 
       setIsMinting(true);
+      setIsPending(true);
+      const notifId = notification.loading("Awaiting wallet confirmation…");
       try {
-        await writeTransaction([call as Call]);
+        const account = await getStarknetAccount();
+        const { transaction_hash } = await account.execute([call]);
+        notification.remove(notifId);
+        notification.success(`BTSUSD minted! Tx: ${transaction_hash.slice(0, 10)}…`);
       } finally {
         setIsMinting(false);
+        setIsPending(false);
+        notification.remove(notifId);
       }
     },
-    [address, writeTransaction],
+    [address],
   );
 
   /**
@@ -324,7 +348,7 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
    */
   const repayDebt = useCallback(
     async (depositTxid: string, amount: bigint) => {
-      if (!address) throw new Error("Wallet not connected");
+      // wallet check is handled by getStarknetAccount()
 
       const felt = txidToFelt(depositTxid);
       const cdp = new Contract({
@@ -334,13 +358,20 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
       const call = cdp.populate("repay_debt", [felt, cairo.uint256(amount)]);
 
       setIsRepaying(true);
+      setIsPending(true);
+      const notifId = notification.loading("Awaiting wallet confirmation…");
       try {
-        await writeTransaction([call as Call]);
+        const account = await getStarknetAccount();
+        const { transaction_hash } = await account.execute([call]);
+        notification.remove(notifId);
+        notification.success(`Debt repaid! Tx: ${transaction_hash.slice(0, 10)}…`);
       } finally {
         setIsRepaying(false);
+        setIsPending(false);
+        notification.remove(notifId);
       }
     },
-    [address, writeTransaction],
+    [address],
   );
 
   const refetchAll = useCallback(() => {

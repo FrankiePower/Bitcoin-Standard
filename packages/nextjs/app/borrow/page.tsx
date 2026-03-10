@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useAccount, useNetwork, useSwitchChain } from "@starknet-react/core";
+import { useNetwork } from "@starknet-react/core";
+import { useAccount } from "~~/hooks/useAccount";
 import Wallet from "sats-connect";
 import { DashboardLayout } from "~~/components/layout/dashboard-layout";
 import {
@@ -392,10 +393,11 @@ type RegtestKeyRecord = {
 };
 
 export default function BorrowPage() {
-  const { status, address } = useAccount();
-  const isConnected = status === "connected";
+  const { status, address: xverseAddress } = useAccount();
+  const [braavosAddress, setBraavosAddress] = useState<string | null>(null);
+  const address = braavosAddress ?? xverseAddress;
+  const isConnected = status === "connected" || !!braavosAddress;
   const { chain } = useNetwork();
-  const { switchChain } = useSwitchChain({});
   const { targetNetwork } = useTargetNetwork();
 
   // Vault txid state (managed in page, passed to hook)
@@ -529,7 +531,7 @@ export default function BorrowPage() {
   }, [repayAmount]);
 
   // Deposit BTC via Xverse PSBT
-  const { btcAddress, vaultBtcBalance, vaultState, bitcoinNetwork } =
+  const { btcAddress, bitcoinNetwork, connectToStarknetSepolia } =
     useXverseStore();
   const [depositAmount, setDepositAmount] = useState("1");
   const [depositStep, setDepositStep] = useState<
@@ -642,6 +644,19 @@ export default function BorrowPage() {
 
   const handleRegisterVault = useCallback(async () => {
     setError("");
+    // If not connected, do two-step: sats-connect (gets starknet address + activates
+    // window.starknet_xverse on Sepolia), then starknet-react InjectedConnector
+    // (establishes account interface needed by useTransactor).
+    if (!isConnected || !address) {
+      // Try Braavos first, fall back to Xverse
+      const braavos = (window as any).starknet_braavos;
+      if (braavos) {
+        const accounts = await braavos.enable();
+        if (accounts?.[0]) { setBraavosAddress(accounts[0]); return false; }
+      }
+      await connectToStarknetSepolia();
+      return false;
+    }
     const t = regTxid.trim().replace(/^0x/, "");
     if (t.length !== 64) {
       setError("TxID must be 64 hex characters");
@@ -663,38 +678,7 @@ export default function BorrowPage() {
       setError(e?.message ?? "Registration failed");
       return false;
     }
-  }, [regTxid, regBTCSats, cdp, address]);
-
-  const isWrongStarknetNetwork = useMemo(() => {
-    if (!isConnected || !chain?.id) return false;
-    return BigInt(chain.id) !== targetNetwork.id;
-  }, [isConnected, chain?.id, targetNetwork.id]);
-
-  const registerDisabledReason = useMemo(() => {
-    if (!isConnected) {
-      return "Connect a Starknet wallet to register this vault.";
-    }
-    if (isWrongStarknetNetwork) {
-      return `Switch Starknet to ${targetNetwork.name} to continue.`;
-    }
-    if (regTxid.trim().length !== 64) {
-      return "Vault txid is missing or invalid.";
-    }
-    if (regBTCSats === BigInt(0)) {
-      return "Enter the BTC amount for this vault.";
-    }
-    return null;
-  }, [
-    isConnected,
-    isWrongStarknetNetwork,
-    targetNetwork.name,
-    regTxid,
-    regBTCSats,
-  ]);
-
-  const handleSwitchStarknetNetwork = useCallback(() => {
-    void switchChain({ chainId: targetNetwork.id.toString(16) });
-  }, [switchChain, targetNetwork.id]);
+  }, [isConnected, connectToStarknetSepolia, regTxid, regBTCSats, cdp, address]);
 
   const handleMint = useCallback(async () => {
     setError("");
@@ -845,10 +829,10 @@ export default function BorrowPage() {
             },
             {
               label: "Total Vaults",
-              value: vaultState === "Active" ? "1" : "0",
+              value: cdp.vaultInfo ? "1" : "0",
               sub:
-                vaultBtcBalance !== null
-                  ? `${parseFloat(vaultBtcBalance.toFixed(8))} BTC locked`
+                cdp.position.btcSats > BigInt(0)
+                  ? `${formatBTC(cdp.position.btcSats)} BTC locked`
                   : "No active vault",
             },
           ].map((s) => (
@@ -884,7 +868,8 @@ export default function BorrowPage() {
             <li>
               1. Run{" "}
               <code className="text-neutral-800">make start-bitcoind</code> in{" "}
-              <code className="text-neutral-800">standard_vault/</code> and start the oracle service.
+              <code className="text-neutral-800">standard_vault/</code> and
+              start the oracle service.
             </li>
             <li>
               2. Connect your Xverse wallet (top-right), then enter a BTC amount
@@ -926,13 +911,13 @@ export default function BorrowPage() {
               </div>
             </div>
           </div>
-          {isConnected && isWrongStarknetNetwork && (
+          {isConnected && chain?.id && BigInt(chain.id) !== targetNetwork.id && (
             <div className="mt-2 flex items-center justify-between rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2">
               <p className="text-xs text-amber-700">
                 Connected to the wrong Starknet network.
               </p>
               <button
-                onClick={handleSwitchStarknetNetwork}
+                onClick={() => void connectToStarknetSepolia()}
                 className="rounded-md border border-amber-600/40 bg-amber-500/20 px-2.5 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-500/30"
               >
                 Switch to {targetNetwork.name}
@@ -1168,9 +1153,7 @@ export default function BorrowPage() {
                 </div>
                 <button
                   onClick={() => void handleRegisterVault()}
-                  disabled={
-                    cdp.isRegistering || registerDisabledReason !== null
-                  }
+                  disabled={cdp.isRegistering}
                   className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {cdp.isRegistering ? (
@@ -1178,26 +1161,14 @@ export default function BorrowPage() {
                   ) : null}
                   {cdp.isRegistering
                     ? "Registering…"
-                    : "Register Vault on Starknet"}
+                    : !isConnected
+                      ? "Connect Starknet & Register"
+                      : "Register Vault on Starknet"}
                 </button>
-                {registerDisabledReason && (
-                  <p className="text-xs text-neutral-600 text-center">
-                    {registerDisabledReason}
-                  </p>
-                )}
                 {!isConnected && (
                   <p className="text-xs text-neutral-500 text-center">
-                    Use the top-right wallet button to connect Starknet. BTC
-                    Regtest and Starknet are separate networks.
+                    Click to connect Starknet Sepolia via Xverse, then register.
                   </p>
-                )}
-                {isConnected && isWrongStarknetNetwork && (
-                  <button
-                    onClick={handleSwitchStarknetNetwork}
-                    className="w-full rounded-lg border border-neutral-300 bg-white py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
-                  >
-                    Switch Starknet to {targetNetwork.name}
-                  </button>
                 )}
               </div>
             )}
@@ -1217,9 +1188,9 @@ export default function BorrowPage() {
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs font-medium text-neutral-700">
                     Amount
-                    {vaultBtcBalance !== null && (
+                    {cdp.position.btcSats > BigInt(0) && (
                       <span className="ml-2 font-normal text-neutral-400">
-                        · {parseFloat(vaultBtcBalance.toFixed(8))} BTC in vault
+                        · {formatBTC(cdp.position.btcSats)} BTC in vault
                       </span>
                     )}
                   </label>
@@ -1438,12 +1409,12 @@ export default function BorrowPage() {
             <li>
               <span className="text-neutral-800">1.</span>{" "}
               <code className="text-orange-600">make deposit</code> in{" "}
-              <code className="text-neutral-800">standard_vault/</code> →
-              locks BTC in OP_CAT vault, prints txid
+              <code className="text-neutral-800">standard_vault/</code> → locks
+              BTC in OP_CAT vault, prints txid
             </li>
             <li>
-              <span className="text-neutral-800">2.</span> Paste txid + amount
-              → Register Vault on Starknet (CDPCore)
+              <span className="text-neutral-800">2.</span> Paste txid + amount →
+              Register Vault on Starknet (CDPCore)
             </li>
             <li>
               <span className="text-neutral-800">3.</span> Mint BTSUSD

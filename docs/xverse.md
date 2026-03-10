@@ -192,3 +192,42 @@ Your app can then&#x20;
 * prompt the user to switch their Xverse wallet to the newly added network with the [wallet\_changeNetwork](https://docs.xverse.app/sats-connect/wallet-methods/wallet_changenetwork)
 * &#x20;fetch the user's active Xverse account under the new network with the [`wallet_getAccount`](https://docs.xverse.app/sats-connect/wallet-methods/wallet_getaccount) method.
   {% endhint %}
+
+
+# wallet\_openBridge
+
+## Help Users Bridge Assets Between Bitcoin Layers
+
+Your app can use the `wallet_openBridge` method to prompt the user to bridge assets between Bitcoin layers with their Xverse wallet.\
+\
+This can be especially useful to onboard users to apps operating on Bitcoin and Bitcoin L2s like Starknet, Spark or Stacks.
+
+## Request Params <a href="#id-6c42baa3-c47d-47b0-9a64-be9a102ea8ad" id="id-6c42baa3-c47d-47b0-9a64-be9a102ea8ad"></a>
+
+* `fromAsset`
+  * The asset (ticker) you wish your user to bridge to another Bitcoin layer
+  * Example: `BTC` when bridging BTC from Bitcoin Mainnet to Starknet
+* `toAsset`
+  * The asset (ticker) you wish your user to receive on the destination Bitcoin layer
+  * Example: `WBTC` when bridging BTC from Bitcoin Mainnet to Starknet
+
+## Permissions Required <a href="#id-616fb9ae-ded6-43dc-9c32-52a1a9ca8e55" id="id-616fb9ae-ded6-43dc-9c32-52a1a9ca8e55"></a>
+
+* 🔓 Your app must have first [connected to the wallet](https://docs.xverse.app/sats-connect/connecting-to-the-wallet/connect-to-xverse-wallet) and obtained [account read permissions](https://docs.xverse.app/sats-connect/xverse-wallet-permissions)
+* 🔒 If your user has not [connected their active Xverse account to your app](https://docs.xverse.app/sats-connect/connecting-to-the-wallet/connect-to-xverse-wallet) yet, and your app does not the necessary account read [permissions](https://docs.xverse.app/sats-connect/xverse-wallet-permissions) -> the method will throw with an access denied error
+
+## wallet\_openBridge Result: Open the Bridge Flow <a href="#id-4c07a335-c0e0-4b42-81af-85ec2d1171bb" id="id-4c07a335-c0e0-4b42-81af-85ec2d1171bb"></a>
+
+### ✅ Success <a href="#c7fcb152-b219-4511-9f1d-f3992d2c739e" id="c7fcb152-b219-4511-9f1d-f3992d2c739e"></a>
+
+If the account is connected and the requested bridge route exists
+
+* -> the method successfully returns `openBridgeResult`
+* -> Xverse wallet opens the relevant bridge screen for the requested bridge route
+  * the user can then choose an amount and confirm the bridge in Xverse Wallet<br>
+
+    <figure><img src="https://3630714736-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2F33DLypUqgcjkBSmN0gZn%2Fuploads%2FvvQkoDEgTxZgh039x1oh%2Fimage.png?alt=media&#x26;token=acbdd2e6-bf11-42f4-a8ff-a6921a5cfae3" alt=""><figcaption></figcaption></figure>
+
+### ❌ Error <a href="#d6911fd7-b946-47e4-8dc8-70af3607487a" id="d6911fd7-b946-47e4-8dc8-70af3607487a"></a>
+
+* If the account is not connected or the requested bridge route does not exist, the method will reject with an error object
