@@ -1,382 +1,338 @@
-# 🏗 Scaffold-Stark
+# Bitcoin Standard Protocol
 
-<h4 align="center">
-  <a href="https://docs.scaffoldstark.com/">Documentation</a> |
-  <a href="https://scaffoldstark.com/">Website</a> |
-  <a href="https://scaffold-stark-demo.vercel.app/debug">Demo</a>
-</h4>
+**Lock real BTC on Bitcoin. Mint BTSUSD on Starknet. Collateral enforced by Bitcoin consensus.**
 
-🧪 An open-source, up-to-date toolkit for building decentralized applications (dapps) on Starknet blockchain. It's designed to make it easier for developers to create and deploy smart contracts and build user interfaces that interact with those contracts.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Cairo](https://img.shields.io/badge/Cairo-2.12-orange.svg)](https://docs.starknet.io/documentation/architecture_and_concepts/Cairo_on_Starknet/)
+[![Rust](https://img.shields.io/badge/Rust-1.75-red.svg)](https://www.rust-lang.org/)
+[![Tests](https://img.shields.io/badge/snforge-60%20passed-brightgreen.svg)](packages/snfoundry/contracts)
 
-⚙️ Built using NextJS, Starknet.js, Scarb, Starknet-React, Starknet Foundry.
+## Overview
 
-- ✅ **Contract Fast Reload**: Your frontend auto-adapts to your smart contracts as you deploy them.
-- 🪝 [**Custom hooks**](https://docs.scaffoldstark.com/hooks/): Collection of React hooks wrapper around [starknet-react](https://starknet-react.com/) to simplify interactions with smart contracts with typescript autocompletion.
-- 🧱 [**Components**](https://docs.scaffoldstark.com/components): Collection of common web3 components to quickly build your frontend.
-- 🔥 **Burner Wallet & Prefunded Account**: Quickly test your application with a burner wallet and prefunded accounts.
-- 🔐 **Integration with Wallet Providers**: Connect to different wallet providers and interact with Starknet network.
+Bitcoin Standard is a **native Bitcoin-backed CDP (Collateralized Debt Position) protocol** built on Starknet. Unlike wrapped-BTC approaches, collateral never leaves Bitcoin — it is locked in **OP_CAT covenant Taproot vaults** directly on Bitcoin L1, while debt accounting and the stablecoin live on Starknet.
 
-![Debug Contracts tab](./packages/nextjs/public/debug-image.png)
+### The 3-Step Protocol Flow
 
-## Next Phase (Post-MVP)
-
-The current MVP focuses on single-vault borrow/mint/repay flow. The next phase extends this to a production bridge architecture:
-
-1. **Merkle-batched bridge requests (Bitcoin side)**
-- Batch deposits and withdrawals using aggregator covenants (DepositAggregator / WithdrawalAggregator).
-- Process batches via a Bridge covenant state root update.
-- Expand withdrawal batches to user payouts via WithdrawalExpander.
-
-2. **Oracle service as coordinator (not just price feed)**
-- Continue pushing BTC price and volatility on Starknet.
-- Monitor health factors and trigger liquidation workflow when required.
-- Produce signed attestations for liquidation/repayment events.
-- Reconcile Starknet vault state with Bitcoin outpoint state.
-
-3. **Operator/backend responsibility**
-- Keep Merkle tree construction, proof generation, and covenant transaction assembly in backend/operator services.
-- Keep frontend focused on user intents and status, not covenant internals.
-
-This phase is optional for demo scope, but required for higher throughput and stronger bridge automation.
-
-## 0. Requirements
-
-Before you begin, you need to install the following tools:
-
-- [Node (>= v22)](https://nodejs.org/en/download/)
-- Yarn ([v1](https://classic.yarnpkg.com/en/docs/install/) or [v2+](https://yarnpkg.com/getting-started/install))
-- [Git](https://git-scm.com/downloads)
-
-## 1. Install developer tools
-
-You can install the developer tools natively or use Dev Containers.
-
-### Option 1: Natively install developer tools
-
-#### 1.1 Starkup
-
-Tool for installing all the Starknet essentials for development. [Starkup](https://github.com/software-mansion/starkup) will install the latest stable versions of:
-
-- [Scarb](https://docs.swmansion.com/scarb/) - Cairo package manager and build toolchain
-- [Starknet Foundry](https://foundry-rs.github.io/starknet-foundry/index.html) - Development toolchain for testing on Starknet
-- [asdf](https://asdf-vm.com/guide/getting-started.html) - Version manager to easily switch between tool versions
-- [Cairo 1.0 extension](https://marketplace.visualstudio.com/items?itemName=starkware.cairo1) for VSCode - Syntax highlighting and language support
-- [Starknet Devnet](https://0xspaceshard.github.io/starknet-devnet/) - Starknet Devnet
-
-To install `starkup`, run the following command:
-
-```sh
-curl --proto '=https' --tlsv1.2 -sSf https://sh.starkup.sh | sh
+```
+1. Lock BTC on Bitcoin     →  OP_CAT Taproot vault constrains all spend paths
+2. Mint BTSUSD on Starknet →  CDPCore issues stablecoin against BTC collateral
+3. Repay or Liquidate      →  Bitcoin-enforced vault paths, no bridge custody
 ```
 
-#### 1.2 Create your project
+### Key Properties
 
-Open a terminal and run the following command:
+- **No wrapped BTC** — real BTC stays on Bitcoin L1 inside a covenant vault
+- **No bridge custody** — the vault script enforces liquidation destination at the consensus level
+- **Trust-minimized oracle** — oracle keypair is committed into the Tapscript; a compromised oracle cannot redirect funds
+- **Starknet accounting** — debt, health factor, and stablecoin supply tracked on-chain with full auditability
+- **Three spend paths** — repay (user+oracle 2-of-2), liquidate (OP_CAT covenant), timeout (CSV emergency recovery)
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Bitcoin L1 (regtest / mainnet)               │
+│                                                                     │
+│   ┌──────────────────────────────────────────────────────────────┐  │
+│   │             OP_CAT Taproot Vault (standard_vault)            │  │
+│   │                                                              │  │
+│   │   Leaf A: Repay    → User + Oracle 2-of-2 multisig          │  │
+│   │   Leaf B: Liquidate→ Oracle signs + OP_CAT pins destination  │  │
+│   │   Leaf C: Timeout  → User CSV timelock (emergency recovery)  │  │
+│   └──────────────────────────────────────────────────────────────┘  │
+│                           │ deposit txid                            │
+└───────────────────────────┼─────────────────────────────────────────┘
+                            │ register_vault(txid, btc_sats)
+                            ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                     Starknet Sepolia Testnet                        │
+│                                                                     │
+│  ┌─────────────────┐   ┌──────────────┐   ┌──────────────────────┐ │
+│  │  VaultRegistry  │──▶│   CDPCore    │──▶│    BTSUSDToken       │ │
+│  │  maps txid →    │   │  debt ledger │   │  ERC-20 stablecoin   │ │
+│  │  owner + sats   │   │  health HF   │   │  mint/burn gated     │ │
+│  └─────────────────┘   └──────┬───────┘   └──────────────────────┘ │
+│                               │ get_btc_price / get_btc_volatility  │
+│                        ┌──────▼───────┐                             │
+│                        │  MockOracle  │◀── Oracle Service (cron)    │
+│                        │  BTC/USD     │    CoinGecko → Starknet     │
+│                        └─────────────┘                             │
+└─────────────────────────────────────────────────────────────────────┘
+                            │
+┌───────────────────────────▼─────────────────────────────────────────┐
+│                      Supporting Services                            │
+│                                                                     │
+│  btc-proxy.mjs    → HTTP proxy: Frontend ↔ Bitcoin Core RPC        │
+│  oracle-service/  → Price feed + health monitor + attestation signer│
+│  packages/nextjs/ → Next.js CDP dashboard (Starknet-React)         │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Complete Lifecycle
+
+### Phase 1 — Lock BTC on Bitcoin
+
+User runs the `standard_vault` CLI to deposit BTC into an OP_CAT Taproot vault.
 
 ```bash
-npx create-stark@latest
-cd my-dapp-example
-yarn install
+cd standard_vault
+make deposit
+# → Prints: txid, vault Taproot address, oracle x-only pubkey
+# → Updates vault_covenant.json with active vault state
 ```
 
-Now you have a new project with the basic structure.
+The vault UTXO is now on Bitcoin. Three spend paths are cryptographically enforced:
 
-#### 1.3 Troubleshooting
+| Path | Who Signs | What Happens |
+|------|-----------|--------------|
+| Repay (Leaf A) | User + Oracle | Debt cleared on Starknet, BTC returned to user |
+| Liquidate (Leaf B) | Oracle only | OP_CAT covenant pins output to liquidation pool — oracle cannot redirect funds |
+| Timeout (Leaf C) | User only | CSV timelock — user reclaims BTC after N blocks, no counterparty needed |
 
-- If you run into version errors after using `starkup` or `asdf`, you can try to install the dependencies manually. Check the details below.
+### Phase 2 — Register and Mint on Starknet
 
-<details>
+User pastes the Bitcoin txid into the frontend. The frontend calls:
 
-#### Installing with ASDF
+1. `CDPCore.register_vault(txid, btc_sats)` → registered in VaultRegistry
+2. `CDPCore.mint_debt(txid, amount)` → mints BTSUSD against BTC collateral
 
-Using ASDF, you can install the required dependencies of Scaffold Stark 2 in a single command. You can do so by doing
+Health factor is computed continuously:
+
+```
+HF = (collateral_usd × 10000) / (debt_usd × MCR)
+MCR = 150 + volatility_pct / 2   (capped at 250)
+HF ≥ 100 = safe
+```
+
+### Phase 3 — Repay or Liquidate
+
+**Happy path (repay):**
+- User repays BTSUSD on frontend → `CDPCore.repay_debt(txid, amount)`
+- Oracle signs repayment attestation → `make repay` executes Leaf A → BTC returned
+
+**Liquidation path:**
+- Oracle service detects HF < 100 → signs LIQUIDATION attestation
+- `make liquidate` executes Leaf B → OP_CAT covenant forces BTC to liquidation pool
+- No amount of oracle compromise can redirect the liquidation output
+
+---
+
+## How OP_CAT Enforcement Works
+
+The liquidation covenant uses the **CAT+Schnorr sighash introspection technique**:
+
+[BIP341](https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#common-signature-message) defines a `SigMsg` — a commitment to every field of the spending transaction. [Andrew Polestra observed](https://medium.com/blockstream/cat-and-schnorr-tricks-i-faf1b59bd298) that setting P and R to the generator point G makes the Schnorr `s` value equal to `SigMsg + 1`.
+
+The Tapscript exploits this: the witness provides raw `SigMsg` components; OP_CAT reassembles them on the stack; CHECKSIG validates the result. If it passes, the transaction structure is exactly what the script committed to — **including the output address**. The script asserts that the single output goes to the pre-committed `liquidation_pool_address`. Any attempt to sign a different destination produces an invalid `SigMsg` and fails at consensus.
+
+All script logic is in [`standard_vault/src/vault/script.rs`](standard_vault/src/vault/script.rs).
+
+---
+
+## Deployed Contracts (Starknet Sepolia)
+
+| Contract | Address | Explorer |
+|----------|---------|---------|
+| **VaultRegistry** | `0x0147864dd4a1c9849cbdaea58c22cdc36fe42a66c1102bc02ec4668932937bae` | [View](https://sepolia.starkscan.co/contract/0x0147864dd4a1c9849cbdaea58c22cdc36fe42a66c1102bc02ec4668932937bae) |
+| **CDPCore** | `0x070985a3cf9817e50a90bc2d3550f77d64f8a9bebc71577172295682f9580879` | [View](https://sepolia.starkscan.co/contract/0x070985a3cf9817e50a90bc2d3550f77d64f8a9bebc71577172295682f9580879) |
+| **BTSUSDToken** | `0x075690645b6e49811b87ec11bbffb3f25aa6b00cb8070a9459983135e39cb2cd` | [View](https://sepolia.starkscan.co/contract/0x075690645b6e49811b87ec11bbffb3f25aa6b00cb8070a9459983135e39cb2cd) |
+| **MockOracle** | `0x04ed3d329fffa670f2a728444a9b53d0cae859a4397adfbde1622e0303041f14` | [View](https://sepolia.starkscan.co/contract/0x04ed3d329fffa670f2a728444a9b53d0cae859a4397adfbde1622e0303041f14) |
+| **BTSSavingsVault** | `0x01286e3af345995555c0248f6ab32c3a10ac1a882343730de9400ea07f1714c0` | [View](https://sepolia.starkscan.co/contract/0x01286e3af345995555c0248f6ab32c3a10ac1a882343730de9400ea07f1714c0) |
+
+---
+
+## Monorepo Structure
+
+```
+Bitcoin-Standard/
+├── standard_vault/              # Rust — OP_CAT Taproot vault CLI
+│   ├── src/
+│   │   ├── main.rs              # CLI entrypoint (deposit/repay/liquidate/timeout/status)
+│   │   ├── settings.rs          # Config (oracle keypair, RPC, timelock)
+│   │   └── vault/
+│   │       ├── contract.rs      # Vault struct + tx builders (repay/liquidate/timeout)
+│   │       └── script.rs        # OP_CAT Tapscript construction (Leaf A/B/C)
+│   ├── Makefile                 # Demo commands
+│   ├── settings.toml            # Vault config (oracle key, deposit amount, timelock)
+│   └── vault_covenant.json      # Active vault state (txid, keypairs, status)
+│
+├── packages/
+│   ├── nextjs/                  # Next.js frontend (CDP dashboard)
+│   │   ├── app/
+│   │   │   ├── page.tsx         # Landing page
+│   │   │   ├── borrow/          # Vault register + mint + repay UI
+│   │   │   ├── dashboard/       # Protocol stats (TVL, supply, backing ratio)
+│   │   │   └── btsusd/          # Savings vault UI
+│   │   ├── hooks/
+│   │   │   └── useNativeCDP.ts  # Core hook: reads + writes to all Starknet contracts
+│   │   └── contracts/
+│   │       └── nativeContracts.ts  # Addresses, ABIs, formatters
+│   │
+│   ├── snfoundry/               # Cairo contracts + deploy scripts
+│   │   └── contracts/src/
+│   │       ├── VaultRegistry.cairo   # Maps BTC txid → owner + sats
+│   │       ├── CDPCore.cairo         # Debt engine, health factor, liquidation
+│   │       ├── BTSUSDToken.cairo     # ERC-20 stablecoin (mint/burn gated to CDPCore)
+│   │       ├── MockOracle.cairo      # BTC price + volatility feed
+│   │       └── BTSSavingsVault.cairo # ERC-4626 savings module
+│   │
+│   └── oracle-service/          # Node.js cron service
+│       └── src/
+│           ├── index.ts         # Scheduler: price (5min), volatility (60min), health (2min)
+│           ├── coingecko.ts     # BTC price + 30-day volatility fetch
+│           ├── starknet.ts      # MockOracle push + CDPCore health reads
+│           ├── bitcoin.ts       # UTXO outpoint monitor via Bitcoin RPC
+│           └── attestations.ts  # LIQUIDATION + REPAYMENT_CLEARED signature generation
+│
+├── btc-proxy.mjs                # HTTP proxy: Frontend ↔ Bitcoin Core RPC (CORS bridge)
+├── docs/
+│   ├── ARCHITECTURE.md          # Deep-dive protocol architecture
+│   ├── TODO.md                  # Feature tracker + deployed addresses
+│   ├── PROGRESS.md              # Build status by component
+│   └── UX_STORY_PLAN.md         # UX narrative and polish plan
+└── README.md                    # This file
+```
+
+---
+
+## Demo Setup
+
+### Prerequisites (one-time)
 
 ```bash
-asdf install
+# Build OP_CAT-enabled Bitcoin Core + vault binary
+cd standard_vault
+make bootstrap        # ~10-20 min first time (compiles Bitcoin Core)
 ```
 
-You can refer to the guide of manual installation of asdf [here](https://asdf-vm.com/guide/getting-started.html).
+Also requires:
+- Node.js ≥ 22, Yarn
+- Rust toolchain
+- C++ compiler (for Bitcoin Core build)
+- Argent / Braavos wallet connected to Starknet Sepolia
 
-#### Scarb version
+### Running the Demo (4 terminals)
 
-To ensure the proper functioning of scaffold-stark, your `Scarb` version must match the version specified in [Compatible versions](#compatible-versions). To accomplish this, first check Scarb version:
-
-```sh
-scarb --version
-```
-
-If your `Scarb` version is not the version specified in [Compatible versions](#compatible-versions), you need to install it. If you already have installed `Scarb` via `starkup`, you can setup this specific version with the following command:
-
-```sh
-asdf install scarb <version> && asdf set scarb <version>
-```
-
-Replace `<version>` with the exact version from [Compatible versions](#compatible-versions). Otherwise, you can install Scarb following the [instructions](https://docs.swmansion.com/scarb/download.html#install-via-asdf).
-
-#### Starknet Foundry version
-
-To ensure the proper functioning of the tests on scaffold-stark, your `Starknet Foundry` version must match the version specified in [Compatible versions](#compatible-versions). To accomplish this, first check your `Starknet Foundry` version:
-
-```sh
-snforge --version
-```
-
-If your `Starknet Foundry` version is not the version specified in [Compatible versions](#compatible-versions), you need to install it. If you already have installed `Starknet Foundry` via `starkup`, you can setup this specific version with the following command:
-
-```sh
-asdf install starknet-foundry <version> && asdf set starknet-foundry <version>
-```
-
-Replace `<version>` with the exact version from [Compatible versions](#compatible-versions). Otherwise, you can install Starknet Foundry following the [instructions](https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html#installation-via-asdf).
-
-#### Starknet-devnet version
-
-To ensure the proper functioning of scaffold-stark, your `starknet-devnet` version must match the version specified in [Compatible versions](#compatible-versions). To accomplish this, first check your `starknet-devnet` version:
-
-```sh
-starknet-devnet --version
-```
-
-If your `starknet-devnet` version is not the version specified in [Compatible versions](#compatible-versions), you need to install it.
-
-- Install starknet-devnet via `asdf` ([instructions](https://github.com/gianalarcon/asdf-starknet-devnet/blob/main/README.md)). Use the exact version from [Compatible versions](#compatible-versions).
-
-</details>
-
-### Option 2. Dev Containers
-
-#### 2.1 Install Docker Desktop
-
-As an alternative to installing the tools locally (Scarb, Starknet Foundry, Starknet Devnet), you can use Docker, this is the recommended option for `Windows` users. Here's what you need to do:
-
-1. Install [Docker Desktop](https://www.docker.com/get-started/)
-2. Install [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-3. Create a new project folder.
-
-- `npx create-stark@latest`
-- `cd my-dapp-example`
-
-4. Check your project folder contains a `devcontainer.json` file. This file is used to set up the environment:
-
-- The configuration uses the `starknetfoundation/starknet-dev:<Scarb version>` image with the Scarb version specified in [Compatible versions](#compatible-versions).
-- This includes all required tools pre-installed, such as Scarb, Starknet Foundry, Starknet Devnet and other dependencies.
-
-#### 2.2 Getting Started with Docker Setup
-
-To start using the Docker-based setup:
-
-1. Open the project in **Visual Studio Code**.
-2. Select **"Reopen in Container"**.
-3. If you need to rebuild the container, open the Command Palette (**View -> Command Palette**) and choose:
-   - **Dev Containers: Rebuild and Reopen in Container**
-
-> Once inside the container, you can start working with all the tools and dependencies pre-configured.
-
-Now you are ready!!!
-
-## Compatible versions
-
-- Starknet-devnet - 0.6.1
-- Scarb - v2.12.2
-- Snforge - v0.51.1
-- Cairo - v2.12.2
-- Rpc - v0.9.x
-
-## Quickstart 1: Deploying a Smart Contract to Starknet-Devnet
-
-To get started with Scaffold-Stark, follow the steps below:
-
-1. Install the latest version of Scaffold-Stark
-
+**Terminal 1 — Bitcoin regtest node:**
 ```bash
-npx create-stark@latest
-cd my-dapp-example
-yarn install
+cd standard_vault
+make start-bitcoind
 ```
 
-2. Run a local network in the first terminal.
-
+**Terminal 2 — BTC proxy (frontend ↔ Bitcoin Core):**
 ```bash
-yarn chain
+node btc-proxy.mjs
+# Listening on http://127.0.0.1:4040
 ```
 
-> To run a fork : `yarn chain --fork-network <URL> [--fork-block <BLOCK_NUMBER>]`
-
-This command starts a local Starknet network using Devnet. The network runs on your local machine and can be used for testing and development. You can customize the network configuration in `scaffold.config.ts` for your nextjs app.
-
-3. On a second terminal, deploy the sample contract:
-
+**Terminal 3 — Oracle service (price feed + health monitor):**
 ```bash
-yarn deploy
+cd packages/oracle-service
+cp .env.example .env   # fill in Starknet private key + RPC
+npm run start
+# → Pushes BTC price to MockOracle every 5 min
+# → Monitors vault health factors every 2 min
+# → Signs LIQUIDATION attestations when HF < 100
 ```
 
-This command deploys a sample smart contract to the local network. The contract is located in `packages/snfoundry/contracts/src` and can be modified to suit your needs. The `yarn deploy` command uses the deploy script located in `packages/snfoundry/scripts-ts/deploy.ts` to deploy the contract to the network. You can also customize the deploy script.
-
-By default `Scaffold-Stark` takes the first prefunded account from `starknet-devnet` as a deployer address,
-
-4. On a third terminal, start your NextJS app:
-
-```bash
-yarn start
-```
-
-Visit your app on: `http://localhost:3000`. You can interact with your smart contract using the `Debug Contracts` page.
-
-5. Check your environment variables. We have a `yarn postinstall` script that will create `.env` files based on the `.env.example` files provided. If the environment variables don't exist, you can manually create a `.env` file from the `.env.example` to get the app running!
-
-> ⚠️ **IMPORTANT**: Never commit your private keys or sensitive environment variables to version control. The `.env` files are included in `.gitignore` by default, but always double-check before pushing your changes.
-
-## Quickstart 2: Deploying a Smart Contract to Sepolia Testnet
-
-<details>
-
-1. Make sure you already cloned this repo and installed dependencies.
-
-2. Prepare your environment variables.
-
-Find the `packages/snfoundry/.env` file and fill the env variables related to Sepolia testnet with your own wallet account contract address and private key. Find the `packages/nextjs/.env` file and fill the env variable related to Sepolia testnet rpc url.
-
-3. Change your default network to Sepolia testnet.
-
-Find the `packages/nextjs/scaffold.config.ts` file and change the `targetNetworks` to `[chains.sepolia]`.
-
-![chall-0-scaffold-config](./packages/nextjs/public/scaffold-config.png)
-
-4. Get some testnet tokens.
-
-You will need to get some `STRK` Sepolia tokens to deploy your contract to Sepolia testnet.
-
-> Some popular faucets are [Starknet Faucet](https://starknet-faucet.vercel.app/) and [Blastapi Starknet Sepolia STRK](https://blastapi.io/faucets/starknet-sepolia-strk)
-
-4. Open a terminal, deploy the sample contract to Sepolia testnet:
-
-```bash
-yarn deploy --network sepolia
-```
-
-5. On a second terminal, start your NextJS app:
-
+**Terminal 4 — Frontend:**
 ```bash
 yarn start
+# → http://localhost:3000
 ```
 
-Visit your app on: `http://localhost:3000`. You can interact with your smart contract using the `Debug Contracts` page.
+### Demo Flow
 
-</details>
-
-## Setup RPC specific version
-
-<details>
-
-To ensure the proper functioning of the scaffold-stark with Testnet or Mainnet, your RPC version must match the version specified in [Compatible versions](#compatible-versions). This repository contains `.env.example` files with the default RPC URLs. Check the RPC URLs in `packages/nextjs/.env.example` and `packages/snfoundry/.env.example` for the current endpoints. Let's verify this RPC version by calling a `POST` request in an API platform like `Postman` or `Insommia`. Use the RPC URL from the `.env.example` files and the body should be:
-
-```json
-{
-  "jsonrpc": "2.0",
-  "method": "starknet_specVersion",
-  "id": 1
-}
+```
+1. make deposit           → creates Taproot UTXO on Bitcoin, prints txid
+2. Frontend: Register     → paste txid → CDPCore.register_vault()
+3. Frontend: Mint BTSUSD  → CDPCore.mint_debt() → stablecoin issued
+4. Frontend: Show HF      → health factor, collateral ratio, risk status
+5. make liquidate         → oracle signs + OP_CAT sends BTC to liquidation pool
+   (or)
+6. make repay <addr>      → user + oracle sign → debt cleared, BTC returned
+7. make timeout <addr>    → CSV timelock recovery (no oracle needed)
 ```
 
-You have to paste the endpoint and body in the API platform and click on the `Send` button. If the response matches the RPC version in [Compatible versions](#compatible-versions), then you are good to go. Otherwise, you have to get the correct RPC URL endpoint from the `.env.example` files.
+### Vault State Persistence
 
-![rpc-version](./packages/nextjs/public/rpc-version.png)
+`vault_covenant.json` stores the active vault state. Bitcoin chain data lives in `standard_vault/bitcoin-data/`.
 
-</details>
+| Scenario | Result |
+|----------|--------|
+| Stop + restart bitcoind (`make start-bitcoind`) | Chain intact, vault resumes |
+| `make clean-bitcoin-data` | Chain wiped — need fresh `make deposit` |
+| `make bootstrap` | Same as above (cleans data first) |
 
-## Network Configuration Centralization
+---
 
-<details>
+## Oracle Keypair Wiring
 
-By default, majority of the Network settings are centralized in `scaffold.config.ts`, the exception being the RPC urls which are configured from your environment variables. In the absence of the proper settings, the framework will choose a random provider for you.
-In the env file also, the lines configuring the networks (devnet, sepolia or mainnet) need to be uncommented, depending on what
-network you want activated for you.
+The vault Tapscript commits to the oracle's x-only public key. The oracle service must use the matching private key.
 
-**How to Change Networks:**
+1. Set `oracle_private_key_hex` in `standard_vault/settings.toml`
+2. Run `make deposit` — prints the oracle x-only pubkey
+3. In `packages/oracle-service/.env` set:
+   - `ORACLE_BTC_PRIVATE_KEY` — same key as `settings.toml`
+   - `EXPECTED_ORACLE_XONLY_PUBKEY` — pubkey printed by `make deposit`
 
-- Update the `targetNetworks` array in `scaffold.config.ts` (first network is the primary target)
+The oracle service validates this wiring on startup and warns if there is a mismatch.
 
-### Required Environment Variables
+---
 
-Set these in your `.env` file:
+## Contract Quality
 
-- `NEXT_PUBLIC_DEVNET_PROVIDER_URL`
-- `NEXT_PUBLIC_SEPOLIA_PROVIDER_URL`
-- `NEXT_PUBLIC_MAINNET_PROVIDER_URL`
-
-Configuration uses these variables with fallbacks:
-
-```typescript
-"devnet": process.env.NEXT_PUBLIC_DEVNET_PROVIDER_URL || "defaultRpcValue",
-"sepolia": process.env.NEXT_PUBLIC_SEPOLIA_PROVIDER_URL || "defaultRpcValue",
-"mainnet": process.env.NEXT_PUBLIC_MAINNET_PROVIDER_URL || "defaultRpcValue"
+```
+snforge test          → 60 passed, 0 failed
+yarn compile          → pass (scarb build)
+yarn next:check-types → pass
+yarn next:lint        → pass (0 warnings)
 ```
 
-</details>
+---
 
-## CLI Usage
+## Comparison
 
-<details>
-Depending on your package manager, substitute the word `COMMAND` with the appropiate one from the list.
+| | Bitcoin Standard | Wrapped-BTC CDPs | Payment-Relay / Oracle Systems |
+|---|---|---|---|
+| BTC collateral location | Bitcoin L1 (OP_CAT vault) | Bridge / multisig custody | N/A — no real BTC locking |
+| Bridge custody risk | None | High | N/A |
+| Liquidation enforcement | Bitcoin consensus (OP_CAT) | Smart contract only | N/A |
+| Stablecoin chain | Starknet | Ethereum / L2 | Various |
+| Oracle trust | Keypair in Tapscript | External price feed | Central relay |
+| Emergency recovery | CSV timelock (Leaf C) | Contract-only | Varies |
 
-```bash
-yarn COMMAND
-npm run COMMAND
-```
+---
 
-This repo prefer yarn as package manager.
+## Security Model
 
-Commands:
+- **Vault script is immutable** once the Taproot address is created. No admin can change spend paths post-deposit.
+- **Liquidation destination is hard-coded** in the Tapscript at deposit time. The oracle cannot redirect liquidation proceeds.
+- **Oracle key compromise** allows triggering liquidation but not theft — OP_CAT forces the output to the committed liquidation pool.
+- **Timeout path** (Leaf C) requires no oracle or counterparty — user can always recover BTC after the CSV timelock expires.
+- **Debt accounting** is fully on-chain on Starknet with no off-chain state.
 
-| Command          | Description                                                                               |
-| ---------------- | ----------------------------------------------------------------------------------------- |
-| format:check     | (Read only) Batch checks for format inconsistencies for the nextjs and snfoundry codebase |
-| next:check-types | Compile typscript project                                                                 |
-| next:lint        | Runs next lint                                                                            |
-| prepare          | Install husky's git hooks                                                                 |
-| usage            | Show this text                                                                            |
+---
 
-### CLI Smart Contracts
+## Roadmap
 
-| Command         | Description                                                                         |
-| --------------- | ----------------------------------------------------------------------------------- |
-| compile         | Compiles contracts.                                                                 |
-| test            | Runs snfoundry tests                                                                |
-| chain           | Starts the local blockchain network.                                                |
-| deploy          | Deploys contract to the configured network discarding previous deployments.         |
-| deploy:no-reset | Deploys contract to the configured network without discarding previous deployments. |
-| verify          | Verify Smart Contracts with Walnut                                                  |
+- [x] OP_CAT Taproot vault — 3-path covenant (repay / liquidate / timeout)
+- [x] Starknet CDP contracts (VaultRegistry, CDPCore, BTSUSDToken, MockOracle)
+- [x] Oracle service — price feed, health monitor, attestation signer
+- [x] Frontend — register, mint, repay, health factor display
+- [x] BTSSavingsVault — ERC-4626 savings module
+- [x] End-to-end regtest demo (deposit → repay, deposit → liquidate, deposit → timeout)
+- [ ] Switch MockOracle → Pragma live price feed
+- [ ] Signet / mainnet deployment (requires OP_CAT activation)
+- [ ] Merkle-batched bridge for higher throughput
+- [ ] Multi-vault aggregation
 
-### CLI Frontend
+---
 
-| Command     | Description                                  |
-| ----------- | -------------------------------------------- |
-| start       | Starts the frontend server                   |
-| test:nextjs | Runs the nextjs tests                        |
-| vercel      | Deploys app to vercel                        |
-| vercel:yolo | Force deploy app to vercel (ignoring errors) |
+## License
 
-## **What's next**
-
-- Edit your smart contract `your_contract.cairo` in `packages/snfoundry/contracts/src`
-- Edit your frontend homepage at `packages/nextjs/app/page.tsx`. For guidance on [routing](https://nextjs.org/docs/app/building-your-application/routing/defining-routes) and configuring [pages/layouts](https://nextjs.org/docs/app/building-your-application/routing/pages-and-layouts) checkout the Next.js documentation.
-- Edit your deployment scripts in `packages/snfoundry/script-ts/deploy.ts`
-- Edit your smart contract tests in `packages/snfoundry/contracts/src/test`. To run tests use `yarn test`
-- You can write unit tests for your Next.js app! Run them with one the following scripts below.
-  - `yarn test:nextjs` to run regular tests with watch mode
-  - `yarn test:nextjs run` to run regular tests without watch mode
-  - `yarn test:nextjs run --coverage` to run regular tests without watch mode with coverage
-
-</details>
-
-## Documentation
-
-Visit our [docs](https://docs.scaffoldstark.com/) to learn how to start building with Scaffold-Stark.
-
-To know more about its features, check out our [website](https://scaffoldstark.com)
-
-## Contributing to Scaffold-Stark
-
-We welcome contributions to Scaffold-Stark!
-
-Please see [CONTRIBUTING.MD](https://github.com/Scaffold-Stark/scaffold-stark-2/blob/main/CONTRIBUTING.md) for more information and guidelines for contributing to Scaffold-Stark.
+MIT — see [LICENSE](LICENSE)
