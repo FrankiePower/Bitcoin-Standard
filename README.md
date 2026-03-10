@@ -217,6 +217,20 @@ cd standard_vault
 make start-bitcoind
 ```
 
+After starting the node, load the required wallets (run once per session):
+```bash
+cd standard_vault
+./bitcoin-core-cat/src/bitcoin-cli -regtest -rpcuser=user -rpcpassword=password loadwallet miner
+./bitcoin-core-cat/src/bitcoin-cli -regtest -rpcuser=user -rpcpassword=password loadwallet btcstd_demo
+```
+
+> **First time only?** If loadwallet fails with "wallet not found", create them instead:
+> ```bash
+> ./bitcoin-core-cat/src/bitcoin-cli -regtest -rpcuser=user -rpcpassword=password createwallet miner
+> ./bitcoin-core-cat/src/bitcoin-cli -regtest -rpcuser=user -rpcpassword=password createwallet btcstd_demo
+> ./bitcoin-core-cat/src/bitcoin-cli -regtest -rpcuser=user -rpcpassword=password -rpcwallet=miner generatetoaddress 101 $(./bitcoin-core-cat/src/bitcoin-cli -regtest -rpcuser=user -rpcpassword=password -rpcwallet=miner getnewaddress)
+> ```
+
 **Terminal 2 — BTC proxy (frontend ↔ Bitcoin Core):**
 ```bash
 node btc-proxy.mjs
@@ -241,15 +255,31 @@ yarn start
 
 ### Demo Flow
 
+> **⚠️ Regtest requires manual block mining.** Transactions broadcast to regtest sit in the mempool unconfirmed until you mine a block. Run the mine command after every `make` step or you will get "insufficient fee, rejecting replacement" errors on retry.
+>
+> **Mine a block:**
+> ```bash
+> cd standard_vault
+> ./bitcoin-core-cat/src/bitcoin-cli -regtest -rpcuser=user -rpcpassword=password -rpcwallet=miner generatetoaddress 1 $(./bitcoin-core-cat/src/bitcoin-cli -regtest -rpcuser=user -rpcpassword=password -rpcwallet=miner getnewaddress)
+> ```
+> Save yourself grief and alias it in your shell:
+> ```bash
+> alias mine='cd ~/path/to/Bitcoin-Standard/standard_vault && ./bitcoin-core-cat/src/bitcoin-cli -regtest -rpcuser=user -rpcpassword=password -rpcwallet=miner generatetoaddress 1 $(./bitcoin-core-cat/src/bitcoin-cli -regtest -rpcuser=user -rpcpassword=password -rpcwallet=miner getnewaddress)'
+> ```
+
 ```
 1. make deposit           → creates Taproot UTXO on Bitcoin, prints txid
+   mine ← MINE A BLOCK
 2. Frontend: Register     → paste txid → CDPCore.register_vault()
 3. Frontend: Mint BTSUSD  → CDPCore.mint_debt() → stablecoin issued
 4. Frontend: Show HF      → health factor, collateral ratio, risk status
 5. make liquidate         → oracle signs + OP_CAT sends BTC to liquidation pool
+   mine ← MINE A BLOCK
    (or)
-6. make repay <addr>      → user + oracle sign → debt cleared, BTC returned
-7. make timeout <addr>    → CSV timelock recovery (no oracle needed)
+6. make repay             → user + oracle sign → debt cleared, BTC returned
+   mine ← MINE A BLOCK
+7. make timeout           → CSV timelock recovery (no oracle needed)
+   mine ← MINE A BLOCK
 ```
 
 ### Vault State Persistence
