@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useAccount } from "@starknet-react/core";
+import { useAccount, useNetwork, useSwitchChain } from "@starknet-react/core";
 import Wallet from "sats-connect";
 import { DashboardLayout } from "~~/components/layout/dashboard-layout";
 import {
@@ -23,6 +23,7 @@ import {
   formatHealthFactor,
   healthStatus,
 } from "~~/hooks/useNativeCDP";
+import { useTargetNetwork } from "~~/hooks/scaffold-stark/useTargetNetwork";
 import { useXverseStore } from "~~/services/store/xverseStore";
 
 // ─── BTC Market Banner ─────────────────────────────────────────────────────────
@@ -169,7 +170,9 @@ function BitcoinVaultStatus({
     return (
       <div className="rounded-xl border border-neutral-200 bg-white p-4 text-sm text-neutral-600 shadow-sm space-y-1">
         <div className="font-medium text-neutral-800">Vault txid loaded</div>
-        <div className="font-mono text-xs text-neutral-500 break-all">{txid}</div>
+        <div className="font-mono text-xs text-neutral-500 break-all">
+          {txid}
+        </div>
         <div>
           Not registered on Starknet yet. Complete Step 1 below to enable
           minting.
@@ -391,6 +394,9 @@ type RegtestKeyRecord = {
 export default function BorrowPage() {
   const { status, address } = useAccount();
   const isConnected = status === "connected";
+  const { chain } = useNetwork();
+  const { switchChain } = useSwitchChain({});
+  const { targetNetwork } = useTargetNetwork();
 
   // Vault txid state (managed in page, passed to hook)
   const [activeTxid, setActiveTxid] = useState("");
@@ -523,7 +529,8 @@ export default function BorrowPage() {
   }, [repayAmount]);
 
   // Deposit BTC via Xverse PSBT
-  const { btcAddress, vaultBtcBalance, vaultState } = useXverseStore();
+  const { btcAddress, vaultBtcBalance, vaultState, bitcoinNetwork } =
+    useXverseStore();
   const [depositAmount, setDepositAmount] = useState("1");
   const [depositStep, setDepositStep] = useState<
     "idle" | "preparing" | "signing" | "broadcasting" | "done" | "error"
@@ -657,6 +664,37 @@ export default function BorrowPage() {
       return false;
     }
   }, [regTxid, regBTCSats, cdp, address]);
+
+  const isWrongStarknetNetwork = useMemo(() => {
+    if (!isConnected || !chain?.id) return false;
+    return BigInt(chain.id) !== targetNetwork.id;
+  }, [isConnected, chain?.id, targetNetwork.id]);
+
+  const registerDisabledReason = useMemo(() => {
+    if (!isConnected) {
+      return "Connect a Starknet wallet to register this vault.";
+    }
+    if (isWrongStarknetNetwork) {
+      return `Switch Starknet to ${targetNetwork.name} to continue.`;
+    }
+    if (regTxid.trim().length !== 64) {
+      return "Vault txid is missing or invalid.";
+    }
+    if (regBTCSats === BigInt(0)) {
+      return "Enter the BTC amount for this vault.";
+    }
+    return null;
+  }, [
+    isConnected,
+    isWrongStarknetNetwork,
+    targetNetwork.name,
+    regTxid,
+    regBTCSats,
+  ]);
+
+  const handleSwitchStarknetNetwork = useCallback(() => {
+    void switchChain({ chainId: targetNetwork.id.toString(16) });
+  }, [switchChain, targetNetwork.id]);
 
   const handleMint = useCallback(async () => {
     setError("");
@@ -862,6 +900,43 @@ export default function BorrowPage() {
               </code>
             </li>
           </ul>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
+              <div className="text-[11px] uppercase tracking-wide text-neutral-500">
+                Bitcoin Network
+              </div>
+              <div className="mt-0.5 text-xs font-semibold text-neutral-900">
+                {bitcoinNetwork || "Not connected"}
+              </div>
+              <div className="text-[11px] text-neutral-500">
+                Use Regtest for local BTC node operations.
+              </div>
+            </div>
+            <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
+              <div className="text-[11px] uppercase tracking-wide text-neutral-500">
+                Starknet Network
+              </div>
+              <div className="mt-0.5 text-xs font-semibold text-neutral-900">
+                {chain?.name || "Not connected"}
+              </div>
+              <div className="text-[11px] text-neutral-500">
+                Must be {targetNetwork.name} for register/mint calls.
+              </div>
+            </div>
+          </div>
+          {isConnected && isWrongStarknetNetwork && (
+            <div className="mt-2 flex items-center justify-between rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2">
+              <p className="text-xs text-amber-700">
+                Connected to the wrong Starknet network.
+              </p>
+              <button
+                onClick={handleSwitchStarknetNetwork}
+                className="rounded-md border border-amber-600/40 bg-amber-500/20 px-2.5 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-500/30"
+              >
+                Switch to {targetNetwork.name}
+              </button>
+            </div>
+          )}
           {operatorMessage && (
             <p className="mt-2 text-xs text-emerald-600">{operatorMessage}</p>
           )}
@@ -1092,10 +1167,7 @@ export default function BorrowPage() {
                 <button
                   onClick={() => void handleRegisterVault()}
                   disabled={
-                    !isConnected ||
-                    cdp.isRegistering ||
-                    regTxid.trim().length !== 64 ||
-                    regBTCSats === BigInt(0)
+                    cdp.isRegistering || registerDisabledReason !== null
                   }
                   className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
@@ -1106,11 +1178,24 @@ export default function BorrowPage() {
                     ? "Registering…"
                     : "Register Vault on Starknet"}
                 </button>
+                {registerDisabledReason && (
+                  <p className="text-xs text-neutral-600 text-center">
+                    {registerDisabledReason}
+                  </p>
+                )}
                 {!isConnected && (
                   <p className="text-xs text-neutral-500 text-center">
-                    Connect your Starknet wallet (ArgentX / Braavos) to
-                    register.
+                    Use the top-right wallet button to connect Starknet. BTC
+                    Regtest and Starknet are separate networks.
                   </p>
+                )}
+                {isConnected && isWrongStarknetNetwork && (
+                  <button
+                    onClick={handleSwitchStarknetNetwork}
+                    className="w-full rounded-lg border border-neutral-300 bg-white py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+                  >
+                    Switch Starknet to {targetNetwork.name}
+                  </button>
                 )}
               </div>
             )}

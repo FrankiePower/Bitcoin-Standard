@@ -267,7 +267,9 @@ function parseCurrentOutpoint(
 export async function getStandardVaultStatus(): Promise<StandardVaultStatus> {
   const { repoRoot, standardVaultDir, vaultFilePath } = await getPaths();
   const vaultInfo = await readVaultFile();
-  const currentOutpoint = parseCurrentOutpoint(vaultInfo.parsed?.current_outpoint);
+  const currentOutpoint = parseCurrentOutpoint(
+    vaultInfo.parsed?.current_outpoint,
+  );
   const result = await runStandardVaultAction("status");
 
   const oraclePubKey = maybeExtract(
