@@ -1,6 +1,10 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { useAccount as useStarknetAccount, useConnect, useDisconnect } from "@starknet-react/core";
+import {
+  useAccount as useStarknetAccount,
+  useConnect,
+  useDisconnect,
+} from "@starknet-react/core";
 import { useXverseStore } from "~~/services/store/xverseStore";
 
 const ConnectModal = () => {
@@ -147,14 +151,18 @@ const ConnectModal = () => {
                       )}
 
                       {/* Braavos — not yet connected */}
-                      {isXverseConnected && !isBraavosConnected && braavosConnector && (
-                        <button
-                          onClick={() => connectStarknet({ connector: braavosConnector })}
-                          className="w-full py-3 rounded-lg text-[15px] font-semibold text-white bg-[#7c3aed] hover:bg-[#6d28d9] transition-all"
-                        >
-                          Connect Braavos
-                        </button>
-                      )}
+                      {isXverseConnected &&
+                        !isBraavosConnected &&
+                        braavosConnector && (
+                          <button
+                            onClick={() =>
+                              connectStarknet({ connector: braavosConnector })
+                            }
+                            className="w-full py-3 rounded-lg text-[15px] font-semibold text-white bg-[#7c3aed] hover:bg-[#6d28d9] transition-all"
+                          >
+                            Connect Braavos
+                          </button>
+                        )}
 
                       {/* Xverse — not yet connected */}
                       {isBraavosConnected && !isXverseConnected && (
@@ -165,7 +173,9 @@ const ConnectModal = () => {
                           disabled={isXverseConnecting}
                           className="w-full py-3 rounded-lg text-[15px] font-semibold text-white bg-orange-500 hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
-                          {isXverseConnecting ? "Connecting..." : "Connect Xverse"}
+                          {isXverseConnecting
+                            ? "Connecting..."
+                            : "Connect Xverse"}
                         </button>
                       )}
 
@@ -197,7 +207,9 @@ const ConnectModal = () => {
                         disabled={isXverseConnecting}
                         className="w-full py-3 rounded-lg text-[15px] font-semibold text-white bg-orange-500 hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                       >
-                        {isXverseConnecting ? "Connecting..." : "Connect Xverse"}
+                        {isXverseConnecting
+                          ? "Connecting..."
+                          : "Connect Xverse"}
                       </button>
 
                       {/* Braavos */}
