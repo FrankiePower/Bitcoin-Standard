@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useXverseStore } from "~~/services/store/xverseStore";
-import { TestSignFlow } from "~~/components/TestSignFlow";
 
 const ConnectModal = () => {
   const modalRef = useRef<HTMLInputElement>(null);
@@ -11,10 +10,9 @@ const ConnectModal = () => {
     bitcoinNetwork,
     status,
     btcBalance,
-    vaultBtcBalance,
-    vaultState,
     connect,
     connectToLocalRegtest,
+    connectToStarknetSepolia,
     disconnect,
     hydrate,
   } = useXverseStore();
@@ -117,27 +115,6 @@ const ConnectModal = () => {
                           </p>
                         </div>
                       )}
-                      {vaultBtcBalance !== null && (
-                        <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5">
-                          <div className="flex items-center justify-between mb-1">
-                            <p className="text-neutral-400 text-xs">
-                              Vault (OP_CAT)
-                            </p>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-mono text-emerald-400">
-                                {vaultBtcBalance.toFixed(4)} BTC
-                              </span>
-                              {vaultState && (
-                                <span
-                                  className={`text-xs px-2 py-0.5 rounded-full ${vaultState === "Active" ? "bg-emerald-500/10 text-emerald-400" : "bg-zinc-500/10 text-zinc-400"}`}
-                                >
-                                  {vaultState}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
                       {starknetAddress && (
                         <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5">
                           <p className="text-neutral-400 text-xs mb-1">
@@ -154,7 +131,12 @@ const ConnectModal = () => {
                       >
                         Switch to Local Regtest
                       </button>
-                      <TestSignFlow />
+                      <button
+                        onClick={connectToStarknetSepolia}
+                        className="w-full py-2.5 rounded-lg text-[13px] font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition-all"
+                      >
+                        Switch to Starknet Sepolia
+                      </button>
                       <button
                         onClick={() => {
                           disconnect();

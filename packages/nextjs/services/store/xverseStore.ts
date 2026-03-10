@@ -22,6 +22,7 @@ type XverseWalletState = {
   vaultTaprootAddress: string | null;
   connect: () => Promise<void>;
   connectToLocalRegtest: () => Promise<void>;
+  connectToStarknetSepolia: () => Promise<void>;
   disconnect: () => Promise<void>;
   hydrate: () => void;
   refreshBalances: () => Promise<void>;
@@ -220,6 +221,51 @@ export const useXverseStore = create<XverseWalletState>((set, get) => ({
     } catch (err: any) {
       console.error("[xverse] connectToLocalRegtest error:", err);
       toast.error(err?.message || "Failed to connect to regtest");
+    }
+  },
+
+  connectToStarknetSepolia: async () => {
+    toast.info("Switching to Starknet Sepolia...");
+    try {
+      const response = await Wallet.request("wallet_connect", {
+        addresses: ["payment", "ordinals", "starknet"],
+        message: "Bitcoin Standard: connect on Testnet for Starknet Sepolia",
+        network: "Testnet",
+      } as any);
+
+      if (response.status !== "success" || !response.result) {
+        const msg =
+          response.status === "error"
+            ? (response as any).error?.message
+            : "Connection not approved";
+        toast.error(msg || "Failed to switch to Starknet Sepolia");
+        return;
+      }
+
+      const result = response.result as any;
+      const addresses: any[] = result.addresses ?? result.addressses ?? [];
+      const paymentAccount = addresses.find((a: any) => a.purpose === "payment");
+      const starknetAccount = addresses.find((a: any) => a.purpose === "starknet");
+
+      if (!paymentAccount) {
+        toast.error("Xverse did not return a payment address");
+        return;
+      }
+
+      const btcAddress = paymentAccount.address;
+      const starknetAddress = starknetAccount?.address ?? null;
+      const bitcoinNetwork = result.network?.bitcoin?.name ?? "Testnet";
+
+      localStorage.setItem("xverse_payment_address", btcAddress);
+      if (starknetAddress)
+        localStorage.setItem("xverse_starknet_address", starknetAddress);
+      localStorage.setItem("xverse_bitcoin_network", bitcoinNetwork);
+
+      set({ btcAddress, starknetAddress, bitcoinNetwork, status: "connected" });
+      toast.success(`Starknet Sepolia connected${starknetAddress ? ` — ${starknetAddress.slice(0, 10)}...` : ""}`);
+      void get().refreshBalances();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to switch to Starknet Sepolia");
     }
   },
 
