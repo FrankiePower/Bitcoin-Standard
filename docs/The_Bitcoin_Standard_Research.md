@@ -61,11 +61,11 @@ This is where the true, actionable "Bitcoin Standard" of modern DeFi comes to li
 
 Instead of waiting for hyperbitcoinization where merchants price goods in Satoshis, we can bridge the gap today. The next evolution is turning passive Bitcoin into productive collateral without selling it. 
 
-The **Bitcoin Standard Protocol (BTCStandard)** we are building represents the modern mechanics of this transition. By bringing BTC to high-speed, low-cost layer 2 networks (like Starknet as WBTC), we create the ultimate CDP:
-1. **Pristine Collateral:** Users lock up the hardest asset in human history (Bitcoin).
-2. **Stable Liquidity:** Users mint an over-collateralized stablecoin (BTCUSD) to spend in the real world or deploy in DeFi.
-3. **No Centralized Risk:** Unlike holding fiat in a bank, the Proof of Solvency is on-chain, 100% transparent and mathematically auditable 24/7.
-4. **Dynamic Risk Engine:** Because Bitcoin is still volatile in fiat terms, dynamic LTVs and circuit breakers protect the system algorithmically, without human bias.
+The **Bitcoin Standard Protocol (BTCStandard)** we are building represents the modern mechanics of this transition. BTC is locked directly in an OP_CAT covenant vault on Bitcoin L1 — no bridges, no wrapped tokens. Starknet holds only the debt ledger. Bitcoin consensus itself enforces the collateral.
+1. **Pristine Collateral:** Users lock up the hardest asset in human history (real BTC, on Bitcoin L1).
+2. **Stable Liquidity:** Users mint an over-collateralized stablecoin (BTSUSD) to spend in the real world or deploy in DeFi.
+3. **No Bridge Risk:** Unlike WBTC or any bridged-BTC CDP, there is no custodian and no bridge to exploit. The vault covenant is enforced by Bitcoin script, not a multisig.
+4. **Dynamic Risk Engine:** Because Bitcoin is still volatile in fiat terms, dynamic LTVs and volatility-adjusted circuit breakers protect the system algorithmically, without human bias.
 
 ### Conclusion
 
