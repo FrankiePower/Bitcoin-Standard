@@ -1,7 +1,7 @@
 /**
  * BTCStandard Phase 2 contract addresses and ABIs — Starknet Sepolia
  *
- * These are the native Bitcoin CDP contracts (VaultRegistry, CDPCore, BTCUSDToken, MockOracle).
+ * These are the native Bitcoin CDP contracts (VaultRegistry, CDPCore, BTSUSDToken, MockOracle).
  * Addresses are hardcoded for Sepolia. Swap to mainnet addresses when deploying.
  */
 
@@ -12,7 +12,7 @@ export const NATIVE_ADDRESSES = {
     "0x0147864dd4a1c9849cbdaea58c22cdc36fe42a66c1102bc02ec4668932937bae",
   CDP_CORE:
     "0x070985a3cf9817e50a90bc2d3550f77d64f8a9bebc71577172295682f9580879",
-  BTCUSD_TOKEN:
+  BTSUSD_TOKEN:
     "0x075690645b6e49811b87ec11bbffb3f25aa6b00cb8070a9459983135e39cb2cd",
   MOCK_ORACLE:
     "0x04ed3d329fffa670f2a728444a9b53d0cae859a4397adfbde1622e0303041f14",
@@ -181,9 +181,9 @@ export const VAULT_REGISTRY_ABI = [
   },
 ] as const;
 
-// ─── BTCUSDToken ABI (ERC20) ───────────────────────────────────────────────────
+// ─── BTSUSDToken ABI (ERC20) ───────────────────────────────────────────────────
 
-export const BTCUSD_TOKEN_ABI = [
+export const BTSUSD_TOKEN_ABI = [
   U256_STRUCT,
   {
     type: "function",
@@ -275,8 +275,8 @@ export function formatBTC(sats: bigint, decimals = 8): string {
   return `${whole.toLocaleString()}.${fracStr}`;
 }
 
-/** BTCUSD amount (18 decimals) → formatted string */
-export function formatBTCUSD(amount: bigint, decimals = 2): string {
+/** BTSUSD amount (18 decimals) → formatted string */
+export function formatBTSUSD(amount: bigint, decimals = 2): string {
   if (amount === BigInt(0)) return "0";
   const divisor = BigInt("1000000000000000000");
   const whole = amount / divisor;

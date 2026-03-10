@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useNativeCDP, formatBTC, formatBTCUSD } from "~~/hooks/useNativeCDP";
+import { useNativeCDP, formatBTC, formatBTSUSD } from "~~/hooks/useNativeCDP";
 import { NATIVE_ADDRESSES } from "~~/contracts/nativeContracts";
 
 export default function BTSUSDPage() {
@@ -24,7 +24,7 @@ export default function BTSUSDPage() {
   const stats = [
     {
       label: "Total Supply",
-      value: `${formatBTCUSD(totalSupply)} BTSUSD`,
+      value: `${formatBTSUSD(totalSupply)} BTSUSD`,
       icon: Coins,
     },
     { label: "Stability Fee", value: "2.5% p.a.", icon: Gauge },
@@ -138,12 +138,12 @@ export default function BTSUSDPage() {
                 <div className="flex items-center justify-between text-sm font-medium gap-3">
                   <span className="text-sky-700">Contract Address</span>
                   <a
-                    href={`https://sepolia.starkscan.co/contract/${NATIVE_ADDRESSES.BTCUSD_TOKEN}`}
+                    href={`https://sepolia.starkscan.co/contract/${NATIVE_ADDRESSES.BTSUSD_TOKEN}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sky-700 hover:underline flex items-center gap-1.5"
                   >
-                    {`${NATIVE_ADDRESSES.BTCUSD_TOKEN.slice(0, 8)}...${NATIVE_ADDRESSES.BTCUSD_TOKEN.slice(-6)}`}{" "}
+                    {`${NATIVE_ADDRESSES.BTSUSD_TOKEN.slice(0, 8)}...${NATIVE_ADDRESSES.BTSUSD_TOKEN.slice(-6)}`}{" "}
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </div>

@@ -19,7 +19,7 @@ import {
 import {
   useNativeCDP,
   formatBTC,
-  formatBTCUSD,
+  formatBTSUSD,
   formatHealthFactor,
   healthStatus,
 } from "~~/hooks/useNativeCDP";
@@ -225,9 +225,9 @@ function BitcoinVaultStatus({
           </div>
         </div>
         <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-          <div className="text-neutral-500 text-xs mb-1">BTCUSD Debt</div>
+          <div className="text-neutral-500 text-xs mb-1">BTSUSD Debt</div>
           <div className="font-semibold text-neutral-900">
-            {formatBTCUSD(position.debtBTCUSD)} BTCUSD
+            {formatBTSUSD(position.debtBTSUSD)} BTSUSD
           </div>
           <div className="text-xs text-neutral-500">
             ≈ ${debtUSD.toLocaleString(undefined, { maximumFractionDigits: 2 })}
@@ -235,7 +235,7 @@ function BitcoinVaultStatus({
         </div>
       </div>
 
-      {position.debtBTCUSD > BigInt(0) && (
+      {position.debtBTSUSD > BigInt(0) && (
         <HealthFactorBar hf={healthFactor} mcr={mcr} />
       )}
     </div>
@@ -550,7 +550,7 @@ export default function BorrowPage() {
   // Projected health factor after minting additional debt
   const projectedHF = useMemo(() => {
     if (mintAmountBigInt === BigInt(0) || !cdp.vaultInfo) return null;
-    const newDebt = cdp.position.debtBTCUSD + mintAmountBigInt;
+    const newDebt = cdp.position.debtBTSUSD + mintAmountBigInt;
     const collateralUSD8dec = BigInt(Math.floor(cdp.collateralUSD * 1e8));
     const debtUSD8dec = (newDebt * BigInt(1e8)) / TOKEN_DECIMALS;
     if (debtUSD8dec === BigInt(0)) return null;
@@ -738,7 +738,7 @@ export default function BorrowPage() {
       setError("Enter an amount");
       return;
     }
-    if (repayAmountBigInt > cdp.position.debtBTCUSD) {
+    if (repayAmountBigInt > cdp.position.debtBTSUSD) {
       setError("Amount exceeds outstanding debt");
       return;
     }
@@ -812,9 +812,9 @@ export default function BorrowPage() {
       <div className="space-y-5 max-w-2xl mx-auto">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Borrow BTCUSD</h1>
+          <h1 className="text-2xl font-bold text-neutral-900">Borrow BTSUSD</h1>
           <p className="mt-1 text-sm text-neutral-600">
-            Lock native Bitcoin in an OP_CAT vault, then mint BTCUSD stablecoin
+            Lock native Bitcoin in an OP_CAT vault, then mint BTSUSD stablecoin
             against it on Starknet.
           </p>
         </div>
@@ -892,7 +892,7 @@ export default function BorrowPage() {
             <li>
               3. Register txid + BTC amount with your connected Starknet wallet.
             </li>
-            <li>4. Mint BTCUSD and keep health factor above 100.</li>
+            <li>4. Mint BTSUSD and keep health factor above 100.</li>
             <li>
               5. Bridge endpoint:{" "}
               <code className="text-neutral-800">
@@ -947,7 +947,7 @@ export default function BorrowPage() {
           {(
             [
               { id: "register", label: "1. Deposit BTC" },
-              { id: "mint", label: "2. Mint BTCUSD" },
+              { id: "mint", label: "2. Mint BTSUSD" },
               { id: "repay", label: "3. Repay Debt" },
             ] as { id: Tab; label: string }[]
           ).map((t) => (
@@ -1085,7 +1085,7 @@ export default function BorrowPage() {
                   }}
                   className="flex items-center gap-1 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-400 transition"
                 >
-                  Continue to Mint BTCUSD <ChevronRight size={14} />
+                  Continue to Mint BTSUSD <ChevronRight size={14} />
                 </button>
               </div>
             )}
@@ -1100,7 +1100,7 @@ export default function BorrowPage() {
           </div>
         )}
 
-        {/* ── Tab: Mint BTCUSD ─────────────────────────────────────────────── */}
+        {/* ── Tab: Mint BTSUSD ─────────────────────────────────────────────── */}
         {tab === "mint" && (
           <div className="space-y-4">
             {/* Vault status */}
@@ -1136,7 +1136,7 @@ export default function BorrowPage() {
                 </div>
                 <p className="text-xs text-neutral-500">
                   Link your Bitcoin deposit to your Starknet account so you can
-                  mint BTCUSD.
+                  mint BTSUSD.
                 </p>
                 <div className="space-y-2">
                   <div>
@@ -1208,7 +1208,7 @@ export default function BorrowPage() {
                 <div className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white">
                   2
                 </div>
-                <h2 className="font-semibold text-neutral-900">Mint BTCUSD</h2>
+                <h2 className="font-semibold text-neutral-900">Mint BTSUSD</h2>
               </div>
 
               <div>
@@ -1233,7 +1233,7 @@ export default function BorrowPage() {
                   >
                     Max:{" "}
                     {cdp.maxMintable > BigInt(0)
-                      ? `${(Number(cdp.maxMintable) / 1e18).toLocaleString(undefined, { maximumFractionDigits: 2 })} BTCUSD`
+                      ? `${(Number(cdp.maxMintable) / 1e18).toLocaleString(undefined, { maximumFractionDigits: 2 })} BTSUSD`
                       : "—"}
                   </button>
                 </div>
@@ -1247,7 +1247,7 @@ export default function BorrowPage() {
                     className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 pr-20 text-sm text-neutral-900 placeholder-neutral-400 focus:border-orange-500 focus:outline-none"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-neutral-500">
-                    BTCUSD
+                    BTSUSD
                   </span>
                 </div>
               </div>
@@ -1293,12 +1293,12 @@ export default function BorrowPage() {
                 ) : (
                   <Zap size={16} />
                 )}
-                {cdp.isMinting ? "Minting..." : "Mint BTCUSD"}
+                {cdp.isMinting ? "Minting..." : "Mint BTSUSD"}
               </button>
 
               <div className="flex items-start gap-2 text-xs text-neutral-500">
                 <Info size={12} className="mt-0.5 shrink-0" />
-                BTCUSD is a BTC-backed stablecoin. Maintain health factor above
+                BTSUSD is a BTC-backed stablecoin. Maintain health factor above
                 100 to avoid liquidation. MCR is dynamic and increases with BTC
                 volatility.
               </div>
@@ -1339,7 +1339,7 @@ export default function BorrowPage() {
                     Outstanding Debt
                   </div>
                   <div className="font-semibold text-neutral-900">
-                    {formatBTCUSD(cdp.position.debtBTCUSD)} BTCUSD
+                    {formatBTSUSD(cdp.position.debtBTSUSD)} BTSUSD
                   </div>
                 </div>
                 <div>
@@ -1347,7 +1347,7 @@ export default function BorrowPage() {
                     Your Balance
                   </div>
                   <div className="font-semibold text-neutral-900">
-                    {formatBTCUSD(cdp.btcusdBalance)} BTCUSD
+                    {formatBTSUSD(cdp.btsusdBalance)} BTSUSD
                   </div>
                 </div>
               </div>
@@ -1360,9 +1360,9 @@ export default function BorrowPage() {
                   <button
                     onClick={() => {
                       const maxRepay =
-                        cdp.position.debtBTCUSD < cdp.btcusdBalance
-                          ? cdp.position.debtBTCUSD
-                          : cdp.btcusdBalance;
+                        cdp.position.debtBTSUSD < cdp.btsusdBalance
+                          ? cdp.position.debtBTSUSD
+                          : cdp.btsusdBalance;
                       setRepayAmount(
                         maxRepay > BigInt(0)
                           ? (Number(maxRepay) / 1e18).toFixed(2)
@@ -1384,13 +1384,13 @@ export default function BorrowPage() {
                     className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 pr-20 text-sm text-neutral-900 placeholder-neutral-400 focus:border-orange-500 focus:outline-none"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-neutral-500">
-                    BTCUSD
+                    BTSUSD
                   </span>
                 </div>
               </div>
 
               {repayAmountBigInt > BigInt(0) &&
-                repayAmountBigInt >= cdp.position.debtBTCUSD && (
+                repayAmountBigInt >= cdp.position.debtBTSUSD && (
                   <div className="flex items-center gap-2 rounded-lg bg-blue-500/10 border border-blue-500/20 px-3 py-2 text-xs text-blue-400">
                     <Info size={12} />
                     Full repayment — vault will be closed and BTC covenant
@@ -1405,7 +1405,7 @@ export default function BorrowPage() {
                   !activeTxid ||
                   cdp.isRepaying ||
                   repayAmountBigInt === BigInt(0) ||
-                  cdp.position.debtBTCUSD === BigInt(0)
+                  cdp.position.debtBTSUSD === BigInt(0)
                 }
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-800 py-3 text-sm font-semibold text-white transition hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -1414,10 +1414,10 @@ export default function BorrowPage() {
                 ) : (
                   <CheckCircle size={16} />
                 )}
-                {cdp.isRepaying ? "Repaying..." : "Repay BTCUSD"}
+                {cdp.isRepaying ? "Repaying..." : "Repay BTSUSD"}
               </button>
 
-              {cdp.position.debtBTCUSD === BigInt(0) && activeTxid && (
+              {cdp.position.debtBTSUSD === BigInt(0) && activeTxid && (
                 <p className="text-center text-xs text-emerald-400">
                   ✓ No outstanding debt on this vault.
                 </p>
@@ -1444,7 +1444,7 @@ export default function BorrowPage() {
               above → Register Vault on Starknet
             </li>
             <li>
-              <span className="text-neutral-800">3.</span> Mint BTCUSD
+              <span className="text-neutral-800">3.</span> Mint BTSUSD
               stablecoin against your locked BTC
             </li>
             <li>

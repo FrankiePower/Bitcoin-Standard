@@ -83,7 +83,7 @@ const ConnectModal = () => {
                     ✕
                   </label>
                   <h2 className="text-2xl font-black text-orange-500 mb-1">
-                    BTCUSD
+                    BTSUSD
                   </h2>
                   <p className="text-neutral-400 text-sm">
                     Connect Your Wallet

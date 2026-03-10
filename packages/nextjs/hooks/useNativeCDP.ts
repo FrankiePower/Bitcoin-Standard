@@ -8,16 +8,16 @@ import {
   NATIVE_ADDRESSES,
   CDP_CORE_ABI,
   VAULT_REGISTRY_ABI,
-  BTCUSD_TOKEN_ABI,
+  BTSUSD_TOKEN_ABI,
   MOCK_ORACLE_ABI,
   txidToFelt,
   parseU256,
   formatBTC,
-  formatBTCUSD,
+  formatBTSUSD,
 } from "~~/contracts/nativeContracts";
 
 // Re-export formatters for use in pages
-export { txidToFelt, formatBTC, formatBTCUSD };
+export { txidToFelt, formatBTC, formatBTSUSD };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -131,21 +131,21 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
     watch: true,
   });
 
-  // User's BTCUSD balance
-  const { data: btcusdBalanceRaw, refetch: refetchBalance } = useReadContract({
+  // User's BTSUSD balance
+  const { data: btsusdBalanceRaw, refetch: refetchBalance } = useReadContract({
     functionName: "balance_of",
-    address: NATIVE_ADDRESSES.BTCUSD_TOKEN,
-    abi: BTCUSD_TOKEN_ABI as any,
+    address: NATIVE_ADDRESSES.BTSUSD_TOKEN,
+    abi: BTSUSD_TOKEN_ABI as any,
     args: address ? [address] : [],
     enabled: isConnected,
     watch: true,
   });
 
-  // BTCUSD total supply
+  // BTSUSD total supply
   const { data: totalSupplyRaw } = useReadContract({
     functionName: "total_supply",
-    address: NATIVE_ADDRESSES.BTCUSD_TOKEN,
-    abi: BTCUSD_TOKEN_ABI as any,
+    address: NATIVE_ADDRESSES.BTSUSD_TOKEN,
+    abi: BTSUSD_TOKEN_ABI as any,
     args: [],
     watch: true,
   });
@@ -215,12 +215,12 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
   }, [vaultInfoRaw]);
 
   const position = useMemo(() => {
-    if (!positionRaw) return { btcSats: BigInt(0), debtBTCUSD: BigInt(0) };
+    if (!positionRaw) return { btcSats: BigInt(0), debtBTSUSD: BigInt(0) };
     const raw = positionRaw as any;
     if (Array.isArray(raw)) {
-      return { btcSats: parseU256(raw[0]), debtBTCUSD: parseU256(raw[1]) };
+      return { btcSats: parseU256(raw[0]), debtBTSUSD: parseU256(raw[1]) };
     }
-    return { btcSats: BigInt(0), debtBTCUSD: BigInt(0) };
+    return { btcSats: BigInt(0), debtBTSUSD: BigInt(0) };
   }, [positionRaw]);
 
   const healthFactor = useMemo(() => {
@@ -228,9 +228,9 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
     return parseU256(healthFactorRaw);
   }, [healthFactorRaw]);
 
-  const btcusdBalance = useMemo(
-    () => parseU256(btcusdBalanceRaw),
-    [btcusdBalanceRaw],
+  const btsusdBalance = useMemo(
+    () => parseU256(btsusdBalanceRaw),
+    [btsusdBalanceRaw],
   );
 
   const totalSupply = useMemo(
@@ -244,13 +244,13 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
     return (Number(position.btcSats) / 1e8) * btcPriceUSD;
   }, [position.btcSats, btcPrice, btcPriceUSD]);
 
-  // Debt value in USD (BTCUSD is 1:1 with USD)
+  // Debt value in USD (BTSUSD is 1:1 with USD)
   const debtUSD = useMemo(
-    () => Number(position.debtBTCUSD) / 1e18,
-    [position.debtBTCUSD],
+    () => Number(position.debtBTSUSD) / 1e18,
+    [position.debtBTSUSD],
   );
 
-  // Max mintable BTCUSD at current dynamic MCR
+  // Max mintable BTSUSD at current dynamic MCR
   const maxMintable = useMemo(() => {
     if (collateralUSD === 0 || btcPrice === BigInt(0)) return BigInt(0);
     const maxDebt = (collateralUSD * 100) / dynamicMCR - debtUSD;
@@ -292,9 +292,9 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
   );
 
   /**
-   * Mint BTCUSD debt against a registered vault.
+   * Mint BTSUSD debt against a registered vault.
    * @param depositTxid - vault txid
-   * @param amount - BTCUSD amount (18 decimals)
+   * @param amount - BTSUSD amount (18 decimals)
    */
   const mintDebt = useCallback(
     async (depositTxid: string, amount: bigint) => {
@@ -318,9 +318,9 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
   );
 
   /**
-   * Repay BTCUSD debt.
+   * Repay BTSUSD debt.
    * @param depositTxid - vault txid
-   * @param amount - BTCUSD amount (18 decimals)
+   * @param amount - BTSUSD amount (18 decimals)
    */
   const repayDebt = useCallback(
     async (depositTxid: string, amount: bigint) => {
@@ -392,7 +392,7 @@ export function useNativeCDP({ txid }: UseNativeCDPOptions = {}) {
     maxMintable,
 
     // User
-    btcusdBalance,
+    btsusdBalance,
 
     // Actions
     registerVault,

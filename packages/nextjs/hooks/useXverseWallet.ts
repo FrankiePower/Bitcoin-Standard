@@ -106,7 +106,7 @@ export const useXverseWallet = () => {
     try {
       const response = await Wallet.request("wallet_connect", {
         addresses: ["payment", "ordinals", "starknet"],
-        message: "BTCUSD Protocol wants to connect to your wallet",
+        message: "BTSUSD Protocol wants to connect to your wallet",
         network,
       } as any);
 
